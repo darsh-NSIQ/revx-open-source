@@ -55,4 +55,5 @@
     <tabs>Revquila_Enterprise_Trust</tabs>
     <tabs>Revquila_Setup</tabs>
     <uiType>Lightning</uiType>
+    <utilityBar>RevX_UtilityBar</utilityBar>
 </CustomApplication>

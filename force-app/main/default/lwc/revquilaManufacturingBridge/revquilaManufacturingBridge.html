@@ -1,0 +1,163 @@
+<template>
+  <div class="rq-page-shell">
+    <!-- Header -->
+    <header class="rq-head">
+      <div class="rq-title-block">
+        <span class="rq-eyebrow">Manufacturing Cloud Bridge</span>
+        <h1 class="rq-title">Sales Agreements &amp; Run-Rate</h1>
+        <p class="rq-subtitle">
+          Manage volume run-rates, monitor scheduled release batches, and generate RevX Orders with pre-negotiated tier pricing.
+        </p>
+      </div>
+      <div class="rq-actions">
+        <button class="rq-btn rq-btn-secondary" onclick={handleCreateSample} disabled={loading}>
+          + Create Sample Agreement
+        </button>
+        <button class="rq-btn rq-btn-primary" onclick={handleRefresh} disabled={loading}>
+          Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- KPI Metrics -->
+    <div class="rq-metrics-grid">
+      <div class="rq-metric-card">
+        <span class="rq-metric-label">Total Committed Units</span>
+        <span class="rq-metric-val">{totalCommittedUnitsFormatted}</span>
+        <span class="rq-metric-sub">Run-rate volume target</span>
+      </div>
+      <div class="rq-metric-card">
+        <span class="rq-metric-label">Fulfilled Units</span>
+        <span class="rq-metric-val">{totalActualUnitsFormatted}</span>
+        <span class="rq-metric-sub">{fulfillmentRateFormatted}% fulfillment</span>
+      </div>
+      <div class="rq-metric-card">
+        <span class="rq-metric-label">Committed Contract Value</span>
+        <span class="rq-metric-val">{totalCommittedAmountFormatted}</span>
+        <span class="rq-metric-sub">Agreed milestone revenue</span>
+      </div>
+      <div class="rq-metric-card">
+        <span class="rq-metric-label">Billed Actuals</span>
+        <span class="rq-metric-val highlight">{totalActualAmountFormatted}</span>
+        <span class="rq-metric-sub">Processed through RevX</span>
+      </div>
+    </div>
+
+    <!-- Fulfillment Progress Bar -->
+    <div class="rq-progress-card">
+      <div class="rq-progress-head">
+        <span class="rq-progress-title">Agreement Fulfillment Run-Rate</span>
+        <span class="rq-progress-pct">{fulfillmentRateFormatted}%</span>
+      </div>
+      <div class="rq-progress-track">
+        <div class="rq-progress-fill" style={fulfillmentProgressStyle}></div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="rq-layout-split">
+      <!-- Agreements Sidebar / Selector -->
+      <div class="rq-card rq-agreements-panel">
+        <div class="rq-card-header">
+          <h2>Sales Agreements ({agreementsCount})</h2>
+        </div>
+        <div class="rq-agreements-list">
+          <template for:each={agreements} for:item="agr">
+            <div
+              key={agr.Id}
+              class={agr.cardClass}
+              data-id={agr.Id}
+              onclick={handleSelectAgreement}
+            >
+              <div class="rq-agr-head">
+                <span class="rq-agr-name">{agr.Name}</span>
+                <span class={agr.statusBadgeClass}>{agr.Status__c}</span>
+              </div>
+              <div class="rq-agr-account">{agr.AccountName}</div>
+              <div class="rq-agr-meta">
+                <span>Tier: {agr.Pricing_Tier__c}</span>
+                <span>Units: {agr.Total_Committed_Quantity__c}</span>
+              </div>
+            </div>
+          </template>
+          <template lwc:if={noAgreements}>
+            <div class="rq-empty-state">
+              <p>No Sales Agreements found.</p>
+              <button class="rq-btn rq-btn-secondary rq-sm" onclick={handleCreateSample}>
+                Generate Sample Run-Rate
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Schedule Batches Table -->
+      <div class="rq-card rq-schedules-panel">
+        <div class="rq-card-header">
+          <h2>Delivery Batches &amp; Order Releases</h2>
+          <span class="rq-header-subtitle" if:true={selectedAgreement}>
+            {selectedAgreement.Name} &bull; {selectedAgreement.Pricing_Tier__c}
+          </span>
+        </div>
+
+        <div class="rq-table-wrap">
+          <table class="rq-table">
+            <thead>
+              <tr>
+                <th>Batch / Period</th>
+                <th>Scheduled Date</th>
+                <th>Planned Qty</th>
+                <th>Agreed Price</th>
+                <th>Planned Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={schedules} for:item="sc">
+                <tr key={sc.Id}>
+                  <td class="rq-cell-primary">{sc.Period_Name__c}</td>
+                  <td>{sc.FormattedDate}</td>
+                  <td>{sc.Planned_Quantity__c}</td>
+                  <td>${sc.Agreed_Unit_Price__c}</td>
+                  <td>${sc.Planned_Amount__c}</td>
+                  <td>
+                    <span class={sc.statusBadgeClass}>{sc.Status__c}</span>
+                  </td>
+                  <td>
+                    <template lwc:if={sc.isReleased}>
+                      <button
+                        class="rq-btn rq-btn-quiet rq-sm"
+                        data-orderid={sc.Order__c}
+                        onclick={handleViewOrder}
+                      >
+                        View Order &rarr;
+                      </button>
+                    </template>
+                    <template lwc:else>
+                      <button
+                        class="rq-btn rq-btn-primary rq-sm"
+                        data-id={sc.Id}
+                        onclick={handleReleaseOrder}
+                        disabled={loading}
+                      >
+                        Release RevX Order
+                      </button>
+                    </template>
+                  </td>
+                </tr>
+              </template>
+              <template lwc:if={noSchedules}>
+                <tr>
+                  <td colspan="7" class="rq-empty-cell">
+                    Select a Sales Agreement to view its schedule and release orders.
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

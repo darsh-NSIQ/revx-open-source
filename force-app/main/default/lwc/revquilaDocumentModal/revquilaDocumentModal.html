@@ -1,0 +1,38 @@
+<template>
+  <c-revquila-modal
+    heading={heading}
+    subheading={subheading}
+    size="wide"
+    onclose={handleClose}
+    lwc:ref="modal"
+  >
+    <div class="rq-desk">
+      <c-revquila-document-preview
+        document={document}
+      ></c-revquila-document-preview>
+    </div>
+
+    <div slot="footer" class="rq-foot">
+      <p class="rq-status" role="status">
+        <template lwc:if={error}>
+          <span class="rq-error">{error}</span>
+        </template>
+        <template lwc:if={pdfUrl}>
+          {readyText}
+          <a href={pdfUrl} target="_blank" rel="noopener">{linkText}</a>
+        </template>
+      </p>
+      <div class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={handleCancel}>Close</button>
+        <button
+          class="rq-btn rq-primary"
+          data-autofocus="true"
+          disabled={creating}
+          onclick={handleDownload}
+        >
+          {downloadLabel}
+        </button>
+      </div>
+    </div>
+  </c-revquila-modal>
+</template>

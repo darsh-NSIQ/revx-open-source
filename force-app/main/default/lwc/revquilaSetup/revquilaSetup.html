@@ -1,0 +1,2132 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <c-revquila-brand></c-revquila-brand>
+        <span class="rq-pill rq-tone-acc">{liveLabel}</span>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1 rq-360-header">
+        <div>
+          <p class="rq-eyebrow">RevX Revenue Operating System · Architecture Cockpit 360</p>
+          <h1>Setup & Revenue <em>Cockpit 360</em>.</h1>
+          <p class="rq-sub">Executive posture, real-time subsystem diagnostics, and central configuration across CPQ, Billing, RevRec & AI.</p>
+        </div>
+        <div class="rq-360-header-actions">
+          <button class="rq-btn rq-quiet rq-diag-btn" onclick={handleRunDiagnostics} disabled={running360Diagnostics} title="Execute complete limit and connectivity audit">
+            <span class="rq-pulse-dot" aria-hidden="true"></span>
+            <span>{diagButtonLabel}</span>
+          </button>
+          <template lwc:if={showSeedDemoBtn}>
+            <button class="rq-btn rq-secondary" onclick={handleQuickLoadDemo} disabled={loadingDemo}>
+              Seed Demo Workspace
+            </button>
+          </template>
+          <span class="rq-pill rq-tone-good rq-pill-lg">
+            ● Posture: {healthScoreBadge}
+          </span>
+        </div>
+      </header>
+
+      <!-- 4-Card System 360 KPI Grid -->
+      <div class="rq-360-kpis rq-rise rq-d1">
+        <div class="rq-card rq-360-kpi" data-section="cockpit" onclick={handleJumpToSection}>
+          <div class="rq-kpi-top">
+            <span class="rq-kpi-label">System 360 Health</span>
+            <span class={healthScorePillClass}>{healthScoreBadge}</span>
+          </div>
+          <div class="rq-kpi-main">
+            <strong class={healthScoreTextClass}>{healthScore}%</strong>
+            <span class="rq-kpi-sub">9 Subsystems Verified</span>
+          </div>
+          <div class="rq-kpi-foot">
+            <span class="rq-kpi-link">Run live diagnostic audit →</span>
+          </div>
+        </div>
+
+        <div class="rq-card rq-360-kpi" data-section="jobs" onclick={handleJumpToSection}>
+          <div class="rq-kpi-top">
+            <span class="rq-kpi-label">Daily Daemon & RevRec</span>
+            <span class={jobsBadgeClass}>{jobsStatusBadge}</span>
+          </div>
+          <div class="rq-kpi-main">
+            <strong class="rq-kpi-val">{jobNextRunShort}</strong>
+            <span class="rq-kpi-sub">Auto Billing & ASC 606</span>
+          </div>
+          <div class="rq-kpi-foot">
+            <span class="rq-kpi-link">Configure daily schedule →</span>
+          </div>
+        </div>
+
+        <div class="rq-card rq-360-kpi" data-section="payments" onclick={handleJumpToSection}>
+          <div class="rq-kpi-top">
+            <span class="rq-kpi-label">Payment Gateway</span>
+            <span class={gatewayBadgeClass}>{gatewayStatusBadge}</span>
+          </div>
+          <div class="rq-kpi-main">
+            <strong class="rq-kpi-val">{activeGatewayName}</strong>
+            <span class="rq-kpi-sub">Webhook settlement active</span>
+          </div>
+          <div class="rq-kpi-foot">
+            <span class="rq-kpi-link">Manage credentials & keys →</span>
+          </div>
+        </div>
+
+        <div class="rq-card rq-360-kpi" data-section="ai" onclick={handleJumpToSection}>
+          <div class="rq-kpi-top">
+            <span class="rq-kpi-label">AI Intelligence</span>
+            <span class="rq-pill rq-tone-acc">Active Copilot</span>
+          </div>
+          <div class="rq-kpi-main">
+            <strong class="rq-kpi-val">{aiProviderName}</strong>
+            <span class="rq-kpi-sub">Deal Win & Churn Radar</span>
+          </div>
+          <div class="rq-kpi-foot">
+            <span class="rq-kpi-link">Tune LLM & scoring models →</span>
+          </div>
+        </div>
+      </div>
+
+      <template lwc:if={readOnly}>
+        <p class="rq-verdict rq-tone-warn rq-banner">
+          You can look around, but only someone with the RevX Admin
+          permission set can change and publish settings.
+        </p>
+      </template>
+
+      <div class="rq-setup rq-rise rq-d2">
+        <nav class="rq-card rq-nav" aria-label="Settings">
+          <!-- Search box -->
+          <div class="rq-nav-search-wrap">
+            <svg class="rq-nav-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              class="rq-input rq-nav-search-input"
+              placeholder="Search 16 modules…"
+              value={navSearchTerm}
+              oninput={handleNavSearchInput}
+              aria-label="Filter configuration sections"
+            />
+            <template lwc:if={hasNavSearchTerm}>
+              <button class="rq-btn-clear" onclick={handleClearNavSearch} title="Clear search">✕</button>
+            </template>
+          </div>
+
+          <template for:each={categorizedNav} for:item="cat">
+            <div key={cat.key} class="rq-nav-group">
+              <span class="rq-nav-group-title">{cat.title}</span>
+              <template for:each={cat.items} for:item="item">
+                <button
+                  key={item.key}
+                  class={item.itemClass}
+                  aria-current={item.current}
+                  data-key={item.key}
+                  onclick={handleSection}
+                >
+                  <span>
+                    <strong>{item.label}</strong>
+                    <small>{item.blurb}</small>
+                  </span>
+                  <template lwc:if={item.changed}>
+                    <i class="rq-dot" title="Unpublished changes"></i>
+                  </template>
+                </button>
+              </template>
+            </div>
+          </template>
+
+          <template lwc:if={noNavMatches}>
+            <div class="rq-nav-empty">
+              <p>No modules match "<strong>{navSearchTerm}</strong>"</p>
+              <button class="rq-btn rq-quiet rq-sm" onclick={handleClearNavSearch}>Clear filter</button>
+            </div>
+          </template>
+        </nav>
+
+        <div class={layoutClass}>
+          <section class="rq-card rq-panel">
+            <div class="rq-card-head">
+              <div>
+                <h2>{current.label}</h2>
+                <p class="rq-sub">{current.blurb}</p>
+              </div>
+              <template lwc:if={canReset}>
+                <button class="rq-btn rq-quiet rq-sm" onclick={handleReset}>
+                  Reset to defaults
+                </button>
+              </template>
+            </div>
+
+            <fieldset class="rq-fields" disabled={readOnly}>
+              <!-- 360 Cockpit & Health Section -->
+              <template lwc:if={is.cockpit}>
+                <div class="rq-cockpit-content">
+                  <!-- Executive Posture Hero Banner -->
+                  <div class="rq-cockpit-hero">
+                    <div class="rq-gauge-box">
+                      <div class="rq-gauge-ring">
+                        <svg class="rq-gauge-svg" viewBox="0 0 120 120">
+                          <circle class="rq-gauge-track" cx="60" cy="60" r="52"></circle>
+                          <circle class="rq-gauge-bar" cx="60" cy="60" r="52" stroke-dashoffset={gaugeDashOffset}></circle>
+                        </svg>
+                        <div class="rq-gauge-text">
+                          <span class="rq-gauge-number">{healthScore}%</span>
+                          <span class="rq-gauge-label">HEALTH</span>
+                        </div>
+                      </div>
+                      <div class="rq-gauge-meta">
+                        <span class="rq-pill rq-tone-good">ENTERPRISE GRADE A+</span>
+                        <small>All Core Engines Synced</small>
+                      </div>
+                    </div>
+
+                    <div class="rq-hero-posture">
+                      <div class="rq-hero-badges">
+                        <span class="rq-pill rq-tone-acc">Version {activeVersionNumber} Active</span>
+                        <span class="rq-pill rq-tone-mute">Published: {publishedDateText}</span>
+                        <span class="rq-pill rq-tone-good">100% Native Salesforce</span>
+                      </div>
+                      <h3 class="rq-hero-title">Continuous Revenue Architecture & Governance</h3>
+                      <p class="rq-hero-desc">
+                        RevX runs 100% native inside your Salesforce sandbox and production org. Every quote calculation,
+                        recurring billing cycle, ASC 606 revenue waterfall, and payment gateway call is enforced with
+                        strict <code>USER_MODE</code> and Field-Level Security.
+                      </p>
+                      <div class="rq-hero-actions">
+                        <button class="rq-btn rq-primary" onclick={handleRunDiagnostics} disabled={running360Diagnostics}>
+                          <span class="rq-pulse-dot" aria-hidden="true"></span>
+                          Run 360 Self-Test
+                        </button>
+                        <button class="rq-btn rq-quiet" data-section="history" onclick={handleJumpToSection}>
+                          Audit Version History →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 4-Counter Live Revenue Inventory -->
+                  <div class="rq-inventory-banner">
+                    <div class="rq-inventory-title-row">
+                      <h4>Live Revenue Inventory</h4>
+                      <small>Real-time database volume across core custom objects</small>
+                    </div>
+                    <div class="rq-inventory-grid">
+                      <div class="rq-inventory-card" data-section="pricing" onclick={handleJumpToSection}>
+                        <span class="rq-inv-val">{quoteCount}</span>
+                        <span class="rq-inv-lbl">Active Quotes</span>
+                      </div>
+                      <div class="rq-inventory-card" data-section="billing" onclick={handleJumpToSection}>
+                        <span class="rq-inv-val">{invoiceCount}</span>
+                        <span class="rq-inv-lbl">Invoices Generated</span>
+                      </div>
+                      <div class="rq-inventory-card" data-section="jobs" onclick={handleJumpToSection}>
+                        <span class="rq-inv-val">{subscriptionCount}</span>
+                        <span class="rq-inv-lbl">Active Subscriptions</span>
+                      </div>
+                      <div class="rq-inventory-card" data-section="productRules" onclick={handleJumpToSection}>
+                        <span class="rq-inv-val">{productCount}</span>
+                        <span class="rq-inv-lbl">Catalog Products</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 8-Domain Capability Matrix -->
+                  <div class="rq-section-head">
+                    <div>
+                      <h3>Enterprise Capability Matrix</h3>
+                      <p class="rq-sub">1-click jump to configure and customize any subsystem domain.</p>
+                    </div>
+                  </div>
+                  <div class="rq-matrix-grid">
+                    <template for:each={capabilityMatrix} for:item="item">
+                      <div key={item.key} class="rq-matrix-card">
+                        <div class="rq-matrix-top">
+                          <span class="rq-matrix-cat">{item.category}</span>
+                          <span class={item.badgeClass}>{item.badge}</span>
+                        </div>
+                        <h4 class="rq-matrix-title">{item.title}</h4>
+                        <p class="rq-matrix-blurb">{item.blurb}</p>
+                        <button
+                          class="rq-btn rq-quiet rq-sm rq-matrix-btn"
+                          data-section={item.targetSection}
+                          onclick={handleJumpToSection}
+                        >
+                          Configure {item.category} →
+                        </button>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- 9-Subsystem Diagnostic Checklist -->
+                  <div class="rq-section-head" style="margin-top: 24px;">
+                    <div>
+                      <h3>9-Subsystem Health & Diagnostic Verification</h3>
+                      <p class="rq-sub">Real-time status of data planes, calculation engines, and gateways.</p>
+                    </div>
+                    <button class="rq-btn rq-quiet rq-sm" onclick={loadHealth360}>
+                      ↻ Refresh Status
+                    </button>
+                  </div>
+                  <div class="rq-diag-list">
+                    <template for:each={diagnosticsList} for:item="diag">
+                      <div key={diag.id} class="rq-diag-row">
+                        <div class="rq-diag-status-col">
+                          <span class={diag.statusTone}>{diag.statusLabel}</span>
+                        </div>
+                        <div class="rq-diag-info-col">
+                          <div class="rq-diag-name-row">
+                            <strong>{diag.name}</strong>
+                            <span class="rq-diag-cat">({diag.category})</span>
+                          </div>
+                          <p class="rq-diag-detail">{diag.detail}</p>
+                        </div>
+                        <div class="rq-diag-action-col">
+                          <button
+                            class="rq-btn rq-quiet rq-sm"
+                            data-section={diag.actionKey}
+                            onclick={handleJumpToSection}
+                          >
+                            Manage →
+                          </button>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Branding -->
+              <template lwc:if={is.brand}>
+                <div class="rq-block">
+                  <span class="rq-label">Accent colour</span>
+                  <div class="rq-colour">
+                    <input
+                      class="rq-picker"
+                      type="color"
+                      aria-label="Pick the accent colour"
+                      value={accentForPicker}
+                      data-path="brand.accent"
+                      oninput={handleInput}
+                    />
+                    <input
+                      class="rq-input rq-hex"
+                      type="text"
+                      aria-label="Accent colour as a hex value"
+                      maxlength="7"
+                      value={draft.brand.accent}
+                      data-path="brand.accent"
+                      oninput={handleInput}
+                    />
+                    <div
+                      class="rq-swatches"
+                      role="group"
+                      aria-label="Suggested colours"
+                    >
+                      <template for:each={swatches} for:item="swatch">
+                        <button
+                          key={swatch.value}
+                          class={swatch.swatchClass}
+                          style={swatch.swatchStyle}
+                          title={swatch.name}
+                          aria-label={swatch.name}
+                          aria-pressed={swatch.pressed}
+                          data-value={swatch.value}
+                          onclick={handleSwatch}
+                        ></button>
+                      </template>
+                    </div>
+                  </div>
+                  <span class="rq-hint">
+                    Buttons, links, charts and the page tint all follow it. This
+                    page is already showing your choice.
+                  </span>
+                </div>
+
+                <div class="rq-block">
+                  <span class="rq-label">Logo</span>
+                  <div class="rq-logo-row">
+                    <div class="rq-logo-box">
+                      <img src={logoUrl} alt="Current logo" />
+                    </div>
+                    <div class="rq-logo-acts">
+                      <button
+                        class="rq-btn rq-quiet rq-sm"
+                        disabled={uploading}
+                        onclick={pickLogo}
+                      >
+                        {uploadLabel}
+                      </button>
+                      <template lwc:if={hasOwnLogo}>
+                        <button
+                          class="rq-btn rq-quiet rq-sm"
+                          onclick={removeLogo}
+                        >
+                          Use the RevX logo
+                        </button>
+                      </template>
+                      <input
+                        class="rq-file"
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        aria-label="Logo file"
+                        tabindex="-1"
+                        lwc:ref="logoFile"
+                        onchange={handleLogoFile}
+                      />
+                    </div>
+                  </div>
+                  <span class="rq-hint">
+                    PNG or JPG, under 1 MB. It shows at the top of every page
+                    and on quotes and invoices.
+                  </span>
+                  <template lwc:if={logoError}>
+                    <span class="rq-error" role="alert">{logoError}</span>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Documents: colour -->
+              <template lwc:if={is.pdf}>
+                <div class="rq-block">
+                  <label class="rq-switch">
+                    <input
+                      type="checkbox"
+                      checked={usesBrandColour}
+                      onchange={handleUseBrandColour}
+                    />
+                    <span class="rq-track"></span>
+                    Documents use the app's accent colour
+                  </label>
+                  <template lwc:if={hasDocumentColour}>
+                    <div class="rq-colour">
+                      <input
+                        class="rq-picker"
+                        type="color"
+                        aria-label="Pick the document colour"
+                        value={documentColour}
+                        data-path="pdf.accent"
+                        oninput={handleInput}
+                      />
+                      <input
+                        class="rq-input rq-hex"
+                        type="text"
+                        aria-label="Document colour as a hex value"
+                        maxlength="7"
+                        value={draft.pdf.accent}
+                        data-path="pdf.accent"
+                        oninput={handleInput}
+                      />
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Tax: country -->
+              <template lwc:if={is.tax}>
+                <div class="rq-block">
+                  <span class="rq-label">Country</span>
+                  <div class="rq-country">
+                    <input
+                      class="rq-input"
+                      type="search"
+                      placeholder="Filter, e.g. Germany"
+                      aria-label="Filter the countries"
+                      value={countrySearch}
+                      oninput={handleCountrySearch}
+                    />
+                    <select
+                      class="rq-input"
+                      aria-label="Country"
+                      onchange={handleCountry}
+                    >
+                      <template for:each={countries} for:item="country">
+                        <option
+                          key={country.code}
+                          value={country.code}
+                          selected={country.selected}
+                        >
+                          {country.label}
+                        </option>
+                      </template>
+                    </select>
+                  </div>
+                  <span class="rq-hint">
+                    {countryCount}. Picking one loads its tax system, standard
+                    rate, currency and number format as a starting point. Every
+                    value stays editable.
+                  </span>
+                  <template lwc:if={presetNote}>
+                    <p class="rq-verdict rq-tone-acc">{presetNote}</p>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Plain fields of the section -->
+              <template lwc:if={hasFields}>
+                <div class="rq-form-grid">
+                  <template for:each={fields} for:item="field">
+                    <div key={field.path} class={field.wrapClass}>
+                      <template lwc:if={field.isToggle}>
+                        <label class="rq-switch">
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            data-path={field.path}
+                            onchange={handleToggle}
+                          />
+                          <span class="rq-track"></span>
+                          {field.label}
+                        </label>
+                      </template>
+                      <template lwc:elseif={field.isChoice}>
+                        <span class="rq-label">{field.label}</span>
+                        <div
+                          class="rq-seg"
+                          role="group"
+                          aria-label={field.label}
+                        >
+                          <template for:each={field.options} for:item="option">
+                            <button
+                              key={option.value}
+                              class={option.optionClass}
+                              aria-pressed={option.pressed}
+                              data-path={field.path}
+                              data-value={option.value}
+                              onclick={handleChoice}
+                            >
+                              {option.label}
+                            </button>
+                          </template>
+                        </div>
+                      </template>
+                      <template lwc:else>
+                        <label class="rq-wrap">
+                          <span class="rq-label">{field.label}</span>
+                          <template lwc:if={field.isText}>
+                            <input
+                              class="rq-input"
+                              type="text"
+                              autocomplete="off"
+                              value={field.value}
+                              data-path={field.path}
+                              oninput={handleInput}
+                            />
+                          </template>
+                          <template lwc:elseif={field.isNumber}>
+                            <input
+                              class="rq-input"
+                              type="number"
+                              min={field.min}
+                              max={field.max}
+                              step={field.step}
+                              value={field.value}
+                              data-path={field.path}
+                              oninput={handleNumber}
+                            />
+                          </template>
+                          <template lwc:elseif={field.isArea}>
+                            <textarea
+                              class="rq-input"
+                              data-path={field.path}
+                              oninput={handleInput}
+                            ></textarea>
+                          </template>
+                          <template lwc:else>
+                            <select
+                              class="rq-input"
+                              data-path={field.path}
+                              onchange={handleInput}
+                            >
+                              <template
+                                for:each={field.options}
+                                for:item="option"
+                              >
+                                <option
+                                  key={option.value}
+                                  value={option.value}
+                                  selected={option.selected}
+                                >
+                                  {option.label}
+                                </option>
+                              </template>
+                            </select>
+                          </template>
+                        </label>
+                      </template>
+                      <template lwc:if={field.hint}>
+                        <span class="rq-hint">{field.hint}</span>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Tax: a rate for each region -->
+              <template lwc:if={showRegionRates}>
+                <div class="rq-block">
+                  <div class="rq-block-head">
+                    <span class="rq-label">Rates per region</span>
+                    <div class="rq-block-acts">
+                      <template lwc:if={hasPresetRates}>
+                        <button
+                          class="rq-btn rq-quiet rq-sm"
+                          onclick={loadPresetRates}
+                        >
+                          Load the preset rates
+                        </button>
+                      </template>
+                      <button class="rq-btn rq-quiet rq-sm" onclick={addRegion}>
+                        + Add a region
+                      </button>
+                    </div>
+                  </div>
+                  <span class="rq-hint">{regionRateSummary}</span>
+                  <div class="rq-rates">
+                    <template for:each={regionRows} for:item="row">
+                      <div key={row.key} class="rq-rate">
+                        <input
+                          class="rq-input"
+                          type="text"
+                          autocomplete="off"
+                          placeholder="Region"
+                          aria-label="Region"
+                          value={row.region}
+                          data-index={row.index}
+                          data-field="region"
+                          oninput={handleRegionField}
+                        />
+                        <input
+                          class="rq-input"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="any"
+                          placeholder="%"
+                          aria-label="Rate in percent"
+                          value={row.rate}
+                          data-index={row.index}
+                          data-field="rate"
+                          oninput={handleRegionField}
+                        />
+                        <button
+                          class="rq-x"
+                          aria-label={row.removeLabel}
+                          data-index={row.index}
+                          onclick={removeRegion}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Tax: other countries -->
+              <template lwc:if={is.tax}>
+                <div class="rq-block">
+                  <div class="rq-block-head">
+                    <span class="rq-label">Other countries you sell into</span>
+                    <div class="rq-block-acts">
+                      <select
+                        class="rq-input rq-market-pick"
+                        aria-label="Country to add"
+                        onchange={handleMarketCountry}
+                      >
+                        <template for:each={marketChoices} for:item="choice">
+                          <option
+                            key={choice.code}
+                            value={choice.code}
+                            selected={choice.selected}
+                          >
+                            {choice.label}
+                          </option>
+                        </template>
+                      </select>
+                      <button class="rq-btn rq-quiet rq-sm" onclick={addMarket}>
+                        + Add country
+                      </button>
+                    </div>
+                  </div>
+                  <span class="rq-hint">
+                    A quote in one of these countries is priced in its currency
+                    at the exchange rate here, and taxed its way. The country
+                    above stays the home one: products are priced in its
+                    currency and the dashboard adds everything up in it.
+                  </span>
+                  <template lwc:if={hasMarkets}>
+                    <div class="rq-markets">
+                      <template for:each={marketRows} for:item="market">
+                        <div key={market.key} class="rq-market">
+                          <span class="rq-market-name">
+                            <strong>{market.title}</strong>
+                            <small>{market.taxNote}</small>
+                          </span>
+                          <label class="rq-market-field">
+                            <span>Tax rate %</span>
+                            <input
+                              class="rq-input"
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="any"
+                              value={market.rate}
+                              data-index={market.index}
+                              data-field="rate"
+                              oninput={handleMarketField}
+                            />
+                          </label>
+                          <label class="rq-market-field">
+                            <span>{market.rateLabel}</span>
+                            <input
+                              class="rq-input"
+                              type="number"
+                              min="0"
+                              step="any"
+                              value={market.exchangeRate}
+                              data-index={market.index}
+                              data-field="exchangeRate"
+                              oninput={handleMarketField}
+                            />
+                          </label>
+                          <button
+                            class="rq-x"
+                            aria-label={market.removeLabel}
+                            data-index={market.index}
+                            onclick={removeMarket}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Billing: reminders -->
+              <template lwc:if={is.billing}>
+                <div class="rq-block">
+                  <span class="rq-label">Reminders after the due date</span>
+                  <div class="rq-tags">
+                    <template for:each={reminders} for:item="reminder">
+                      <span key={reminder.days} class="rq-tag">
+                        {reminder.label}
+                        <button
+                          aria-label={reminder.removeLabel}
+                          data-days={reminder.days}
+                          onclick={removeReminder}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    </template>
+                    <input
+                      class="rq-input rq-days"
+                      type="number"
+                      min="1"
+                      step="1"
+                      placeholder="Days"
+                      aria-label="Days after the due date"
+                      value={newReminder}
+                      oninput={handleNewReminder}
+                    />
+                    <button class="rq-btn rq-quiet rq-sm" onclick={addReminder}>
+                      + Add
+                    </button>
+                  </div>
+                  <span class="rq-hint">
+                    Each reminder shows as due on an unpaid invoice that many
+                    days after its due date. RevX does not email customers
+                    yet: send the reminder yourself, then log it on the invoice.
+                  </span>
+                </div>
+              </template>
+              <!-- Notifications: saved, not sent yet -->
+              <template lwc:if={is.notifications}>
+                <p class="rq-verdict rq-tone-warn rq-span-all">
+                  Your choices are saved with the settings, but RevX does
+                  not send notifications yet. Nothing is emailed or posted.
+                </p>
+              </template>
+            </fieldset>
+
+            <!-- Payment Gateways & Online Checkout -->
+            <template lwc:if={is.payments}>
+              <div class="rq-payments-setup">
+                <div class="rq-block-head" style="margin-bottom: 16px;">
+                  <p style="margin: 0; color: var(--rq-mut);">
+                    Configure payment gateways for instant customer checkout, automated receipt generation, and real-time webhook reconciliation.
+                  </p>
+                  <template lwc:if={canTestGateway}>
+                    <button
+                      class="rq-btn rq-quiet rq-sm"
+                      onclick={testGatewayConnectionClick}
+                      disabled={testingGateway}
+                    >
+                      {testGatewayButtonLabel}
+                    </button>
+                  </template>
+                </div>
+
+                <template lwc:if={gatewayTestResult}>
+                  <p class={gatewayVerdictClass} style="margin-bottom: 16px;">
+                    {gatewayTestResult.message}
+                  </p>
+                </template>
+
+                <div class="rq-block" style="margin-bottom: 18px;">
+                  <span class="rq-label">Active Gateway</span>
+                  <select
+                    class="rq-input"
+                    aria-label="Active Payment Gateway"
+                    onchange={handleGatewaySelect}
+                  >
+                    <template for:each={gatewayOptions} for:item="opt">
+                      <option
+                        key={opt.value}
+                        value={opt.value}
+                        selected={opt.selected}
+                      >
+                        {opt.label}
+                      </option>
+                    </template>
+                  </select>
+                  <span class="rq-hint">
+                    {gatewayExplanationText}
+                  </span>
+                </div>
+
+                <template lwc:if={isStripe}>
+                  <div class="rq-block" style="margin-bottom: 18px; padding: 16px; border-radius: 12px; background: var(--rq-bg);">
+                    <div class="rq-block-head" style="margin-bottom: 12px;">
+                      <strong style="font-size: 13px; color: var(--rq-text);">Stripe API Credentials</strong>
+                      <template lwc:if={gatewayStatus.hasSecret}>
+                        <span class="rq-tag" style="background: color-mix(in srgb, var(--rq-good, #2e844a) 15%, transparent); color: var(--rq-good, #2e844a);">
+                          Secret Key Configured
+                        </span>
+                      </template>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                      <div class="rq-wrap">
+                        <span class="rq-label">Stripe Secret Key</span>
+                        <input
+                          class="rq-input"
+                          type="password"
+                          placeholder={gatewaySecretPlaceholder}
+                          value={gatewaySecret}
+                          oninput={handleGatewaySecretInput}
+                        />
+                        <span class="rq-hint">Starts with sk_live_... (or sk_test_... for sandbox). Never exposed in client browsers.</span>
+                      </div>
+
+                      <div class="rq-wrap">
+                        <span class="rq-label">Stripe Webhook Signing Secret (Optional)</span>
+                        <input
+                          class="rq-input"
+                          type="password"
+                          placeholder={webhookSecretPlaceholder}
+                          value={webhookSecret}
+                          oninput={handleWebhookSecretInput}
+                        />
+                        <span class="rq-hint">Starts with whsec_.... Obtained from Stripe Dashboard &gt; Developers &gt; Webhooks. Used to cryptographically verify signatures.</span>
+                      </div>
+
+                      <div style="margin-top: 4px;">
+                        <button
+                          class="rq-btn rq-primary rq-sm"
+                          onclick={saveGatewaySecrets}
+                          disabled={savingGatewayKeys}
+                        >
+                          Save Stripe credentials
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
+                <template lwc:if={isRazorpay}>
+                  <div class="rq-block" style="margin-bottom: 18px; padding: 16px; border-radius: 12px; background: var(--rq-bg);">
+                    <div class="rq-block-head" style="margin-bottom: 12px;">
+                      <strong style="font-size: 13px; color: var(--rq-text);">Razorpay API Credentials</strong>
+                      <div style="display: flex; gap: 6px;">
+                        <template lwc:if={gatewayStatus.hasKey}>
+                          <span class="rq-tag" style="background: color-mix(in srgb, var(--rq-good, #2e844a) 15%, transparent); color: var(--rq-good, #2e844a);">
+                            Key ID Configured
+                          </span>
+                        </template>
+                        <template lwc:if={gatewayStatus.hasSecret}>
+                          <span class="rq-tag" style="background: color-mix(in srgb, var(--rq-good, #2e844a) 15%, transparent); color: var(--rq-good, #2e844a);">
+                            Secret Configured
+                          </span>
+                        </template>
+                      </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                      <div class="rq-wrap">
+                        <span class="rq-label">Razorpay Key ID</span>
+                        <input
+                          class="rq-input"
+                          type="text"
+                          placeholder={gatewayKeyPlaceholder}
+                          value={gatewayKey}
+                          oninput={handleGatewayKeyInput}
+                        />
+                        <span class="rq-hint">Starts with rzp_live_... (or rzp_test_...).</span>
+                      </div>
+
+                      <div class="rq-wrap">
+                        <span class="rq-label">Razorpay Key Secret</span>
+                        <input
+                          class="rq-input"
+                          type="password"
+                          placeholder={gatewaySecretPlaceholder}
+                          value={gatewaySecret}
+                          oninput={handleGatewaySecretInput}
+                        />
+                        <span class="rq-hint">Secret key generated in Razorpay Dashboard &gt; Settings &gt; API Keys.</span>
+                      </div>
+
+                      <div class="rq-wrap">
+                        <span class="rq-label">Razorpay Webhook Secret (Optional)</span>
+                        <input
+                          class="rq-input"
+                          type="password"
+                          placeholder={webhookSecretPlaceholder}
+                          value={webhookSecret}
+                          oninput={handleWebhookSecretInput}
+                        />
+                        <span class="rq-hint">Secret entered in Razorpay Dashboard &gt; Settings &gt; Webhooks.</span>
+                      </div>
+
+                      <div style="margin-top: 4px;">
+                        <button
+                          class="rq-btn rq-primary rq-sm"
+                          onclick={saveGatewaySecrets}
+                          disabled={savingGatewayKeys}
+                        >
+                          Save Razorpay credentials
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
+                <div class="rq-block" style="margin-bottom: 18px; padding: 16px; border-radius: 12px; background: var(--rq-bg);">
+                  <strong style="font-size: 13px; color: var(--rq-text); margin-bottom: 4px; display: block;">
+                    Real-Time Webhook Listener
+                  </strong>
+                  <span class="rq-hint" style="margin-bottom: 10px; display: block;">
+                    When a customer pays via checkout link or customer portal, the gateway sends an event to this Salesforce REST endpoint. RevX automatically reconciles the payment, marks the invoice paid, and records transaction details.
+                  </span>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <input
+                      class="rq-input"
+                      type="text"
+                      readonly
+                      value={gatewayStatus.webhookEndpoint}
+                      style="font-family: monospace; font-size: 12px;"
+                    />
+                    <button
+                      class="rq-btn rq-quiet rq-sm"
+                      onclick={copyWebhookUrl}
+                      style="white-space: nowrap;"
+                    >
+                      Copy URL
+                    </button>
+                  </div>
+                </div>
+
+                <div class="rq-block" style="margin-top: 20px; border-top: 1px solid var(--rq-line); padding-top: 16px;">
+                  <strong style="font-size: 13px; color: var(--rq-text); margin-bottom: 12px; display: block;">
+                    Checkout &amp; Portal Settings
+                  </strong>
+                  <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <label class="rq-switch">
+                      <input
+                        type="checkbox"
+                        checked={paymentLinks}
+                        onchange={handlePaymentLinksToggle}
+                      />
+                      <span class="rq-track"></span>
+                      Enable 1-Click Payment Link Generation on Invoices (Shows "Payment link" on Invoice 360)
+                    </label>
+
+                    <label class="rq-switch">
+                      <input
+                        type="checkbox"
+                        checked={portalPay}
+                        onchange={handlePortalPayToggle}
+                      />
+                      <span class="rq-track"></span>
+                      Allow Online Checkout on Public Customer Portal
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Salesforce sync -->
+            <template lwc:if={is.sync}>
+              <div class="rq-sync">
+                <p>
+                  RevX quotes link to the Account, Contact and Opportunity
+                  the org already has. The rules here write into those records
+                  as a deal moves, so the sales pipeline stays right without
+                  anyone retyping: for example, when a quote is signed, set the
+                  Opportunity's stage to Closed Won and its amount to the
+                  quote's.
+                </p>
+                <dl class="rq-kv rq-links">
+                  <template for:each={syncLinks} for:item="row">
+                    <div key={row.label} class="rq-kv-row">
+                      <dt>{row.label}</dt>
+                      <dd>{row.value}</dd>
+                    </div>
+                  </template>
+                </dl>
+                <template lwc:if={hasSyncRules}>
+                  <div class="rq-rules">
+                    <template for:each={syncRules} for:item="rule">
+                      <div key={rule.key} class="rq-rule">
+                        <span class="rq-rule-word">When</span>
+                        <select
+                          class="rq-input"
+                          aria-label="When"
+                          data-index={rule.index}
+                          data-field="trigger"
+                          onchange={handleSyncField}
+                        >
+                          <template for:each={rule.moments} for:item="moment">
+                            <option
+                              key={moment.key}
+                              value={moment.key}
+                              selected={moment.selected}
+                            >
+                              {moment.label}
+                            </option>
+                          </template>
+                        </select>
+                        <span class="rq-rule-word">set the linked</span>
+                        <select
+                          class="rq-input"
+                          aria-label="Record"
+                          data-index={rule.index}
+                          data-field="target"
+                          onchange={handleSyncField}
+                        >
+                          <template for:each={rule.targets} for:item="target">
+                            <option
+                              key={target.name}
+                              value={target.name}
+                              selected={target.selected}
+                            >
+                              {target.name}
+                            </option>
+                          </template>
+                        </select>
+                        <span class="rq-rule-word">field</span>
+                        <template lwc:if={rule.fieldsLoading}>
+                          <span class="rq-rule-loading">Reading fields…</span>
+                        </template>
+                        <template lwc:else>
+                          <select
+                            class="rq-input"
+                            aria-label="Field"
+                            data-index={rule.index}
+                            data-field="field"
+                            onchange={handleSyncField}
+                          >
+                            <option value="">Pick a field</option>
+                            <template for:each={rule.fields} for:item="field">
+                              <option
+                                key={field.name}
+                                value={field.name}
+                                selected={field.selected}
+                              >
+                                {field.label}
+                              </option>
+                            </template>
+                          </select>
+                        </template>
+                        <span class="rq-rule-word">to</span>
+                        <select
+                          class="rq-input"
+                          aria-label="Value"
+                          data-index={rule.index}
+                          data-field="source"
+                          onchange={handleSyncField}
+                        >
+                          <template for:each={rule.sources} for:item="source">
+                            <option
+                              key={source.key}
+                              value={source.key}
+                              selected={source.selected}
+                            >
+                              {source.label}
+                            </option>
+                          </template>
+                        </select>
+                        <template lwc:if={rule.typed}>
+                          <template lwc:if={rule.picklist}>
+                            <select
+                              class="rq-input"
+                              aria-label="Value to set"
+                              data-index={rule.index}
+                              data-field="value"
+                              onchange={handleSyncField}
+                            >
+                              <option value="">Pick a value</option>
+                              <template
+                                for:each={rule.valueOptions}
+                                for:item="choice"
+                              >
+                                <option
+                                  key={choice.option}
+                                  value={choice.option}
+                                  selected={choice.selected}
+                                >
+                                  {choice.option}
+                                </option>
+                              </template>
+                            </select>
+                          </template>
+                          <template lwc:else>
+                            <input
+                              class="rq-input"
+                              type={rule.valueType}
+                              aria-label="Value to set"
+                              placeholder="Value"
+                              value={rule.value}
+                              data-index={rule.index}
+                              data-field="value"
+                              oninput={handleSyncField}
+                            />
+                          </template>
+                        </template>
+                        <button
+                          class="rq-x"
+                          aria-label={rule.removeLabel}
+                          data-index={rule.index}
+                          onclick={removeSyncRule}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+                <template lwc:else>
+                  <p class="rq-sub rq-nothing">
+                    No rules yet. Nothing is written to Salesforce until you add
+                    one and publish.
+                  </p>
+                </template>
+                <template lwc:if={syncFieldsError}>
+                  <span class="rq-error" role="alert">{syncFieldsError}</span>
+                </template>
+                <template lwc:if={canPublish}>
+                  <div>
+                    <button class="rq-btn rq-quiet rq-sm" onclick={addSyncRule}>
+                      + Add a rule
+                    </button>
+                  </div>
+                </template>
+                <p class="rq-fine">
+                  A rule that cannot be applied, say a field a validation rule
+                  refuses, is noted on the quote's timeline instead of stopping
+                  the action. Rules run for the user doing the action, with
+                  their own access.
+                </p>
+              </div>
+            </template>
+
+            <!-- Scheduled Daily Jobs -->
+            <template lwc:if={is.jobs}>
+              <div class="rq-jobs">
+                <div class="rq-card-head" style="margin-bottom: 16px;">
+                  <div>
+                    <h2>Scheduled Daily Jobs</h2>
+                    <p class="rq-sub">Automatic background processing: billing runs, renewals, revenue recognition, FX rates, and quote/contract expiry.</p>
+                  </div>
+                  <div>
+                    <button class="rq-btn rq-primary rq-sm" onclick={handleRunJobsNow} disabled={runningJobs}>
+                      {runJobsButtonLabel}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="rq-card rq-stat" style="margin-bottom: 20px; padding: 16px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                      <span class="rq-stat-label">Schedule status</span>
+                      <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                        <span class={jobStatusPillClass}>{jobStatusLabel}</span>
+                        <span class="rq-hint">Next: {jobNextRunLabel} · Last: {jobLastRunLabel}</span>
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="rq-hint">Run daily at</span>
+                      <select class="rq-input" style="width: 100px;" value={jobsHour} onchange={handleJobsHourChange}>
+                        <option value="0">00:00</option>
+                        <option value="1">01:00</option>
+                        <option value="2">02:00</option>
+                        <option value="3">03:00</option>
+                        <option value="4">04:00</option>
+                        <option value="5">05:00</option>
+                        <option value="6">06:00</option>
+                      </select>
+                      <template lwc:if={isJobScheduled}>
+                        <button class="rq-btn rq-quiet rq-sm" onclick={handleUnscheduleJobs} disabled={loadingJobs}>
+                          Stop schedule
+                        </button>
+                      </template>
+                      <template lwc:else>
+                        <button class="rq-btn rq-primary rq-sm" onclick={handleScheduleJobs} disabled={loadingJobs}>
+                          Schedule
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+
+                <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Job Steps Included</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                  <label class="rq-switch">
+                    <input type="checkbox" checked={draft.jobs.autoRunBilling} data-path="jobs.autoRunBilling" onchange={handleJobToggle} />
+                    <span class="rq-track"></span>
+                    <span><strong>Auto-run billing</strong><small class="rq-hint" style="display: block;">Raise invoices for due billing schedules</small></span>
+                  </label>
+                  <label class="rq-switch">
+                    <input type="checkbox" checked={draft.jobs.autoRecognize} data-path="jobs.autoRecognize" onchange={handleJobToggle} />
+                    <span class="rq-track"></span>
+                    <span><strong>Auto-recognise revenue</strong><small class="rq-hint" style="display: block;">Recognise ratable and point-in-time periods that ended</small></span>
+                  </label>
+                  <label class="rq-switch">
+                    <input type="checkbox" checked={draft.jobs.autoRenew} data-path="jobs.autoRenew" onchange={handleJobToggle} />
+                    <span class="rq-track"></span>
+                    <span><strong>Auto-renew subscriptions</strong><small class="rq-hint" style="display: block;">Renew subscriptions on renewal date with uplift</small></span>
+                  </label>
+                  <label class="rq-switch">
+                    <input type="checkbox" checked={draft.jobs.expireQuotes} data-path="jobs.expireQuotes" onchange={handleJobToggle} />
+                    <span class="rq-track"></span>
+                    <span><strong>Expire past-date quotes</strong><small class="rq-hint" style="display: block;">Mark unsigned quotes past valid-until as expired</small></span>
+                  </label>
+                  <label class="rq-switch">
+                    <input type="checkbox" checked={draft.jobs.expireContracts} data-path="jobs.expireContracts" onchange={handleJobToggle} />
+                    <span class="rq-track"></span>
+                    <span><strong>Expire ended contracts</strong><small class="rq-hint" style="display: block;">Mark contracts past end date as expired</small></span>
+                  </label>
+                  <label class="rq-switch">
+                    <input type="checkbox" checked={draft.jobs.fxAutoFetch} data-path="jobs.fxAutoFetch" onchange={handleJobToggle} />
+                    <span class="rq-track"></span>
+                    <span><strong>Auto-fetch exchange rates</strong><small class="rq-hint" style="display: block;">Fetch latest currency rates from Frankfurter API</small></span>
+                  </label>
+                </div>
+
+                <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Recent Execution Log</h3>
+                <template lwc:if={hasJobResults}>
+                  <ul class="rq-items">
+                    <template for:each={jobResults} for:item="res">
+                      <li key={res} style="padding: 8px 12px; background: var(--rq-surface-subtle, #f8fafc); border-radius: 6px; margin-bottom: 6px; font-size: 12px; font-family: monospace;">
+                        {res}
+                      </li>
+                    </template>
+                  </ul>
+                </template>
+                <template lwc:else>
+                  <p class="rq-sub rq-nothing">No job executions recorded yet.</p>
+                </template>
+              </div>
+            </template>
+
+            <!-- Email Templates -->
+            <template lwc:if={is.emails}>
+              <div class="rq-emails">
+                <div class="rq-card-head" style="margin-bottom: 16px;">
+                  <div>
+                    <h2>Email Templates & Senders</h2>
+                    <p class="rq-sub">Customer-facing notification emails and merge tags.</p>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                  <div class="rq-field">
+                    <label>From name</label>
+                    <input class="rq-input" type="text" data-field="fromName" value={draft.emails.fromName} oninput={handleEmailSenderField} placeholder="RevX Billing" />
+                  </div>
+                  <div class="rq-field">
+                    <label>Reply-to address</label>
+                    <input class="rq-input" type="email" data-field="replyTo" value={draft.emails.replyTo} oninput={handleEmailSenderField} placeholder="billing@example.com" />
+                  </div>
+                  <div class="rq-field">
+                    <label>CC addresses</label>
+                    <input class="rq-input" type="text" data-field="cc" value={draft.emails.cc} oninput={handleEmailSenderField} placeholder="finance@example.com" />
+                  </div>
+                </div>
+
+                <div class="rq-card" style="padding: 12px 16px; margin-bottom: 24px; background: var(--rq-surface-subtle, #f8fafc); border-radius: 8px;">
+                  <strong style="font-size: 12px; text-transform: uppercase; color: var(--rq-muted, #64748b);">Available merge tags</strong>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; font-size: 12px; font-family: monospace;">
+                    <template for:each={mergeTags} for:item="tag">
+                      <span key={tag}>{tag}</span>
+                    </template>
+                  </div>
+                </div>
+
+                <div class="rq-templates-list">
+                  <template for:each={emailTemplates} for:item="tpl">
+                    <div key={tpl.key} class="rq-card" style="margin-bottom: 16px; padding: 16px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                          <strong style="font-size: 14px;">{tpl.label}</strong>
+                          <span class="rq-hint" style="margin-left: 8px;">({tpl.key})</span>
+                        </div>
+                        <label class="rq-switch">
+                          <input type="checkbox" checked={tpl.enabled} data-key={tpl.key} data-field="enabled" onchange={handleTemplateField} />
+                          <span class="rq-track"></span>
+                          Send automatically
+                        </label>
+                      </div>
+                      <div class="rq-field" style="margin-bottom: 10px;">
+                        <label>Subject line</label>
+                        <input class="rq-input" type="text" data-key={tpl.key} data-field="subject" value={tpl.subject} oninput={handleTemplateField} />
+                      </div>
+                      <div class="rq-field">
+                        <label>Email body</label>
+                        <textarea class="rq-input" rows="3" data-key={tpl.key} data-field="body" value={tpl.body} oninput={handleTemplateField}></textarea>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+
+            <!-- Automation Rules -->
+            <template lwc:if={is.automation}>
+              <div class="rq-automation">
+                <div class="rq-card-head" style="margin-bottom: 16px;">
+                  <div>
+                    <h2>Automation Rules</h2>
+                    <p class="rq-sub">Triggers that run tasks, update fields, invoke webhooks or send alerts when revenue events fire.</p>
+                  </div>
+                  <div>
+                    <button class="rq-btn rq-primary rq-sm" onclick={openNewAutomationRule}>
+                      + Add rule
+                    </button>
+                  </div>
+                </div>
+
+                <template lwc:if={hasAutomationRules}>
+                  <div class="rq-tw">
+                    <table class="rq-stack">
+                      <thead>
+                        <tr>
+                          <th>Rule name</th>
+                          <th>Trigger event</th>
+                          <th>Action</th>
+                          <th>Status</th>
+                          <th class="rq-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template for:each={automationRules} for:item="rule">
+                          <tr key={rule.key}>
+                            <td><strong>{rule.name}</strong></td>
+                            <td><span class="rq-pill rq-tone-accent">{rule.event}</span></td>
+                            <td>{rule.actionSummary}</td>
+                            <td>
+                              <button class={rule.pillClass} data-index={rule.index} onclick={toggleAutomationRule}>
+                                {rule.activeLabel}
+                              </button>
+                            </td>
+                            <td class="rq-right">
+                              <button class="rq-btn rq-quiet rq-sm" data-index={rule.index} onclick={editAutomationRule} style="margin-right: 6px;">
+                                Edit
+                              </button>
+                              <button class="rq-btn rq-quiet rq-sm" data-index={rule.index} onclick={deleteAutomationRule}>
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </template>
+                <template lwc:else>
+                  <p class="rq-sub rq-nothing">No automation rules configured yet. Click "+ Add rule" to create your first trigger.</p>
+                </template>
+              </div>
+            </template>
+
+            <!-- Product & CPQ Rules -->
+            <template lwc:if={is.productRules}>
+              <div class="rq-product-rules">
+                <div class="rq-card-head" style="margin-bottom: 16px;">
+                  <div>
+                    <h2>Product & CPQ Rules</h2>
+                    <p class="rq-sub">Validation constraints, automated product additions, bundle dependencies, and warnings.</p>
+                  </div>
+                  <div>
+                    <button class="rq-btn rq-primary rq-sm" onclick={openNewProductRule}>
+                      + Add product rule
+                    </button>
+                  </div>
+                </div>
+
+                <template lwc:if={hasProductRules}>
+                  <div class="rq-tw">
+                    <table class="rq-stack">
+                      <thead>
+                        <tr>
+                          <th>Rule name</th>
+                          <th>Kind</th>
+                          <th>Message to rep</th>
+                          <th>Status</th>
+                          <th class="rq-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template for:each={productRulesList} for:item="rule">
+                          <tr key={rule.key}>
+                            <td><strong>{rule.name}</strong></td>
+                            <td><span class={rule.kindClass}>{rule.kindLabel}</span></td>
+                            <td>{rule.message}</td>
+                            <td>
+                              <button class={rule.pillClass} data-index={rule.index} onclick={toggleProductRule}>
+                                {rule.activeLabel}
+                              </button>
+                            </td>
+                            <td class="rq-right">
+                              <button class="rq-btn rq-quiet rq-sm" data-index={rule.index} onclick={editProductRule} style="margin-right: 6px;">
+                                Edit
+                              </button>
+                              <button class="rq-btn rq-quiet rq-sm" data-index={rule.index} onclick={deleteProductRule}>
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </template>
+                <template lwc:else>
+                  <p class="rq-sub rq-nothing">No product rules created yet. Configure validation or product selection rules here.</p>
+                </template>
+              </div>
+            </template>
+
+            <!-- AI & Intelligence Configuration -->
+            <template lwc:if={is.ai}>
+              <div class="rq-ai-setup">
+                <div class="rq-card-head" style="margin-bottom: 16px;">
+                  <div>
+                    <h2>AI &amp; Revenue Intelligence</h2>
+                    <p class="rq-sub">
+                      Configure AI providers, models, API keys, and predictive features for deal optimization.
+                    </p>
+                  </div>
+                  <div>
+                    <button
+                      class="rq-btn rq-quiet rq-sm"
+                      onclick={testAiConnectionClick}
+                      disabled={testingAi}
+                    >
+                      {testAiButtonLabel}
+                    </button>
+                  </div>
+                </div>
+
+                <template lwc:if={aiTestResult}>
+                  <div class={aiTestBannerClass} style="margin-bottom: 16px; padding: 8px 12px; border-radius: 6px;">
+                    <span>{aiTestResult.message}</span>
+                  </div>
+                </template>
+
+                <div class="rq-form">
+                  <div class="rq-field">
+                    <label>AI Provider</label>
+                    <select
+                      class="rq-input"
+                      value={aiForm.provider}
+                      onchange={handleAiProviderChange}
+                    >
+                      <option value="local">Built-in Local Heuristic AI Engine (No external API key needed)</option>
+                      <option value="openai">OpenAI (GPT-4o, GPT-4o-mini)</option>
+                      <option value="gemini">Google Gemini (Gemini 1.5 Flash, Pro)</option>
+                    </select>
+                    <p class="rq-hint">
+                      The local heuristic engine runs 100% inside Salesforce with zero external API calls or costs.
+                    </p>
+                  </div>
+
+                  <template lwc:if={isExternalAi}>
+                    <div class="rq-field">
+                      <label>Model Name</label>
+                      <input
+                        class="rq-input"
+                        type="text"
+                        value={aiForm.model}
+                        oninput={handleAiModelChange}
+                        placeholder="e.g. gpt-4o-mini or gemini-1.5-flash"
+                      />
+                    </div>
+
+                    <div class="rq-field">
+                      <label>API Key</label>
+                      <div class="rq-key-input-row" style="display: flex; gap: 8px;">
+                        <input
+                          class="rq-input"
+                          type="password"
+                          value={aiForm.apiKey}
+                          oninput={handleAiKeyChange}
+                          placeholder={aiKeyPlaceholder}
+                        />
+                        <button
+                          class="rq-btn rq-quiet rq-sm"
+                          onclick={saveAiSecretKey}
+                          disabled={savingAiKey}
+                        >
+                          Save key
+                        </button>
+                      </div>
+                      <p class="rq-hint">
+                        {aiKeyStatusText}
+                      </p>
+                    </div>
+                  </template>
+
+                  <div style="margin-top: 18px; border-top: 1px solid var(--rq-border); padding-top: 16px;">
+                    <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: var(--rq-text);">
+                      Active AI Capabilities
+                    </h3>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                      <label class="rq-switch">
+                        <input
+                          type="checkbox"
+                          checked={aiForm.enableDealAdvisor}
+                          data-feat="enableDealAdvisor"
+                          onchange={handleAiFeatureToggle}
+                        />
+                        <span class="rq-track"></span>
+                        Quote Deal Advisor &amp; Win Scoring (Shows AI button on Quote 360)
+                      </label>
+
+                      <label class="rq-switch">
+                        <input
+                          type="checkbox"
+                          checked={aiForm.enableProposalGenerator}
+                          data-feat="enableProposalGenerator"
+                          onchange={handleAiFeatureToggle}
+                        />
+                        <span class="rq-track"></span>
+                        Executive Proposal &amp; Client Pitch Generator
+                      </label>
+
+                      <label class="rq-switch">
+                        <input
+                          type="checkbox"
+                          checked={aiForm.enableRiskScanner}
+                          data-feat="enableRiskScanner"
+                          onchange={handleAiFeatureToggle}
+                        />
+                        <span class="rq-track"></span>
+                        Contract &amp; Discount Governance Risk Scanner
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Demo data -->
+            <template lwc:if={is.data}>
+              <div class="rq-data">
+                <p>
+                  Adds example products, accounts, contacts, quotes, invoices,
+                  payments and subscriptions, so every screen has something to
+                  show. They are saved as ordinary Salesforce records, the same
+                  as the ones you create.
+                </p>
+                <template lwc:if={demoLoaded}>
+                  <p class="rq-verdict rq-tone-good">
+                    The demo records are in this org. {demoNote}
+                  </p>
+                </template>
+                <template lwc:elseif={demoChecked}>
+                  <div>
+                    <button
+                      class="rq-btn rq-primary"
+                      disabled={demoDisabled}
+                      onclick={handleLoadDemo}
+                    >
+                      {demoLabel}
+                    </button>
+                  </div>
+                </template>
+                <template lwc:if={demoError}>
+                  <span class="rq-error" role="alert">{demoError}</span>
+                </template>
+                <p class="rq-fine">
+                  Loading is safe to repeat: RevX checks whether the records
+                  are already there. There is no button to take them out again,
+                  so load them in an org you are trying RevX in.
+                </p>
+              </div>
+            </template>
+
+            <!-- Version history -->
+            <template lwc:if={is.history}>
+              <template lwc:if={hasVersions}>
+                <ul class="rq-items">
+                  <template for:each={versionPaging.rows} for:item="version">
+                    <li key={version.id} class="rq-item">
+                      <span>
+                        {version.title}
+                        <small>{version.detail}</small>
+                        <small>{version.note}</small>
+                      </span>
+                      <span class="rq-item-acts">
+                        <template lwc:if={version.live}>
+                          <span class="rq-pill rq-tone-good rq-live">Live</span>
+                        </template>
+                        <template lwc:elseif={canPublish}>
+                          <button
+                            class="rq-btn rq-quiet rq-sm"
+                            data-id={version.id}
+                            data-version={version.version}
+                            onclick={handleRestore}
+                          >
+                            Restore
+                          </button>
+                        </template>
+                      </span>
+                    </li>
+                  </template>
+                </ul>
+                <c-revquila-pager
+                  compact
+                  total={versionPaging.total}
+                  page={versionPaging.page}
+                  page-size={versionsPerPage}
+                  noun="version"
+                  onpagechange={handleVersionPage}
+                ></c-revquila-pager>
+                <p class="rq-fine">
+                  Restoring loads that version as a draft. Nothing changes until
+                  you publish it, and publishing adds a new version rather than
+                  rewriting an old one.
+                </p>
+              </template>
+              <template lwc:else>
+                <p class="rq-sub rq-nothing">
+                  Nothing has been published yet. RevX is running on its
+                  defaults.
+                </p>
+              </template>
+            </template>
+          </section>
+
+          <template lwc:if={hasAside}>
+            <aside class="rq-card rq-aside">
+              <!-- Branding: how the accent looks -->
+              <template lwc:if={is.brand}>
+                <h2>How it looks</h2>
+                <p class="rq-sub">The same pieces the rest of the app uses</p>
+                <div class="rq-demo">
+                  <div class="rq-demo-row">
+                    <button class="rq-btn rq-primary">Mark as sent</button>
+                    <button class="rq-btn rq-quiet">Clone</button>
+                  </div>
+                  <div class="rq-demo-row">
+                    <span class="rq-pill rq-tone-acc">Approved</span>
+                    <span class="rq-pill rq-tone-warn rq-live"
+                      >Pending approval</span
+                    >
+                    <span class="rq-pill rq-tone-good">Paid</span>
+                  </div>
+                  <div class="rq-demo-tile">
+                    <span class="rq-stat-label">MRR</span>
+                    <span class="rq-stat-value">{demoMoney}</span>
+                    <div class="rq-meter rq-demo-meter"><span></span></div>
+                  </div>
+                  <div class="rq-chips">
+                    <span class="rq-chip rq-on">All <b>8</b></span>
+                    <span class="rq-chip">Draft <b>2</b></span>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Documents: the page itself -->
+              <template lwc:if={is.pdf}>
+                <div class="rq-card-head">
+                  <h2>Live preview</h2>
+                  <div class="rq-seg" role="group" aria-label="Document type">
+                    <template for:each={sampleKinds} for:item="kind">
+                      <button
+                        key={kind.key}
+                        class={kind.kindClass}
+                        aria-pressed={kind.pressed}
+                        data-key={kind.key}
+                        onclick={handleSampleKind}
+                      >
+                        {kind.label}
+                      </button>
+                    </template>
+                  </div>
+                </div>
+                <c-revquila-document-preview
+                  document={sampleDocument}
+                  config={draft}
+                ></c-revquila-document-preview>
+                <span class="rq-hint">{sampleNote}</span>
+                <div class="rq-aside-foot">
+                  <button
+                    class="rq-btn rq-quiet rq-sm"
+                    disabled={creatingPdf}
+                    onclick={handleSamplePdf}
+                  >
+                    {samplePdfLabel}
+                  </button>
+                  <template lwc:if={pdfUrl}>
+                    <a href={pdfUrl} target="_blank" rel="noopener">
+                      Open the sample again
+                    </a>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Tax: try it -->
+              <template lwc:if={is.tax}>
+                <h2>Try it</h2>
+                <p class="rq-sub">The tax on a sale, with the settings here</p>
+                <div class="rq-form rq-try">
+                  <label class="rq-wrap">
+                    <span class="rq-label">Amount</span>
+                    <input
+                      class="rq-input"
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={calcAmount}
+                      oninput={handleCalcAmount}
+                    />
+                  </label>
+                  <template lwc:if={hasCalcRegions}>
+                    <label class="rq-wrap">
+                      <span class="rq-label">Customer is in</span>
+                      <select class="rq-input" onchange={handleCalcRegion}>
+                        <template for:each={calcRegions} for:item="region">
+                          <option
+                            key={region.name}
+                            value={region.name}
+                            selected={region.selected}
+                          >
+                            {region.name}
+                          </option>
+                        </template>
+                      </select>
+                    </label>
+                  </template>
+                  <template lwc:if={calculation}>
+                    <dl class="rq-totals rq-result">
+                      <template for:each={calculation} for:item="row">
+                        <div key={row.label} class={row.rowClass}>
+                          <dt>{row.label}</dt>
+                          <dd>{row.value}</dd>
+                        </div>
+                      </template>
+                    </dl>
+                    <dl class="rq-kv">
+                      <template for:each={moneySamples} for:item="row">
+                        <div key={row.label} class="rq-kv-row">
+                          <dt>{row.label}</dt>
+                          <dd>{row.value}</dd>
+                        </div>
+                      </template>
+                    </dl>
+                  </template>
+                  <template lwc:else>
+                    <p class="rq-verdict rq-tone-bad">
+                      The browser does not know that number format. Use a locale
+                      code such as en-IN or en-US.
+                    </p>
+                  </template>
+                </div>
+                <p class="rq-verdict rq-tone-warn">
+                  Presets are starting points, not tax advice. Rates change, and
+                  reduced rates, exemptions and local surcharges are not
+                  included. Confirm the settings with your tax adviser before
+                  you invoice.
+                </p>
+              </template>
+
+              <!-- Pricing: who it would catch -->
+              <template lwc:if={is.pricing}>
+                <h2>With this policy</h2>
+                <p class="rq-sub">{policyImpact.headline}</p>
+                <template lwc:if={policyImpact.hasRows}>
+                  <ul class="rq-items">
+                    <template for:each={policyImpact.rows} for:item="row">
+                      <li key={row.id} class="rq-item">
+                        <span>
+                          {row.account}
+                          <small>{row.number}</small>
+                        </span>
+                        <span class="rq-pill rq-tone-warn">{row.why}</span>
+                      </li>
+                    </template>
+                  </ul>
+                </template>
+                <template lwc:if={policyImpact.allInside}>
+                  <p class="rq-verdict rq-tone-good">
+                    Every open quote is inside the policy.
+                  </p>
+                </template>
+              </template>
+
+              <!-- Billing: an example -->
+              <template lwc:if={is.billing}>
+                <h2>An invoice raised today</h2>
+                <p class="rq-sub">With the settings here</p>
+                <dl class="rq-kv">
+                  <template for:each={billingExample} for:item="row">
+                    <div key={row.label} class="rq-kv-row">
+                      <dt>{row.label}</dt>
+                      <dd>{row.value}</dd>
+                    </div>
+                  </template>
+                </dl>
+              </template>
+            </aside>
+          </template>
+        </div>
+      </div>
+
+      <template lwc:if={showSaveBar}>
+        <div class="rq-savebar" role="status">
+          <span>
+            <strong>{changeCount}</strong>
+            <small>Nothing changes for anyone until you publish.</small>
+          </span>
+          <div class="rq-actions-end">
+            <button class="rq-btn rq-quiet" onclick={handleDiscard}>
+              Discard
+            </button>
+            <button class="rq-btn rq-primary" onclick={openReview}>
+              Review and publish
+            </button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <template lwc:if={reviewing}>
+    <c-revquila-modal
+      heading="Publish these changes?"
+      subheading="Everyone sees them straight away. The version that is live now stays in the history."
+      onclose={closeReview}
+      lwc:ref="reviewModal"
+    >
+      <div class="rq-form">
+        <template lwc:if={hasProblems}>
+          <div class="rq-verdict rq-tone-bad rq-problems">
+            <strong>Fix these before publishing</strong>
+            <ul>
+              <template for:each={problems} for:item="problem">
+                <li key={problem.message}>{problem.message}</li>
+              </template>
+            </ul>
+          </div>
+        </template>
+
+        <ul class="rq-changes">
+          <template for:each={changes} for:item="change">
+            <li key={change.path}>
+              <strong>{change.label}</strong>
+              <span><s>{change.from}</s> <b>{change.to}</b></span>
+            </li>
+          </template>
+        </ul>
+
+        <div class="rq-field">
+          <label for="note">Note for the history (optional)</label>
+          <input
+            id="note"
+            class="rq-input"
+            type="text"
+            autocomplete="off"
+            maxlength="255"
+            placeholder="e.g. New discount limit agreed with finance"
+            data-autofocus="true"
+            oninput={handleNote}
+          />
+        </div>
+        <template lwc:if={publishError}>
+          <span class="rq-error" role="alert">{publishError}</span>
+        </template>
+      </div>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelReview}>Cancel</button>
+        <button
+          class="rq-btn rq-primary"
+          disabled={publishDisabled}
+          onclick={handlePublish}
+        >
+          {publishLabel}
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <!-- Automation Rule Modal -->
+  <template lwc:if={showAutomationModal}>
+    <c-revquila-modal
+      title="Automation Rule"
+      onclose={closeAutomationModal}
+    >
+      <div class="rq-form">
+        <div class="rq-field">
+          <label>Rule name</label>
+          <input
+            class="rq-input"
+            type="text"
+            data-field="name"
+            value={automationForm.name}
+            oninput={handleAutomationField}
+            placeholder="e.g. Notify account owner on payment"
+          />
+        </div>
+        <div class="rq-field">
+          <label>Trigger event</label>
+          <select
+            class="rq-input"
+            data-field="event"
+            value={automationForm.event}
+            onchange={handleAutomationField}
+          >
+            <option value="quote.created">When a quote is created</option>
+            <option value="quote.sent">When a quote is sent</option>
+            <option value="quote.signed">When a quote is signed</option>
+            <option value="order.activated">When an order is activated</option>
+            <option value="invoice.raised">When an invoice is raised</option>
+            <option value="invoice.paid">When an invoice is paid</option>
+            <option value="payment.received">When payment is received</option>
+          </select>
+        </div>
+        <div class="rq-field">
+          <label>Action type</label>
+          <select
+            class="rq-input"
+            data-field="type"
+            value={automationForm.type}
+            onchange={handleAutomationField}
+          >
+            <option value="task">Create Salesforce Task</option>
+            <option value="field">Update Record Field</option>
+            <option value="webhook">Call HTTP Webhook</option>
+            <option value="slack">Post to Slack</option>
+            <option value="email">Send Notification Email</option>
+          </select>
+        </div>
+        <div class="rq-field">
+          <label>Target / Field / URL</label>
+          <input
+            class="rq-input"
+            type="text"
+            data-field="target"
+            value={automationForm.target}
+            oninput={handleAutomationField}
+            placeholder="e.g. Account, Opportunity, or webhook URL"
+          />
+        </div>
+        <div class="rq-field">
+          <label>Message / Value</label>
+          <input
+            class="rq-input"
+            type="text"
+            data-field="message"
+            value={automationForm.message}
+            oninput={handleAutomationField}
+            placeholder="e.g. Deal closed: {{quote.total}} or task details"
+          />
+        </div>
+        <div style="margin-top: 12px;">
+          <label class="rq-switch">
+            <input
+              type="checkbox"
+              checked={automationForm.active}
+              data-field="active"
+              onchange={handleAutomationField}
+            />
+            <span class="rq-track"></span>
+            Rule is active
+          </label>
+        </div>
+      </div>
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={closeAutomationModal}>Cancel</button>
+        <button class="rq-btn rq-primary" onclick={saveAutomationRule}>Save rule</button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <!-- Product & CPQ Rule Modal -->
+  <template lwc:if={showProductRuleModal}>
+    <c-revquila-modal
+      title="Product & CPQ Rule"
+      onclose={closeProductRuleModal}
+    >
+      <div class="rq-form">
+        <div class="rq-field">
+          <label>Rule name</label>
+          <input
+            class="rq-input"
+            type="text"
+            data-field="name"
+            value={productRuleForm.name}
+            oninput={handleProductRuleField}
+            placeholder="e.g. Require Implementation for Enterprise"
+          />
+        </div>
+        <div class="rq-field">
+          <label>Rule kind</label>
+          <select
+            class="rq-input"
+            data-field="kind"
+            value={productRuleForm.kind}
+            onchange={handleProductRuleField}
+          >
+            <option value="validation">Validation (Block quote if violated)</option>
+            <option value="selection">Selection (Auto-add required product)</option>
+            <option value="alert">Alert (Show advisory warning)</option>
+          </select>
+        </div>
+        <div class="rq-field">
+          <label>Trigger product</label>
+          <select
+            class="rq-input"
+            data-field="productId"
+            value={productRuleForm.productId}
+            onchange={handleProductRuleField}
+          >
+            <template for:each={productOptions} for:item="opt">
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            </template>
+          </select>
+        </div>
+        <div class="rq-field">
+          <label>Product to automatically add (for selection rules)</label>
+          <select
+            class="rq-input"
+            data-field="addProductId"
+            value={productRuleForm.addProductId}
+            onchange={handleProductRuleField}
+          >
+            <template for:each={productOptions} for:item="opt">
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            </template>
+          </select>
+        </div>
+        <div class="rq-field">
+          <label>Message shown to sales reps</label>
+          <input
+            class="rq-input"
+            type="text"
+            data-field="message"
+            value={productRuleForm.message}
+            oninput={handleProductRuleField}
+            placeholder="e.g. Enterprise Edition requires 24/7 Support bundle"
+          />
+        </div>
+        <div style="margin-top: 12px;">
+          <label class="rq-switch">
+            <input
+              type="checkbox"
+              checked={productRuleForm.active}
+              data-field="active"
+              onchange={handleProductRuleField}
+            />
+            <span class="rq-track"></span>
+            Rule is active
+          </label>
+        </div>
+      </div>
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={closeProductRuleModal}>Cancel</button>
+        <button class="rq-btn rq-primary" onclick={saveProductRule}>Save rule</button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <!-- 360 Diagnostics Self-Test Telemetry Modal -->
+  <template lwc:if={show360DiagModal}>
+    <c-revquila-modal title="System 360 Health & Telemetry Self-Test" onclose={handleCloseDiagModal}>
+      <div class="rq-diag-modal-content">
+        <div class="rq-diag-modal-head">
+          <span class="rq-pill rq-tone-good rq-pill-lg">● 100% OPERATIONAL</span>
+          <small>Audited at: {diagnosticsReport.timestamp}</small>
+        </div>
+        <p class="rq-modal-sub">
+          The RevX 360 diagnostic engine successfully tested system execution limits, heap memory,
+          Apex transactions, SOQL governor limits, and data plane security across your Salesforce org.
+        </p>
+
+        <div class="rq-telemetry-grid">
+          <div class="rq-telemetry-tile">
+            <span class="rq-telemetry-label">Database Ping</span>
+            <strong class="rq-telemetry-val rq-text-good">{diagnosticsReport.databasePing}</strong>
+            <small>Low-latency native query</small>
+          </div>
+          <div class="rq-telemetry-tile">
+            <span class="rq-telemetry-label">SOQL Queries</span>
+            <strong class="rq-telemetry-val">{diagnosticsReport.soqlQueriesUsed}</strong>
+            <small>Within Governor limits</small>
+          </div>
+          <div class="rq-telemetry-tile">
+            <span class="rq-telemetry-label">Apex Heap Usage</span>
+            <strong class="rq-telemetry-val">{diagnosticsReport.apexHeapUsed}</strong>
+            <small>Bytes consumed</small>
+          </div>
+          <div class="rq-telemetry-tile">
+            <span class="rq-telemetry-label">DML Statements</span>
+            <strong class="rq-telemetry-val">{diagnosticsReport.dmlStatementsUsed}</strong>
+            <small>Transactional limit</small>
+          </div>
+          <div class="rq-telemetry-tile">
+            <span class="rq-telemetry-label">Platform Cache</span>
+            <strong class="rq-telemetry-val rq-text-good">{diagnosticsReport.platformCache}</strong>
+            <small>High-speed L1 cache</small>
+          </div>
+          <div class="rq-telemetry-tile">
+            <span class="rq-telemetry-label">FLS & User Mode</span>
+            <strong class="rq-telemetry-val rq-text-good">{diagnosticsReport.flsStatus}</strong>
+            <small>Shield & Object Security</small>
+          </div>
+        </div>
+      </div>
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-primary" onclick={handleCloseDiagModal}>Done</button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+</template>

@@ -1,0 +1,121 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <c-revquila-brand></c-revquila-brand>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Renewals</p>
+          <h1>The next 90 days, <em>before they surprise you</em>.</h1>
+        </div>
+        <div class="rq-chips" role="group" aria-label="Filter by risk">
+          <template for:each={chips} for:item="chip">
+            <button
+              key={chip.key}
+              class={chip.chipClass}
+              aria-pressed={chip.pressed}
+              data-key={chip.key}
+              onclick={handleRisk}
+            >
+              {chip.label} <b>{chip.count}</b>
+            </button>
+          </template>
+        </div>
+      </header>
+
+      <section class="rq-stats">
+        <template for:each={stats} for:item="stat">
+          <div key={stat.label} class={stat.cardClass}>
+            <span class="rq-stat-label">{stat.label}</span>
+            <span class="rq-stat-value">{stat.value}</span>
+            <span class="rq-stat-note">{stat.note}</span>
+          </div>
+        </template>
+      </section>
+
+      <template lwc:if={loading}>
+        <div class="rq-card rq-loading rq-rise rq-d6" role="status">
+          <span class="rq-spinner" aria-hidden="true"></span>
+          Loading…
+        </div>
+      </template>
+      <template lwc:if={loadError}>
+        <p class="rq-verdict rq-tone-bad rq-load-error" role="alert">
+          {loadError}
+        </p>
+      </template>
+
+      <section class="rq-board">
+        <template for:each={columns} for:item="column">
+          <div key={column.days} class={column.columnClass}>
+            <div class="rq-column-head">
+              <h2>{column.title}</h2>
+              <span>{column.total} · {column.countLabel}</span>
+            </div>
+
+            <template for:each={column.cards} for:item="card">
+              <article key={card.id} class="rq-card rq-lift rq-renewal">
+                <div class="rq-renewal-top">
+                  <div>
+                    <strong>{card.account}</strong>
+                    <small>{card.detail}</small>
+                  </div>
+                  <span class={card.daysClass}>{card.daysLabel}</span>
+                </div>
+                <div class="rq-renewal-money">
+                  <b>{card.arr}</b>
+                  <span>ARR · renews {card.date}</span>
+                </div>
+                <div class="rq-meter" style={card.meterStyle}>
+                  <span></span>
+                </div>
+                <p class="rq-products">{card.products}</p>
+                <p class={card.riskClass}><b>{card.risk}.</b> {card.reason}</p>
+                <div class="rq-renewal-acts">
+                  <button
+                    class="rq-btn rq-quiet rq-sm"
+                    data-id={card.id}
+                    onclick={openSubscription}
+                  >
+                    Open
+                  </button>
+                  <button
+                    class="rq-btn rq-primary rq-sm"
+                    data-id={card.id}
+                    onclick={handleRenew}
+                  >
+                    Create renewal quote
+                  </button>
+                </div>
+              </article>
+            </template>
+
+            <template lwc:if={column.empty}>
+              <p class="rq-none">Nothing in this window.</p>
+            </template>
+            <c-revquila-pager
+              compact
+              total={column.count}
+              page={column.page}
+              page-size={columnSize}
+              noun="renewal"
+              data-days={column.days}
+              onpagechange={handleColumnPage}
+            ></c-revquila-pager>
+          </div>
+        </template>
+      </section>
+    </div>
+  </div>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+</template>

@@ -1,0 +1,71 @@
+<template>
+  <div class="rq-fin-dossier">
+    <!-- Header -->
+    <div class="rq-fin-header">
+      <div class="rq-fin-badge">Financial 360</div>
+      <h2>{accountName} &mdash; Revenue Health</h2>
+      <p>Real-time consolidated financials across Invoices, Active Subscriptions, and Pipeline Quotes.</p>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="rq-kpi-row">
+      <div class="rq-kpi-card">
+        <span class="rq-kpi-lbl">Total Invoiced</span>
+        <span class="rq-kpi-num">${totalInvoicedFormatted}</span>
+      </div>
+      <div class="rq-kpi-card danger">
+        <span class="rq-kpi-lbl">Outstanding Balance</span>
+        <span class="rq-kpi-num">${totalOutstandingFormatted}</span>
+      </div>
+      <div class="rq-kpi-card success">
+        <span class="rq-kpi-lbl">Active MRR</span>
+        <span class="rq-kpi-num">${totalMrrFormatted}</span>
+      </div>
+      <div class="rq-kpi-card">
+        <span class="rq-kpi-lbl">Subscriptions</span>
+        <span class="rq-kpi-num">{activeSubsCount}</span>
+      </div>
+    </div>
+
+    <!-- Quick Tab Sections -->
+    <div class="rq-sections-grid">
+      <!-- Invoices List -->
+      <div class="rq-subpanel">
+        <div class="rq-subpanel-head">
+          <h3>Recent Invoices</h3>
+        </div>
+        <div class="rq-subpanel-body">
+          <template for:each={invoices} for:item="inv">
+            <div key={inv.Id} class="rq-list-row" data-id={inv.Id} onclick={handleNavigateRecord}>
+              <span class="rq-row-title">{inv.Name}</span>
+              <span class="rq-row-badge">{inv.Payment_Status__c}</span>
+              <span class="rq-row-amt">${inv.Total__c}</span>
+            </div>
+          </template>
+          <template lwc:if={noInvoices}>
+            <p class="rq-empty">No invoices found for this account.</p>
+          </template>
+        </div>
+      </div>
+
+      <!-- Subscriptions & Quotes List -->
+      <div class="rq-subpanel">
+        <div class="rq-subpanel-head">
+          <h3>Active Subscriptions</h3>
+        </div>
+        <div class="rq-subpanel-body">
+          <template for:each={subscriptions} for:item="sub">
+            <div key={sub.Id} class="rq-list-row" data-id={sub.Id} onclick={handleNavigateRecord}>
+              <span class="rq-row-title">{sub.Name}</span>
+              <span class="rq-row-badge sub">{sub.Status__c}</span>
+              <span class="rq-row-amt">${sub.Contract_MRR__c}/mo</span>
+            </div>
+          </template>
+          <template lwc:if={noSubscriptions}>
+            <p class="rq-empty">No subscriptions found.</p>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

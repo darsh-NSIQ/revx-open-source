@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Auto_Pay__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>On: the gateway charges the saved method when an invoice is raised.</description>
+    <label>Auto-Pay</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Checkbox</type>
+</CustomField>

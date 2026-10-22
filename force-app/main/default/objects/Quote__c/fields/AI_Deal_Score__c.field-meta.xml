@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AI_Deal_Score__c</fullName>
+    <description>AI-calculated holistic deal health score (0 to 100) based on margin, discount, terms, and win probability.</description>
+    <externalId>false</externalId>
+    <label>AI Deal Score</label>
+    <precision>3</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

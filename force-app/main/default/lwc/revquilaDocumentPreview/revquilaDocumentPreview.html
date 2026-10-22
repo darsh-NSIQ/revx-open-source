@@ -1,0 +1,138 @@
+<template>
+  <template lwc:if={model}>
+    <div class={paperClass} style={paperStyle}>
+      <div class="rq-sheet">
+        <template lwc:if={model.watermark}>
+          <div class="rq-watermark" aria-hidden="true">{model.watermark}</div>
+        </template>
+
+        <header class="rq-doc-head">
+          <div class="rq-doc-brand">
+            <template lwc:if={logo}>
+              <img src={logo} alt="" />
+            </template>
+            <div>
+              <strong class="rq-doc-company">{model.companyName}</strong>
+              <template for:each={model.companyLines} for:item="line">
+                <span key={line}>{line}</span>
+              </template>
+              <span>{model.companyRegistration}</span>
+            </div>
+          </div>
+          <div class="rq-doc-title">
+            <h3>{model.title}</h3>
+            <span>{model.documentNumber}</span>
+          </div>
+        </header>
+
+        <section class="rq-doc-parties">
+          <div class="rq-doc-to">
+            <h4>Bill to</h4>
+            <strong>{model.customerName}</strong>
+            <template for:each={model.customerLines} for:item="line">
+              <span key={line}>{line}</span>
+            </template>
+            <span>{model.customerRegistration}</span>
+          </div>
+          <dl class="rq-doc-meta">
+            <template for:each={model.meta} for:item="row">
+              <div key={row.label}>
+                <dt>{row.label}</dt>
+                <dd>{row.value}</dd>
+              </div>
+            </template>
+          </dl>
+        </section>
+
+        <table class="rq-doc-lines">
+          <thead>
+            <tr>
+              <th class="rq-doc-no">#</th>
+              <th>Description</th>
+              <th class="rq-doc-num">Qty</th>
+              <th class="rq-doc-num">{model.priceHeading}</th>
+              <template lwc:if={model.showDiscount}>
+                <th class="rq-doc-num">Disc.</th>
+              </template>
+              <th class="rq-doc-num">{model.amountHeading}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template for:each={model.rows} for:item="row">
+              <tr key={row.no}>
+                <td class="rq-doc-no">{row.no}</td>
+                <td>
+                  {row.name}
+                  <template lwc:if={model.showUnit}>
+                    <small>{row.unit}</small>
+                  </template>
+                </td>
+                <td class="rq-doc-num">{row.qty}</td>
+                <td class="rq-doc-num">{row.price}</td>
+                <template lwc:if={model.showDiscount}>
+                  <td class="rq-doc-num">{row.discount}</td>
+                </template>
+                <td class="rq-doc-num">{row.amount}</td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+
+        <section class="rq-doc-sums">
+          <div class="rq-doc-notes">
+            <template lwc:if={hasNotes}>
+              <h4>Notes</h4>
+              <template for:each={model.notesLines} for:item="line">
+                <span key={line}>{line}</span>
+              </template>
+            </template>
+          </div>
+          <dl class="rq-doc-totals">
+            <template for:each={model.totals} for:item="row">
+              <div key={row.label}>
+                <dt>{row.label}</dt>
+                <dd>{row.value}</dd>
+              </div>
+            </template>
+            <div class="rq-doc-grand">
+              <dt>{model.totalLabel}</dt>
+              <dd>{model.totalValue}</dd>
+            </div>
+            <template for:each={model.settled} for:item="row">
+              <div key={row.label} class="rq-doc-settled">
+                <dt>{row.label}</dt>
+                <dd>{row.value}</dd>
+              </div>
+            </template>
+          </dl>
+        </section>
+
+        <section class="rq-doc-foot">
+          <div>
+            <template lwc:if={hasTerms}>
+              <h4>Terms</h4>
+              <template for:each={model.termsLines} for:item="line">
+                <span key={line}>{line}</span>
+              </template>
+            </template>
+            <template lwc:if={hasBank}>
+              <h4 class="rq-doc-gap">Bank details</h4>
+              <template for:each={model.bankLines} for:item="line">
+                <span key={line}>{line}</span>
+              </template>
+            </template>
+          </div>
+          <template lwc:if={model.signatory}>
+            <div class="rq-doc-sign">
+              <span>For {model.companyName}</span>
+              <i></i>
+              <strong>{model.signatory}</strong>
+            </div>
+          </template>
+        </section>
+
+        <footer class="rq-doc-footer">{model.footer}</footer>
+      </div>
+    </div>
+  </template>
+</template>

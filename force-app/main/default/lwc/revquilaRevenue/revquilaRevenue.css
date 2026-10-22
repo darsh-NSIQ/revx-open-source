@@ -1,0 +1,228 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+.rq-waterfall-grid {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  height: 180px;
+  padding: 16px 8px 8px;
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+.rq-wf-col {
+  flex: 1 1 0;
+  min-width: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.rq-wf-bars {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  height: 120px;
+  width: 100%;
+  justify-content: center;
+}
+
+.rq-wf-bar {
+  width: 14px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-height: 4px;
+}
+
+.rq-wf-bar.rq-sched {
+  background: var(--rq-border-strong, #cbd5e1);
+}
+
+.rq-wf-bar.rq-rec {
+  background: var(--rq-brand-acc, #0176d3);
+}
+
+.rq-wf-label {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--rq-muted, #64748b);
+  white-space: nowrap;
+}
+
+.rq-wf-amount {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+  color: var(--rq-text, #1e293b);
+}
+
+.rq-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--rq-muted, #64748b);
+  margin-top: 8px;
+}
+
+.rq-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.rq-legend-dot.rq-sched {
+  background: var(--rq-border-strong, #cbd5e1);
+}
+
+.rq-legend-dot.rq-rec {
+  background: var(--rq-brand-acc, #0176d3);
+}
+
+.rq-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--rq-muted, #64748b);
+}
+
+.rq-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@container rq-page (max-width: 768px) {
+  .rq-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rq-subnav {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 20px 0;
+  border-bottom: 1px solid var(--rq-border, #e2e8f0);
+  padding-bottom: 8px;
+}
+
+.rq-subnav-btn {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--rq-muted, #64748b);
+  transition: all 0.2s ease;
+}
+
+.rq-subnav-btn:hover {
+  background: var(--rq-bg-hover, rgba(0, 0, 0, 0.04));
+  color: var(--rq-text, #1e293b);
+}
+
+.rq-subnav-btn.rq-active {
+  background: var(--rq-brand-surface, #e0f2fe);
+  color: var(--rq-brand-acc, #0284c7);
+  font-weight: 600;
+}
+
+.rq-rf-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  background: var(--rq-surface-subtle, #f8fafc);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--rq-border, #e2e8f0);
+  margin-bottom: 24px;
+}
+
+.rq-rf-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.rq-rf-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--rq-muted, #64748b);
+  margin-bottom: 4px;
+}
+
+.rq-rf-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--rq-text, #1e293b);
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-rf-ending {
+  border-left: 2px solid var(--rq-brand-acc, #0284c7);
+  padding-left: 12px;
+}
+
+.rq-rf-ending .rq-rf-val {
+  color: var(--rq-brand-acc, #0284c7);
+  font-size: 20px;
+}
+
+.rq-badge-locked {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rq-badge-reopened {
+  background: #fef3c7;
+  color: #b45309;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rq-badge-open {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rq-sync-preview {
+  background: #1e293b;
+  color: #f1f5f9;
+  padding: 14px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-top: 12px;
+  border: 1px solid #334155;
+}

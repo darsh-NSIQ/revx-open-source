@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RevX_Account_Type__c</fullName>
+    <description>Standard RevX ledger account category.</description>
+    <label>RevX Account Type</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Accounts Receivable</fullName>
+                <default>true</default>
+                <label>Accounts Receivable</label>
+            </value>
+            <value>
+                <fullName>Deferred Revenue</fullName>
+                <default>false</default>
+                <label>Deferred Revenue</label>
+            </value>
+            <value>
+                <fullName>Sales Revenue</fullName>
+                <default>false</default>
+                <label>Sales Revenue</label>
+            </value>
+            <value>
+                <fullName>Tax Payable</fullName>
+                <default>false</default>
+                <label>Tax Payable / GST Output</label>
+            </value>
+            <value>
+                <fullName>Cash / Bank Clearing</fullName>
+                <default>false</default>
+                <label>Cash / Bank Clearing</label>
+            </value>
+            <value>
+                <fullName>Discounts Allowed</fullName>
+                <default>false</default>
+                <label>Discounts Allowed</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

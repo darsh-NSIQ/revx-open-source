@@ -1,0 +1,19 @@
+<template>
+  <ol class="rq-timeline">
+    <template for:each={items} for:item="event">
+      <li key={event.id} class={event.itemClass} style={event.rowStyle}>
+        <span class="rq-when">{event.when}</span>
+        <strong>{event.title}</strong>
+        <small>{event.detail}</small>
+      </li>
+    </template>
+  </ol>
+  <c-revquila-pager
+    compact
+    total={paging.total}
+    page={paging.page}
+    page-size={pageSize}
+    noun="event"
+    onpagechange={handlePage}
+  ></c-revquila-pager>
+</template>

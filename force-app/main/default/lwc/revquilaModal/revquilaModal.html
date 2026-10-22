@@ -1,0 +1,45 @@
+<template>
+  <div class={backdropClass} onkeydown={handleKeydown}>
+    <span
+      class="rq-guard"
+      tabindex="0"
+      data-edge="start"
+      onfocus={handleGuardFocus}
+    ></span>
+    <section
+      class={panelClass}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="heading"
+      tabindex="-1"
+      lwc:ref="panel"
+    >
+      <header class="rq-top">
+        <div class="rq-titles">
+          <h2 id="heading">{heading}</h2>
+          <template lwc:if={subheading}>
+            <p class="rq-sub">{subheading}</p>
+          </template>
+        </div>
+        <button
+          class="rq-x"
+          aria-label="Close"
+          onclick={close}
+          lwc:ref="closeButton"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18"></path>
+          </svg>
+        </button>
+      </header>
+      <div class="rq-body"><slot></slot></div>
+      <footer class="rq-bottom"><slot name="footer"></slot></footer>
+    </section>
+    <span
+      class="rq-guard"
+      tabindex="0"
+      data-edge="end"
+      onfocus={handleGuardFocus}
+    ></span>
+  </div>
+</template>

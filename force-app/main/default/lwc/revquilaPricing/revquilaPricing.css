@@ -1,0 +1,66 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+.rq-two {
+  flex: 1 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.rq-stack-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rq-act-col {
+  width: 1%;
+  padding-inline: 6px 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.rq-act-col .rq-btn + .rq-btn {
+  margin-left: 6px;
+}
+
+.rq-try {
+  margin-top: 12px;
+}
+
+.rq-result {
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--rq-bg);
+}
+
+.rq-result .rq-card-head b {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-result .rq-kv {
+  margin: 10px 0 0;
+}
+
+.rq-result .rq-sub {
+  margin-top: 8px;
+}
+
+.rq-sample {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rq-dialog-body {
+  margin: 0;
+}
+
+@container rq-page (max-width: 900px) {
+  .rq-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

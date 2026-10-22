@@ -1,0 +1,167 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <c-revquila-brand></c-revquila-brand>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Quotes</p>
+          <h1>Every quote, <em>from draft to paid</em>.</h1>
+        </div>
+        <div class="rq-actions">
+          <button class="rq-btn rq-quiet" onclick={openGuidedSelling} title="Launch interactive CPQ & Rep onboarding co-pilot">
+            ⚡ Guided Selling
+          </button>
+          <button class="rq-btn rq-primary" onclick={openQuickQuote}>
+            + New Quick Quote
+          </button>
+        </div>
+      </header>
+
+      <section class="rq-card rq-toolbar rq-rise rq-d2" lwc:ref="toolbar">
+        <div class="rq-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M16.5 16.5L21 21"></path>
+          </svg>
+          <input
+            class="rq-input"
+            type="search"
+            placeholder="Search account, quote number, owner"
+            aria-label="Search quotes"
+            value={search}
+            oninput={handleSearch}
+          />
+        </div>
+        <div class="rq-chips" role="group" aria-label="Filter by status">
+          <template for:each={chips} for:item="chip">
+            <button
+              key={chip.key}
+              class={chip.chipClass}
+              aria-pressed={chip.pressed}
+              data-key={chip.key}
+              onclick={handleFilter}
+            >
+              {chip.label} <b>{chip.count}</b>
+            </button>
+          </template>
+        </div>
+      </section>
+
+      <section class="rq-card rq-stretch rq-rise rq-d3">
+        <div class="rq-card-head">
+          <h2>{summary}</h2>
+          <p class="rq-sub">{amountNote}</p>
+        </div>
+        <template lwc:if={hasQuotes}>
+          <div class="rq-tw">
+            <table class="rq-stack">
+              <thead>
+                <tr>
+                  <th>Quote</th>
+                  <th>Account</th>
+                  <th class="rq-hide-md">Owner</th>
+                  <th class="rq-right">Amount</th>
+                  <th>Status</th>
+                  <th class="rq-hide-md">Valid until</th>
+                  <th class="rq-chev-col"><span class="rq-sr">Open</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={paging.rows} for:item="quote">
+                  <tr
+                    key={quote.id}
+                    class="rq-go rq-rise"
+                    style={quote.rowStyle}
+                    data-id={quote.id}
+                    onclick={openQuote}
+                  >
+                    <td class="rq-cell-meta">
+                      <button class="rq-link">{quote.number}</button>
+                      <small>{quote.versionLabel} · {quote.updated}</small>
+                    </td>
+                    <td class="rq-cell-title">
+                      <span class="rq-strong">{quote.account}</span>
+                      <small>{quote.opportunity}</small>
+                    </td>
+                    <td class="rq-hide-md rq-cell-extra">{quote.owner}</td>
+                    <td class="rq-right rq-amount rq-cell-value">
+                      {quote.amountLabel}
+                    </td>
+                    <td class="rq-cell-state">
+                      <span class={quote.pillClass}>{quote.statusLabel}</span>
+                    </td>
+                    <td class="rq-hide-md rq-cell-extra">{quote.validUntil}</td>
+                    <td class="rq-chev-col rq-cell-extra">
+                      <svg
+                        class="rq-chev"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 6l6 6-6 6"></path>
+                      </svg>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <c-revquila-pager
+            total={paging.total}
+            page={paging.page}
+            page-size={pageSize}
+            noun="quote"
+            onpagechange={handlePage}
+            onsizechange={handlePageSize}
+          ></c-revquila-pager>
+        </template>
+        <template lwc:if={loading}>
+          <div class="rq-loading" role="status">
+            <span class="rq-spinner" aria-hidden="true"></span>
+            Loading…
+          </div>
+        </template>
+        <template lwc:if={loadError}>
+          <p class="rq-verdict rq-tone-bad" role="alert">{loadError}</p>
+        </template>
+        <template lwc:if={isEmpty}>
+          <div class="rq-empty">
+            <h2>No quotes yet</h2>
+            <p class="rq-sub">
+              Create the first one: pick an account, add products, done.
+            </p>
+            <button class="rq-btn rq-primary" onclick={openQuickQuote}>
+              + New Quick Quote
+            </button>
+          </div>
+        </template>
+        <template lwc:if={noMatch}>
+          <div class="rq-empty">
+            <h2>No quotes match</h2>
+            <p class="rq-sub">Try a different status, or clear the search.</p>
+            <button class="rq-btn rq-quiet" onclick={clearFilters}>
+              Show all quotes
+            </button>
+          </div>
+        </template>
+      </section>
+    </div>
+  </div>
+
+  <template lwc:if={showQuickQuote}>
+    <c-revquila-quick-quote
+      onclose={closeQuickQuote}
+      oncreated={handleQuoteCreated}
+    ></c-revquila-quick-quote>
+  </template>
+
+  <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+</template>

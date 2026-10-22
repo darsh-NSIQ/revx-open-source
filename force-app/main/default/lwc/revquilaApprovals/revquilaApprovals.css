@@ -1,0 +1,148 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+/* ---------- the queue: cards as wide as fit, always filling the row ---------- */
+.rq-queue {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.rq-approval {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rq-approval.rq-decided {
+  background: color-mix(in srgb, var(--rq-card) 70%, transparent);
+}
+
+.rq-approval-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.rq-tick {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  accent-color: var(--rq-acc);
+  cursor: pointer;
+}
+
+.rq-approval-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rq-approval-title strong {
+  display: block;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-approval-title small,
+.rq-products {
+  font-size: 12.5px;
+  color: var(--rq-mut);
+}
+
+.rq-products,
+.rq-cost,
+.rq-note {
+  margin: 0;
+}
+
+/* ---------- discount against the limit, on one scale ---------- */
+.rq-scale small {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rq-warn);
+}
+
+.rq-scale-track {
+  position: relative;
+  height: 8px;
+  border-radius: 8px;
+  background: var(--rq-line);
+}
+
+.rq-scale-fill {
+  display: block;
+  width: calc(100% * var(--rq-p));
+  height: 100%;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--rq-good), var(--rq-warn));
+  transform-origin: left;
+  animation: rq-grow 1s 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* the limit is a tick across the track */
+.rq-scale-limit {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: calc(100% * var(--rq-limit));
+  width: 2px;
+  border-radius: 2px;
+  background: var(--rq-fg);
+}
+
+.rq-cost {
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--rq-bg);
+}
+
+.rq-note {
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--rq-mut);
+  overflow-wrap: anywhere;
+}
+
+.rq-approval-acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.rq-btn.rq-reject {
+  color: var(--rq-mut);
+  box-shadow: inset 0 0 0 1px var(--rq-line);
+}
+
+.rq-btn.rq-reject:hover {
+  color: var(--rq-bad);
+  box-shadow: inset 0 0 0 1px var(--rq-bad);
+}
+
+.rq-btn.rq-approve {
+  color: var(--rq-good);
+  background: color-mix(in srgb, var(--rq-good) 14%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--rq-good) 40%, transparent);
+}
+
+.rq-btn.rq-approve:hover {
+  color: var(--rq-accfg);
+  background: var(--rq-good);
+  transform: translateY(-1px);
+}
+
+@container rq-page (max-width: 560px) {
+  .rq-approval-acts .rq-btn {
+    flex: 1 1 auto;
+  }
+}

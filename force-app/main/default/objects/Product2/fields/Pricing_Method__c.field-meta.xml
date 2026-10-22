@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pricing_Method__c</fullName>
+    <description>Unit price, tiered (the band&apos;s unit price for every unit), block (one flat price per band), a percent of the quote&apos;s other lines, or usage.</description>
+    <label>Pricing Method</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>unit</fullName>
+                <default>false</default>
+                <label>Unit</label>
+            </value>
+            <value>
+                <fullName>tiered</fullName>
+                <default>false</default>
+                <label>Tiered</label>
+            </value>
+            <value>
+                <fullName>block</fullName>
+                <default>false</default>
+                <label>Block</label>
+            </value>
+            <value>
+                <fullName>percent_of_total</fullName>
+                <default>false</default>
+                <label>Percent of total</label>
+            </value>
+            <value>
+                <fullName>usage</fullName>
+                <default>false</default>
+                <label>Usage</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

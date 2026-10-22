@@ -1,0 +1,272 @@
+<template>
+  <div class="rq-chatbot-root">
+    <!-- Chatbot Window (Slide-up & Scale-in animated) -->
+    <template lwc:if={isOpen}>
+      <section class="rq-chat-window" aria-label="RevX AI Copilot">
+        <!-- Header -->
+        <header class="rq-chat-header">
+          <div class="rq-header-brand">
+            <!-- Header Avatar Badge with Solid Vibrant Gradient -->
+            <div class="rq-header-avatar">
+              <svg viewBox="0 0 64 64" class="rq-copilot-svg" aria-hidden="true">
+                <path d="M 22 14 C 15.5 14, 10 19.5, 10 26 C 10 32.5, 15.5 38, 22 38 L 24 38 L 16 58 L 28 48 L 22 48 L 34 38 L 42 38 C 48.5 38, 54 32.5, 54 26 C 54 19.5, 48.5 14, 42 14 Z" fill="#FFFFFF"/>
+                <circle cx="24" cy="26" r="3.2" fill="#0176D3"/>
+                <circle cx="32" cy="26" r="3.2" fill="#0176D3"/>
+                <circle cx="40" cy="26" r="3.2" fill="#0176D3"/>
+                <path d="M 50 3 Q 50 11 58 11 Q 50 11 50 19 Q 50 11 42 11 Q 50 11 50 3 Z" fill="#00F5D4"/>
+                <circle cx="50" cy="11" r="1.5" fill="#FFFFFF"/>
+              </svg>
+            </div>
+            <div class="rq-header-text">
+              <div class="rq-header-title-row">
+                <span class="rq-header-title">RevX AI Copilot</span>
+                <span class="rq-ai-badge">Agentforce Ready</span>
+              </div>
+              <p class="rq-header-subtitle">Quote-to-Cash Intelligence</p>
+            </div>
+          </div>
+          <div class="rq-header-actions">
+            <!-- Command Bar (Cmd+K) Action -->
+            <button class="rq-icon-btn" title="Open Command Bar (Cmd+K)" onclick={handleOpenCommandBar} aria-label="Command Bar">
+              <svg viewBox="0 0 24 24" class="rq-btn-icon" aria-hidden="true">
+                <polyline points="4 17 10 11 4 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="12" y1="19" x2="20" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <!-- Clear Chat Action -->
+            <button class="rq-icon-btn" title="Reset Conversation" onclick={handleClearChat} aria-label="Reset chat">
+              <svg viewBox="0 0 24 24" class="rq-btn-icon" aria-hidden="true">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 3v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3 21v-5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <!-- Minimize Action -->
+            <button class="rq-icon-btn" title="Minimize" onclick={toggleChat} aria-label="Minimize chat">
+              <svg viewBox="0 0 24 24" class="rq-btn-icon" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <!-- Close Action -->
+            <button class="rq-icon-btn rq-icon-btn-close" title="Close" onclick={closeChat} aria-label="Close chat">
+              <svg viewBox="0 0 24 24" class="rq-btn-icon" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <!-- Context Bar if Record Linked -->
+        <template lwc:if={contextTitle}>
+          <div class="rq-context-bar">
+            <svg viewBox="0 0 24 24" class="rq-context-svg" aria-hidden="true">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Linked Record: <strong>{contextTitle}</strong></span>
+          </div>
+        </template>
+
+        <!-- Chat Message Body -->
+        <div class="rq-chat-body" lwc:ref="chatBody">
+          <!-- Initial Welcome Hero when no messages -->
+          <template lwc:if={isNewSession}>
+            <div class="rq-welcome-hero">
+              <!-- Welcome Hero Avatar with Solid Vibrant Gradient -->
+              <div class="rq-hero-avatar-wrap">
+                <svg viewBox="0 0 64 64" class="rq-copilot-svg" aria-hidden="true">
+                  <path d="M 22 14 C 15.5 14, 10 19.5, 10 26 C 10 32.5, 15.5 38, 22 38 L 24 38 L 16 58 L 28 48 L 22 48 L 34 38 L 42 38 C 48.5 38, 54 32.5, 54 26 C 54 19.5, 48.5 14, 42 14 Z" fill="#FFFFFF"/>
+                  <circle cx="24" cy="26" r="3.2" fill="#0176D3"/>
+                  <circle cx="32" cy="26" r="3.2" fill="#0176D3"/>
+                  <circle cx="40" cy="26" r="3.2" fill="#0176D3"/>
+                  <path d="M 50 3 Q 50 11 58 11 Q 50 11 50 19 Q 50 11 42 11 Q 50 11 50 3 Z" fill="#00F5D4"/>
+                  <circle cx="50" cy="11" r="1.5" fill="#FFFFFF"/>
+                </svg>
+              </div>
+              <h4 class="rq-hero-title">How can RevX accelerate your deal today?</h4>
+              <p class="rq-hero-desc">Ask about deal win margins, open invoices &amp; AR, India GST IRN compliance, or 90-day subscription renewals.</p>
+
+              <!-- Professional SaaS Action Cards (No Emojis) -->
+              <div class="rq-prompt-grid">
+                <template for:each={quickPrompts} for:item="item">
+                  <button
+                    key={item.id}
+                    class="rq-prompt-card"
+                    data-prompt={item.prompt}
+                    onclick={handlePromptClick}
+                  >
+                    <div class="rq-card-icon-box">
+                      <!-- Balance Icon -->
+                      <template lwc:if={item.isBalance}>
+                        <svg viewBox="0 0 24 24" class="rq-card-svg" aria-hidden="true">
+                          <rect width="20" height="14" x="2" y="5" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                          <line x1="2" x2="22" y1="10" y2="10" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                      </template>
+                      <!-- Deal Advisor Icon -->
+                      <template lwc:elseif={item.isDeal}>
+                        <svg viewBox="0 0 24 24" class="rq-card-svg" aria-hidden="true">
+                          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <polyline points="16 7 22 7 22 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </template>
+                      <!-- India GST Icon -->
+                      <template lwc:elseif={item.isGst}>
+                        <svg viewBox="0 0 24 24" class="rq-card-svg" aria-hidden="true">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <polyline points="14 2 14 8 20 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                          <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                      </template>
+                      <!-- Rules Icon -->
+                      <template lwc:elseif={item.isRules}>
+                        <svg viewBox="0 0 24 24" class="rq-card-svg" aria-hidden="true">
+                          <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                      </template>
+                    </div>
+                    <div class="rq-card-text">
+                      <span class="rq-card-label">{item.label}</span>
+                      <small class="rq-card-sub">{item.desc}</small>
+                    </div>
+                    <svg viewBox="0 0 24 24" class="rq-card-chev" aria-hidden="true">
+                      <polyline points="9 18 15 12 9 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </template>
+
+          <!-- Chat Messages List -->
+          <template for:each={messages} for:item="msg">
+            <div key={msg.id} class={msg.containerClass}>
+              <template lwc:if={msg.isAi}>
+                <div class="rq-msg-avatar">
+                  <svg viewBox="0 0 64 64" class="rq-copilot-svg" aria-hidden="true">
+                    <path d="M 22 14 C 15.5 14, 10 19.5, 10 26 C 10 32.5, 15.5 38, 22 38 L 24 38 L 16 58 L 28 48 L 22 48 L 34 38 L 42 38 C 48.5 38, 54 32.5, 54 26 C 54 19.5, 48.5 14, 42 14 Z" fill="#FFFFFF"/>
+                    <circle cx="24" cy="26" r="3.2" fill="#0176D3"/>
+                    <circle cx="32" cy="26" r="3.2" fill="#0176D3"/>
+                    <circle cx="40" cy="26" r="3.2" fill="#0176D3"/>
+                    <path d="M 50 3 Q 50 11 58 11 Q 50 11 50 19 Q 50 11 42 11 Q 50 11 50 3 Z" fill="#00F5D4"/>
+                    <circle cx="50" cy="11" r="1.5" fill="#FFFFFF"/>
+                  </svg>
+                </div>
+              </template>
+              <div class="rq-msg-content">
+                <div class={msg.bubbleClass}>
+                  <lightning-formatted-rich-text value={msg.formattedText}></lightning-formatted-rich-text>
+                </div>
+                <div class="rq-msg-time">{msg.time}</div>
+
+                <!-- Professional Follow-up action chips for AI responses -->
+                <template lwc:if={msg.hasActions}>
+                  <div class="rq-msg-chips">
+                    <template for:each={msg.suggestedActions} for:item="action">
+                      <button key={action} class="rq-chip-btn" data-prompt={action} onclick={handlePillClick}>
+                        <svg viewBox="0 0 24 24" class="rq-chip-svg" aria-hidden="true">
+                          <polyline points="9 18 15 12 9 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>{action}</span>
+                      </button>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+
+          <!-- Animated Typing Indicator (Bouncing 3 dots matching the icon) -->
+          <template lwc:if={isThinking}>
+            <div class="rq-msg-row rq-ai-row">
+              <div class="rq-msg-avatar">
+                <svg viewBox="0 0 64 64" class="rq-copilot-svg" aria-hidden="true">
+                  <path d="M 22 14 C 15.5 14, 10 19.5, 10 26 C 10 32.5, 15.5 38, 22 38 L 24 38 L 16 58 L 28 48 L 22 48 L 34 38 L 42 38 C 48.5 38, 54 32.5, 54 26 C 54 19.5, 48.5 14, 42 14 Z" fill="#FFFFFF"/>
+                  <circle cx="24" cy="26" r="3.2" fill="#0176D3"/>
+                  <circle cx="32" cy="26" r="3.2" fill="#0176D3"/>
+                  <circle cx="40" cy="26" r="3.2" fill="#0176D3"/>
+                  <path d="M 50 3 Q 50 11 58 11 Q 50 11 50 19 Q 50 11 42 11 Q 50 11 50 3 Z" fill="#00F5D4"/>
+                  <circle cx="50" cy="11" r="1.5" fill="#FFFFFF"/>
+                </svg>
+              </div>
+              <div class="rq-msg-content">
+                <div class="rq-typing-card" aria-label="RevX is processing">
+                  <span class="rq-typing-dot"></span>
+                  <span class="rq-typing-dot"></span>
+                  <span class="rq-typing-dot"></span>
+                </div>
+                <span class="rq-typing-caption">RevX is thinking…</span>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Footer Input Area -->
+        <footer class="rq-chat-footer">
+          <div class="rq-input-container">
+            <input
+              type="text"
+              class="rq-chat-input"
+              placeholder="Ask RevX Copilot anything… (deals, AR, GST, rules)"
+              value={inputText}
+              oninput={handleInputChange}
+              onkeydown={handleKeyDown}
+              disabled={isThinking}
+            />
+            <button
+              class={sendBtnClass}
+              onclick={handleSend}
+              disabled={sendDisabled}
+              title="Send message"
+              aria-label="Send message"
+            >
+              <svg viewBox="0 0 24 24" class="rq-send-svg" aria-hidden="true">
+                <line x1="22" y1="2" x2="11" y2="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+          <div class="rq-footer-bar">
+            <span class="rq-footer-brand">Powered by <strong>RevX Revenue Engine</strong></span>
+            <span class="rq-kbd-badge">Enter ↵</span>
+          </div>
+        </footer>
+      </section>
+    </template>
+
+    <!-- Sticky Floating Action Button (FAB) with Solid Vibrant Color & High Contrast -->
+    <button
+      class={launcherBtnClass}
+      onclick={toggleChat}
+      title="Open RevX AI Copilot"
+      aria-label="Open RevX AI Copilot"
+      aria-expanded={isOpen}
+    >
+      <div class="rq-fab-badge">
+        <svg viewBox="0 0 64 64" class="rq-copilot-svg" aria-hidden="true">
+          <!-- Crisp Opaque Pure White Speech Bubble with Sharp Lightning Tail -->
+          <path d="M 22 14 C 15.5 14, 10 19.5, 10 26 C 10 32.5, 15.5 38, 22 38 L 24 38 L 16 58 L 28 48 L 22 48 L 34 38 L 42 38 C 48.5 38, 54 32.5, 54 26 C 54 19.5, 48.5 14, 42 14 Z" fill="#FFFFFF"/>
+
+          <!-- 3 Blue Circular Dots inside Bubble -->
+          <circle cx="24" cy="26" r="3.2" fill="#0176D3"/>
+          <circle cx="32" cy="26" r="3.2" fill="#0176D3"/>
+          <circle cx="40" cy="26" r="3.2" fill="#0176D3"/>
+
+          <!-- 4-Point Sparkling Star in Top Right Shoulder -->
+          <path d="M 50 3 Q 50 11 58 11 Q 50 11 50 19 Q 50 11 42 11 Q 50 11 50 3 Z" fill="#00F5D4"/>
+          <circle cx="50" cy="11" r="1.5" fill="#FFFFFF"/>
+        </svg>
+      </div>
+
+      <!-- Online Status Dot -->
+      <span class="rq-status-dot" title="RevX AI Online"></span>
+    </button>
+
+    <!-- Global Command Bar (Cmd+K) Modal -->
+    <c-revquila-command-bar lwc:ref="cmdBar"></c-revquila-command-bar>
+  </div>
+</template>

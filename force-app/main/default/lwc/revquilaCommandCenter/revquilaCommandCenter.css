@@ -1,0 +1,774 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+
+/* ---------- KPI tiles ---------- */
+.rq-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.rq-kpi .rq-lab {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--rq-mut);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rq-kpi .rq-val {
+  margin: 8px 0 2px;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-kpi .rq-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+  color: var(--rq-mut);
+  font-size: 12px;
+}
+
+.rq-delta {
+  font-weight: 700;
+  color: var(--rq-good);
+}
+
+.rq-delta.rq-bad {
+  color: var(--rq-bad);
+}
+
+.rq-spark {
+  flex: none;
+  width: 96px;
+  height: 30px;
+}
+
+.rq-spark path {
+  fill: none;
+  stroke: var(--rq-acc);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: rq-draw 1.6s 0.4s ease-out forwards;
+}
+
+.rq-kpi.rq-bad .rq-spark path {
+  stroke: var(--rq-bad);
+}
+
+/* ---------- Autonomous AI Daily Revenue Briefing Card ---------- */
+.rq-briefing-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 249, 255, 0.75));
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(2, 132, 199, 0.22);
+  border-left: 5px solid #0284c7;
+  border-radius: 16px;
+  box-shadow:
+    0 4px 20px -2px rgba(2, 132, 199, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.rq-brief-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.18);
+  flex-shrink: 0;
+}
+
+.rq-badge-ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.1);
+}
+
+.rq-badge-pipeline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  box-shadow: 0 1px 3px rgba(34, 197, 94, 0.1);
+}
+
+.rq-badge-audit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #faf5ff, #f3e8ff);
+  color: #7e22ce;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 1px 3px rgba(168, 85, 247, 0.1);
+}
+
+.rq-briefing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.rq-brief-stat {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
+}
+
+.rq-brief-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08);
+}
+
+.rq-brief-stat-red {
+  border-top: 3.5px solid #ef4444;
+  background: linear-gradient(180deg, rgba(254, 242, 242, 0.6) 0%, rgba(255, 255, 255, 0.95) 30%);
+}
+
+.rq-brief-stat-amber {
+  border-top: 3.5px solid #f59e0b;
+  background: linear-gradient(180deg, rgba(254, 252, 232, 0.6) 0%, rgba(255, 255, 255, 0.95) 30%);
+}
+
+.rq-brief-stat-blue {
+  border-top: 3.5px solid #0284c7;
+  background: linear-gradient(180deg, rgba(240, 249, 255, 0.6) 0%, rgba(255, 255, 255, 0.95) 30%);
+}
+
+.rq-brief-stat-purple {
+  border-top: 3.5px solid #8b5cf6;
+  background: linear-gradient(180deg, rgba(250, 245, 255, 0.6) 0%, rgba(255, 255, 255, 0.95) 30%);
+}
+
+.rq-stat-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.rq-stat-val {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+
+.rq-val-red { color: #dc2626; }
+.rq-val-amber { color: #d97706; }
+.rq-val-blue { color: #0284c7; }
+.rq-val-purple { color: #7c3aed; }
+
+.rq-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.rq-dot-red {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+}
+
+.rq-dot-amber {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+.rq-dot-blue {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #0284c7;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(2, 132, 199, 0.4);
+}
+
+.rq-dot-purple {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(139, 92, 246, 0.4);
+}
+
+/* ---------- quote-to-cash flow ---------- */
+.rq-pipeline-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.92));
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+}
+
+.rq-flow {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  margin-top: 18px;
+  position: relative;
+}
+
+.rq-st {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 4px;
+  text-align: center;
+  cursor: pointer;
+  background: none;
+  border: none;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.rq-st:hover {
+  transform: translateY(-4px);
+}
+
+/* dashed link from the previous stage, stopping short of both circles */
+.rq-st::before {
+  content: "";
+  position: absolute;
+  top: 21px;
+  left: calc(-50% + 28px);
+  width: calc(100% - 56px);
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #38bdf8 0 8px,
+    transparent 8px 16px
+  );
+  opacity: 0.7;
+  animation: rq-march 0.8s linear infinite;
+}
+
+.rq-st:first-child::before {
+  display: none;
+}
+
+.rq-st .rq-num {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border: 2px solid #cbd5e1;
+  color: #1e293b;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.rq-st:hover .rq-num {
+  background: linear-gradient(135deg, #0176d3, #0284c7);
+  color: #ffffff;
+  border-color: #0176d3;
+  transform: scale(1.08);
+  box-shadow: 0 8px 18px -2px rgba(1, 118, 211, 0.4), 0 0 0 4px rgba(1, 118, 211, 0.15);
+}
+
+.rq-st.rq-hot .rq-num {
+  color: #ea580c;
+  border-color: #f97316;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.35), 0 4px 12px rgba(234, 88, 12, 0.2);
+}
+
+.rq-st .rq-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.rq-st:hover .rq-name {
+  color: #0176d3;
+  font-weight: 700;
+}
+
+/* ---------- Executive Revenue & ASC 606 Insight ---------- */
+.rq-insight-section {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.92));
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+}
+
+.rq-insight-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.rq-insight-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
+}
+
+.rq-insight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08);
+}
+
+.rq-insight-blue {
+  border-top: 3.5px solid #0284c7;
+  background: linear-gradient(180deg, rgba(240, 249, 255, 0.6) 0%, rgba(255, 255, 255, 0.95) 35%);
+}
+
+.rq-insight-green {
+  border-top: 3.5px solid #10b981;
+  background: linear-gradient(180deg, rgba(236, 253, 245, 0.6) 0%, rgba(255, 255, 255, 0.95) 35%);
+}
+
+.rq-insight-indigo {
+  border-top: 3.5px solid #6366f1;
+  background: linear-gradient(180deg, rgba(238, 242, 255, 0.6) 0%, rgba(255, 255, 255, 0.95) 35%);
+}
+
+.rq-mini-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2.5px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.rq-insight-val {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  margin: 8px 0 4px;
+  line-height: 1.15;
+}
+
+/* ---------- two-up rows: each card fills the row, so neither leaves a gap ---------- */
+.rq-two {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.rq-two > .rq-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- MRR chart: drawn to the size of the plot area ---------- */
+.rq-plot {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 230px;
+  margin-top: 10px;
+}
+
+.rq-chart {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.rq-chart .rq-grid {
+  stroke: var(--rq-line);
+  stroke-width: 1;
+}
+
+.rq-chart text {
+  fill: var(--rq-mut);
+  font-size: 11px;
+}
+
+.rq-chart text.rq-end {
+  fill: var(--rq-fg);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* pathLength="1" on the path makes the dash cover the line at any width */
+.rq-chart .rq-ln {
+  fill: none;
+  stroke: var(--rq-acc);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: rq-draw 2s 0.3s ease-out forwards;
+}
+
+.rq-chart .rq-ar {
+  fill: var(--rq-acc);
+  fill-opacity: 0.1;
+  animation: rq-fade 1.2s 1s both;
+}
+
+.rq-chart .rq-dot {
+  fill: var(--rq-acc);
+}
+
+.rq-chart .rq-halo {
+  fill: var(--rq-acc);
+  opacity: 0.3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rq-ping 2s ease-out infinite;
+}
+
+/* ---------- approvals ---------- */
+.rq-list {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* rows share out whatever height the card has */
+.rq-list.rq-spread {
+  justify-content: space-between;
+}
+
+.rq-ap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.75);
+  border: 1px solid var(--rq-line);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.rq-ap:hover {
+  background: #ffffff;
+  border-color: rgba(1, 118, 211, 0.35);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  transform: translateX(4px);
+}
+
+.rq-ap strong {
+  display: block;
+  font-weight: 700;
+}
+
+.rq-ap small {
+  color: var(--rq-mut);
+  font-size: 12px;
+}
+
+.rq-ap.rq-done {
+  opacity: 0.62;
+}
+
+.rq-acts {
+  display: flex;
+  gap: 6px;
+}
+
+.rq-btn.rq-reject {
+  color: var(--rq-mut);
+  box-shadow: inset 0 0 0 1px var(--rq-line);
+}
+
+.rq-btn.rq-reject:hover {
+  color: var(--rq-bad);
+  box-shadow: inset 0 0 0 1px var(--rq-bad);
+}
+
+.rq-btn.rq-approve {
+  color: var(--rq-good);
+  background: color-mix(in srgb, var(--rq-good) 14%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--rq-good) 40%, transparent);
+}
+
+.rq-btn.rq-approve:hover {
+  color: var(--rq-accfg);
+  background: var(--rq-good);
+  transform: translateY(-1px);
+}
+
+/* said in the middle of the chart's space when there is nothing to plot */
+.rq-plot-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0 24px;
+}
+
+.rq-caught-up {
+  margin: 18px 0 6px;
+  color: var(--rq-mut);
+  text-align: center;
+}
+
+/* ---------- recent quotes ---------- */
+.rq-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin-bottom: 8px;
+}
+
+.rq-card-head .rq-more {
+  padding-top: 3px;
+}
+
+.rq-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--rq-acc);
+}
+
+.rq-more svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.25s;
+}
+
+.rq-more:hover svg {
+  transform: translateX(4px);
+}
+
+.rq-link {
+  font-weight: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+/* ---------- renewals ---------- */
+.rq-rn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.rq-rn:hover {
+  background: rgba(248, 250, 252, 0.95);
+  border-color: var(--rq-line);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transform: translateX(3px);
+}
+
+.rq-rn .rq-bar {
+  grid-column: 1 / -1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--rq-line);
+}
+
+.rq-rn .rq-fill {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: var(--rq-c);
+  transform-origin: left;
+  animation: rq-grow 1.4s 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* ---------- motion ---------- */
+@keyframes rq-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes rq-march {
+  to {
+    background-position: 16px 0;
+  }
+}
+
+@keyframes rq-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rq-ping {
+  to {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+@keyframes rq-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ---------- narrower pages ---------- */
+@container rq-page (max-width: 1200px) {
+  .rq-spark {
+    width: 72px;
+  }
+}
+
+@container rq-page (max-width: 1000px) {
+  .rq-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rq-briefing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rq-insight-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rq-spark {
+    width: 96px;
+  }
+}
+
+@container rq-page (max-width: 820px) {
+  .rq-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rq-flow {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    row-gap: 18px;
+  }
+
+  .rq-st:nth-child(5)::before {
+    display: none;
+  }
+}
+
+@container rq-page (max-width: 680px) {
+  .rq-briefing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rq-insight-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container rq-page (max-width: 560px) {
+  .rq-ap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rq-acts .rq-btn {
+    flex: 1 1 auto;
+  }
+}
+
+@container rq-page (max-width: 480px) {
+  .rq-kpi .rq-val {
+    font-size: 24px;
+  }
+
+  .rq-spark {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rq-spark path,
+  .rq-chart .rq-ln {
+    stroke-dashoffset: 0;
+  }
+}

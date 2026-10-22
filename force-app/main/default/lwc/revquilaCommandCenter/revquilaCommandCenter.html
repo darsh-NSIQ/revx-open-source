@@ -1,0 +1,436 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <c-revquila-brand></c-revquila-brand>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Revenue Command Center</p>
+          <h1>{greeting} <em>{collectedLabel}</em> {collectedTail}</h1>
+        </div>
+        <button class="rq-btn rq-primary" onclick={openQuickQuote}>
+          + New Quick Quote
+        </button>
+      </header>
+
+      <template lwc:if={loadError}>
+        <p class="rq-verdict rq-tone-bad rq-load-error" role="alert">
+          {loadError}
+        </p>
+      </template>
+
+      <section class="rq-kpis">
+        <template for:each={kpis} for:item="kpi">
+          <div key={kpi.id} class={kpi.cardClass}>
+            <div class="rq-lab">
+              {kpi.label}
+              <template lwc:if={kpi.badge}>
+                <span class="rq-pill rq-tone-bad rq-live">{kpi.badge}</span>
+              </template>
+            </div>
+            <div class="rq-val">{kpi.display}</div>
+            <div class="rq-foot">
+              <span>
+                <span class={kpi.deltaClass}>{kpi.delta}</span> {kpi.note}
+              </span>
+              <template lwc:if={kpi.spark}>
+                <svg class="rq-spark" viewBox="0 0 96 30" aria-hidden="true">
+                  <path d={kpi.spark}></path>
+                </svg>
+              </template>
+            </div>
+          </div>
+        </template>
+      </section>
+
+      <!-- Autonomous AI Daily Revenue Briefing Card -->
+      <section class="rq-card rq-briefing-card rq-lift rq-rise rq-d6">
+        <div class="rq-card-head">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="rq-brief-icon">
+              🌅
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h2 style="font-size: 16px; font-weight: 700; margin: 0; color: #0f172a;">Autonomous AI Daily Revenue Briefing</h2>
+                <span class="rq-badge-ai">Agentforce AI Live</span>
+              </div>
+              <p class="rq-sub" style="margin: 2px 0 0 0;">Morning digest: Expiring quotes, overdue receivables, upcoming renewals, and high-risk exceptions</p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="rq-btn rq-quiet rq-sm" onclick={openCommandPalette}>
+              Cmd+K Agent →
+            </button>
+            <button class="rq-btn rq-primary rq-sm" onclick={goToExceptions}>
+              Exception Inbox →
+            </button>
+          </div>
+        </div>
+
+        <template lwc:if={briefing}>
+          <div class="rq-briefing-grid">
+            <div class="rq-brief-stat rq-brief-stat-red">
+              <span class="rq-stat-label">Overdue Receivables</span>
+              <div class="rq-stat-val rq-val-red">{briefing.overdueLabel}</div>
+              <span class="rq-hint"><span class="rq-dot-red"></span>{briefing.overdueInvoicesCount} open bills</span>
+            </div>
+            <div class="rq-brief-stat rq-brief-stat-amber">
+              <span class="rq-stat-label">Expiring Quotes (&lt;7d)</span>
+              <div class="rq-stat-val rq-val-amber">{briefing.expiringLabel}</div>
+              <span class="rq-hint"><span class="rq-dot-amber"></span>{briefing.expiringQuotesCount} pending deals</span>
+            </div>
+            <div class="rq-brief-stat rq-brief-stat-blue">
+              <span class="rq-stat-label">Renewals Pipeline (&lt;30d)</span>
+              <div class="rq-stat-val rq-val-blue">{briefing.renewalsLabel}</div>
+              <span class="rq-hint"><span class="rq-dot-blue"></span>{briefing.renewalsDueCount} active contracts</span>
+            </div>
+            <div class="rq-brief-stat rq-brief-stat-purple">
+              <span class="rq-stat-label">Flagged Exceptions</span>
+              <div class="rq-stat-val rq-val-purple">{briefing.pendingExceptionsCount} Items</div>
+              <span class="rq-hint"><span class="rq-dot-purple"></span>Human clearance required</span>
+            </div>
+          </div>
+        </template>
+      </section>
+
+      <!-- Quote to cash pipeline -->
+      <section class="rq-card rq-pipeline-card rq-lift rq-rise rq-d6" style="margin-top: 16px;">
+        <div class="rq-card-head" style="margin-bottom: 4px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h2>Quote to cash, right now</h2>
+              <span class="rq-badge-pipeline">8 Active Stages</span>
+            </div>
+            <p class="rq-sub">
+              Autonomous end-to-end revenue pipeline. Tap any stage to open its list.
+            </p>
+          </div>
+        </div>
+        <div class="rq-flow">
+          <template for:each={stages} for:item="stage">
+            <button
+              key={stage.id}
+              class={stage.stageClass}
+              data-page={stage.page}
+              onclick={openPage}
+            >
+              <span class="rq-num">{stage.count}</span>
+              <span class="rq-name">{stage.label}</span>
+            </button>
+          </template>
+        </div>
+      </section>
+
+      <!-- Executive Revenue & ASC 606 Insight -->
+      <section class="rq-card rq-insight-section rq-lift rq-rise rq-d6" style="margin-top: 16px;">
+        <div class="rq-card-head">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h2>Executive Revenue & ASC 606 Insight</h2>
+              <span class="rq-badge-audit">GAAP / IFRS 15 Compliant</span>
+            </div>
+            <p class="rq-sub">Deferred revenue schedules, deal velocity, and recurring ARR baseline</p>
+          </div>
+          <button class="rq-btn rq-quiet rq-sm" onclick={goToRevenue}>
+            Open Revenue Recognition →
+          </button>
+        </div>
+        <div class="rq-insight-grid">
+          <div class="rq-insight-card rq-insight-blue">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="rq-stat-label">Deferred Balance</span>
+              <span class="rq-mini-tag">ASC 606</span>
+            </div>
+            <div class="rq-insight-val" style="color: var(--rq-brand-acc, #0176d3);">{deferredBalanceLabel}</div>
+            <span class="rq-hint">Revenue awaiting service delivery</span>
+          </div>
+          <div class="rq-insight-card rq-insight-green">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="rq-stat-label">Deal Win Rate</span>
+              <span class="rq-mini-tag">Rolling 90D</span>
+            </div>
+            <div class="rq-insight-val" style="color: #0f172a;">{winRateLabel}</div>
+            <span class="rq-hint">Signed quotes vs total decided</span>
+          </div>
+          <div class="rq-insight-card rq-insight-indigo">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="rq-stat-label">Run-Rate ARR</span>
+              <span class="rq-mini-tag">Annualized</span>
+            </div>
+            <div class="rq-insight-val" style="color: #0f172a;">{arrRunRateLabel}</div>
+            <span class="rq-hint">Current annualised recurring base</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="rq-two">
+        <div class="rq-card rq-lift rq-rise rq-d7">
+          <h2>MRR trend</h2>
+          <p class="rq-sub">{chartSubtitle}</p>
+          <div class="rq-plot" lwc:ref="plot">
+            <template lwc:if={chart}>
+              <svg
+                class="rq-chart"
+                width={chart.width}
+                height={chart.height}
+                role="img"
+                aria-label={chart.summary}
+              >
+                <template for:each={chart.gridLines} for:item="line">
+                  <g key={line.value}>
+                    <line
+                      class="rq-grid"
+                      x1={chart.left}
+                      x2={chart.right}
+                      y1={line.y}
+                      y2={line.y}
+                    ></line>
+                    <text x={chart.tickX} y={line.labelY} text-anchor="end">
+                      {line.label}
+                    </text>
+                  </g>
+                </template>
+                <path class="rq-ar" d={chart.area}></path>
+                <path class="rq-ln" pathLength="1" d={chart.line}></path>
+                <template for:each={chart.months} for:item="month">
+                  <text
+                    key={month.label}
+                    x={month.x}
+                    y={chart.monthY}
+                    text-anchor={month.anchor}
+                  >
+                    {month.label}
+                  </text>
+                </template>
+                <circle
+                  class="rq-halo"
+                  cx={chart.endX}
+                  cy={chart.endY}
+                  r="5"
+                ></circle>
+                <circle
+                  class="rq-dot"
+                  cx={chart.endX}
+                  cy={chart.endY}
+                  r="5"
+                ></circle>
+                <text
+                  class="rq-end"
+                  x={chart.endLabelX}
+                  y={chart.endLabelY}
+                  text-anchor="end"
+                >
+                  {chart.endLabel}
+                </text>
+              </svg>
+            </template>
+            <template lwc:if={noRecurring}>
+              <p class="rq-caught-up rq-plot-empty">
+                No recurring revenue yet. It starts when a quote with yearly
+                products is signed.
+              </p>
+            </template>
+          </div>
+        </div>
+
+        <div class="rq-card rq-lift rq-rise rq-d8">
+          <div class="rq-card-head">
+            <div>
+              <h2>One-tap approvals</h2>
+              <p class="rq-sub">{approvalsNote}</p>
+            </div>
+            <button class="rq-more" data-page="approvals" onclick={openPage}>
+              All approvals
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </button>
+          </div>
+          <template lwc:if={hasApprovals}>
+            <div class="rq-list">
+              <template for:each={approvals} for:item="approval">
+                <div key={approval.id} class={approval.rowClass}>
+                  <div>
+                    <strong>{approval.title}</strong>
+                    <small>{approval.detail}</small>
+                  </div>
+                  <template lwc:if={approval.outcome}>
+                    <span class={approval.outcomeClass}
+                      >{approval.outcome}</span
+                    >
+                  </template>
+                  <template lwc:elseif={approver}>
+                    <div class="rq-acts">
+                      <button
+                        class="rq-btn rq-sm rq-reject"
+                        data-id={approval.id}
+                        onclick={openReject}
+                      >
+                        Reject
+                      </button>
+                      <button
+                        class="rq-btn rq-sm rq-approve"
+                        data-id={approval.id}
+                        onclick={handleApprove}
+                      >
+                        Approve
+                      </button>
+                    </div>
+                  </template>
+                  <template lwc:else>
+                    <button
+                      class="rq-btn rq-sm rq-quiet"
+                      data-id={approval.id}
+                      onclick={openQuote}
+                    >
+                      Open
+                    </button>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+          <template lwc:if={loading}>
+            <div class="rq-loading" role="status">
+              <span class="rq-spinner" aria-hidden="true"></span>
+              Loading…
+            </div>
+          </template>
+          <template lwc:if={noApprovals}>
+            <p class="rq-caught-up">{caughtUp}</p>
+          </template>
+        </div>
+      </section>
+
+      <section class="rq-two">
+        <div class="rq-card rq-rise rq-d9">
+          <div class="rq-card-head">
+            <h2>Recent quotes</h2>
+            <button class="rq-more" data-page="quotes" onclick={openPage}>
+              All quotes
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="rq-tw">
+            <table class="rq-stack">
+              <thead>
+                <tr>
+                  <th>Quote</th>
+                  <th>Account</th>
+                  <th class="rq-right">Amount</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={recentQuotes} for:item="quote">
+                  <tr
+                    key={quote.id}
+                    class="rq-go"
+                    data-id={quote.id}
+                    onclick={openQuote}
+                  >
+                    <td class="rq-cell-meta">
+                      <button class="rq-link">{quote.number}</button>
+                    </td>
+                    <td class="rq-cell-title">{quote.account}</td>
+                    <td class="rq-right rq-cell-value">{quote.amountLabel}</td>
+                    <td class="rq-cell-state">
+                      <span class={quote.pillClass}>{quote.statusLabel}</span>
+                    </td>
+                    <td class="rq-cell-extra">{quote.updated}</td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <template lwc:if={loading}>
+            <div class="rq-loading" role="status">
+              <span class="rq-spinner" aria-hidden="true"></span>
+              Loading…
+            </div>
+          </template>
+          <template lwc:if={noQuotes}>
+            <p class="rq-caught-up">
+              No quotes yet. Start one with New Quick Quote.
+            </p>
+          </template>
+        </div>
+
+        <div class="rq-card rq-lift rq-rise rq-d9">
+          <div class="rq-card-head">
+            <div>
+              <h2>Renewals due</h2>
+              <p class="rq-sub">90 / 60 / 30 day windows</p>
+            </div>
+            <button class="rq-more" data-page="renewals" onclick={openPage}>
+              All renewals
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </button>
+          </div>
+          <template lwc:if={hasRenewals}>
+            <div class="rq-list rq-spread">
+              <template for:each={renewals} for:item="renewal">
+                <button
+                  key={renewal.id}
+                  class="rq-rn"
+                  data-id={renewal.id}
+                  onclick={openSubscription}
+                >
+                  <strong>{renewal.account}</strong>
+                  <span class={renewal.pillClass}>{renewal.daysLabel}</span>
+                  <span class="rq-bar">
+                    <span
+                      class={renewal.barClass}
+                      style={renewal.barStyle}
+                    ></span>
+                  </span>
+                </button>
+              </template>
+            </div>
+          </template>
+          <template lwc:if={loading}>
+            <div class="rq-loading" role="status">
+              <span class="rq-spinner" aria-hidden="true"></span>
+              Loading…
+            </div>
+          </template>
+          <template lwc:if={noRenewals}>
+            <p class="rq-caught-up">Nothing renews in the next 90 days.</p>
+          </template>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <template lwc:if={showQuickQuote}>
+    <c-revquila-quick-quote
+      onclose={closeQuickQuote}
+      oncreated={handleQuoteCreated}
+    ></c-revquila-quick-quote>
+  </template>
+
+  <template lwc:if={rejecting}>
+    <c-revquila-reject-modal
+      quote-title={rejecting.title}
+      onclose={closeReject}
+      onreject={handleReject}
+    ></c-revquila-reject-modal>
+  </template>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+</template>

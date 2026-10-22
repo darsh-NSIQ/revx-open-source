@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Contract_MRR__c</fullName>
+    <description>Monthly recurring revenue of the items on the subscription, whether or not it is billing right now.</description>
+    <label>Contract MRR</label>
+    <summarizedField>Subscription_Item__c.Monthly_Amount__c</summarizedField>
+    <summaryForeignKey>Subscription_Item__c.Subscription__c</summaryForeignKey>
+    <summaryOperation>sum</summaryOperation>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>

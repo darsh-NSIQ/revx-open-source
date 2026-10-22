@@ -1,0 +1,503 @@
+<template>
+  <div class="accounting-sync-container">
+    <!-- Header Section -->
+    <header class="slds-page-header slds-page-header_record-home header-card">
+      <div class="slds-page-header__row">
+        <div class="slds-page-header__col-title">
+          <div class="slds-media">
+            <div class="slds-media__figure">
+              <span class="slds-icon_container slds-icon-standard-lead header-icon">
+                <lightning-icon icon-name="standard:lead" alternative-text="Accounting" size="medium"></lightning-icon>
+              </span>
+            </div>
+            <div class="slds-media__body">
+              <div class="slds-page-header__name">
+                <div class="slds-page-header__name-title">
+                  <h1>
+                    <span class="slds-page-header__title slds-truncate title-text" title="Direct Accounting Sync">
+                      Direct Accounting Sync (Tally • QuickBooks • Zoho Books)
+                    </span>
+                  </h1>
+                </div>
+              </div>
+              <p class="slds-page-header__name-meta subtitle-text">
+                Two-way general ledger mapping, real-time invoice and payment sync, ASC 606 revenue recognition journal integration, and automated retry management.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Target System Selector Buttons -->
+        <div class="slds-page-header__col-actions">
+          <div class="system-switcher-group">
+            <button
+              class={tallyBtnClass}
+              data-system="Tally"
+              onclick={handleSystemSelect}
+              title="Switch to Tally Prime">
+              <span class="system-dot dot-tally"></span>
+              Tally Prime (XML)
+            </button>
+            <button
+              class={qboBtnClass}
+              data-system="QuickBooks"
+              onclick={handleSystemSelect}
+              title="Switch to QuickBooks Online">
+              <span class="system-dot dot-qbo"></span>
+              QuickBooks Online (JSON)
+            </button>
+            <button
+              class={zohoBtnClass}
+              data-system="Zoho Books"
+              onclick={handleSystemSelect}
+              title="Switch to Zoho Books">
+              <span class="system-dot dot-zoho"></span>
+              Zoho Books (REST)
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- KPI Metric Cards -->
+    <div class="slds-grid slds-wrap slds-gutters slds-m-top_medium metrics-grid">
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+        <div class="slds-box kpi-card">
+          <div class="kpi-label">Connector Status</div>
+          <div class="kpi-value slds-text-color_success">
+            <lightning-icon icon-name="utility:connected_apps" size="x-small" class="slds-m-right_xx-small" variant="success"></lightning-icon>
+            Active & Ready
+          </div>
+          <div class="kpi-subtext">Target: {selectedSystem}</div>
+        </div>
+      </div>
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+        <div class="slds-box kpi-card">
+          <div class="kpi-label">Total Synced Records</div>
+          <div class="kpi-value">{overview.totalSyncs}</div>
+          <div class="kpi-subtext">{overview.successfulSyncs} Success • {overview.failedSyncs} Failed</div>
+        </div>
+      </div>
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+        <div class="slds-box kpi-card">
+          <div class="kpi-label">Sync Health Rate</div>
+          <div class="kpi-value">{overview.successRate}%</div>
+          <div class="kpi-subtext">Automated retry queue active</div>
+        </div>
+      </div>
+      <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4">
+        <div class="slds-box kpi-card">
+          <div class="kpi-label">GL Mappings Configured</div>
+          <div class="kpi-value">{overview.mappedAccountsCount} of 6</div>
+          <div class="kpi-subtext">Last Sync: {formattedLastSync}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <div class="slds-m-top_medium main-tabset-card">
+      <lightning-tabset variant="scoped" active-tab-value={activeTab} onselect={handleTabSelect}>
+        
+        <!-- TAB 1: CHART OF ACCOUNTS GL MAPPING -->
+        <lightning-tab label="📊 Chart of Accounts Mapping" value="mappings">
+          <div class="slds-p-around_medium">
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium slds-grid_vertical-align-center">
+              <div>
+                <h2 class="section-title">General Ledger Chart of Accounts Matrix ({selectedSystem})</h2>
+                <p class="section-desc">
+                  Map RevX double-entry buckets (Accounts Receivable, Deferred Revenue, Sales Revenue, Tax Payable, Bank Clearing, Discounts) to your external {selectedSystem} ledger accounts and GL codes.
+                </p>
+              </div>
+              <div class="slds-grid slds-grid_vertical-align-center">
+                <lightning-button
+                  label="Load System Defaults"
+                  icon-name="utility:refresh"
+                  onclick={handleLoadDefaults}
+                  class="slds-m-right_x-small">
+                </lightning-button>
+                <lightning-button
+                  variant="brand"
+                  label="Save GL Mappings"
+                  icon-name="utility:save"
+                  onclick={handleSaveMappings}
+                  disabled={isSavingMappings}>
+                </lightning-button>
+              </div>
+            </div>
+
+            <!-- Mappings Table -->
+            <div class="slds-scrollable_x table-container">
+              <table class="slds-table slds-table_cell-buffer slds-table_bordered custom-table">
+                <thead>
+                  <tr class="slds-line-height_reset">
+                    <th scope="col" style="width: 25%;">RevX Account Bucket</th>
+                    <th scope="col" style="width: 25%;">External GL Code</th>
+                    <th scope="col" style="width: 35%;">External Ledger / Account Name</th>
+                    <th scope="col" style="width: 15%;">Active Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={mappings} for:item="mapItem" for:index="idx">
+                    <tr key={mapItem.revxAccountType} class="slds-hint-parent">
+                      <td>
+                        <span class="account-type-badge">{mapItem.revxAccountType}</span>
+                      </td>
+                      <td>
+                        <lightning-input
+                          type="text"
+                          variant="label-hidden"
+                          value={mapItem.glCode}
+                          data-idx={idx}
+                          data-field="glCode"
+                          placeholder="e.g. 1200 or DR-100"
+                          onchange={handleMappingFieldChange}>
+                        </lightning-input>
+                      </td>
+                      <td>
+                        <lightning-input
+                          type="text"
+                          variant="label-hidden"
+                          value={mapItem.accountName}
+                          data-idx={idx}
+                          data-field="accountName"
+                          placeholder="e.g. Sundry Debtors"
+                          onchange={handleMappingFieldChange}>
+                        </lightning-input>
+                      </td>
+                      <td>
+                        <lightning-input
+                          type="toggle"
+                          variant="label-hidden"
+                          checked={mapItem.active}
+                          data-idx={idx}
+                          data-field="active"
+                          message-toggle-active="Active"
+                          message-toggle-inactive="Inactive"
+                          onchange={handleMappingFieldChange}>
+                        </lightning-input>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </lightning-tab>
+
+        <!-- TAB 2: LIVE SYNC MONITOR & LOGS -->
+        <lightning-tab label="🔄 Sync Monitor & Logs" value="logs">
+          <div class="slds-p-around_medium">
+            <!-- Filter Toolbar -->
+            <div class="slds-grid slds-wrap slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_medium">
+              <div class="slds-grid slds-grid_vertical-align-center">
+                <span class="filter-label slds-m-right_small">Filter Status:</span>
+                <lightning-button-group>
+                  <lightning-button
+                    label="All"
+                    variant={statusFilterAllVariant}
+                    data-status="All"
+                    onclick={handleStatusFilterChange}>
+                  </lightning-button>
+                  <lightning-button
+                    label="Failed Only"
+                    variant={statusFilterFailedVariant}
+                    data-status="Failed"
+                    onclick={handleStatusFilterChange}>
+                  </lightning-button>
+                  <lightning-button
+                    label="Success"
+                    variant={statusFilterSuccessVariant}
+                    data-status="Success"
+                    onclick={handleStatusFilterChange}>
+                  </lightning-button>
+                </lightning-button-group>
+              </div>
+
+              <div class="slds-grid slds-grid_vertical-align-center">
+                <lightning-input
+                  type="search"
+                  variant="label-hidden"
+                  placeholder="Search logs by record or external ref..."
+                  value={searchKey}
+                  onchange={handleSearchChange}
+                  class="slds-m-right_small search-input">
+                </lightning-input>
+                <lightning-button-icon
+                  icon-name="utility:refresh"
+                  alternative-text="Refresh Logs"
+                  title="Refresh Logs"
+                  onclick={refreshLogs}>
+                </lightning-button-icon>
+              </div>
+            </div>
+
+            <!-- Sync Logs Table -->
+            <template if:true={hasLogs}>
+              <div class="slds-scrollable_x table-container">
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered custom-table">
+                  <thead>
+                    <tr class="slds-line-height_reset">
+                      <th scope="col">Synced At</th>
+                      <th scope="col">Entity</th>
+                      <th scope="col">Record Name</th>
+                      <th scope="col">External Ref / ID</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Retries</th>
+                      <th scope="col">Error / Message</th>
+                      <th scope="col" class="slds-text-align_right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={filteredLogs} for:item="log">
+                      <tr key={log.id} class="slds-hint-parent">
+                        <td class="timestamp-cell">{log.syncedAtFormatted}</td>
+                        <td>
+                          <span class={log.entityBadgeClass}>{log.entityType}</span>
+                        </td>
+                        <td class="record-name-cell">
+                          <strong>{log.recordName}</strong>
+                        </td>
+                        <td>
+                          <code class="external-id-code">{log.externalId}</code>
+                        </td>
+                        <td>
+                          <span class={log.statusBadgeClass}>{log.status}</span>
+                        </td>
+                        <td>{log.retryCount}</td>
+                        <td class="error-cell" title={log.errorMessage}>
+                          {log.errorMessage}
+                        </td>
+                        <td class="slds-text-align_right">
+                          <template if:true={log.isFailed}>
+                            <lightning-button
+                              variant="destructive-text"
+                              label="Re-Sync Now"
+                              icon-name="utility:refresh"
+                              size="small"
+                              data-id={log.id}
+                              onclick={handleResyncClick}>
+                            </lightning-button>
+                          </template>
+                          <lightning-button-icon
+                            icon-name="utility:preview"
+                            alternative-text="View Payload"
+                            title="View Payload"
+                            size="small"
+                            data-id={log.id}
+                            onclick={handleViewPayload}
+                            class="slds-m-left_xx-small">
+                          </lightning-button-icon>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </template>
+
+            <!-- Empty State for Logs -->
+            <template if:false={hasLogs}>
+              <div class="slds-illustration slds-illustration_small empty-state-box">
+                <lightning-icon icon-name="utility:sync" size="large" class="slds-m-bottom_small empty-icon"></lightning-icon>
+                <div class="slds-text-heading_medium">No Sync Logs Found</div>
+                <div class="slds-text-body_regular slds-m-top_xx-small">
+                  No synchronization logs match the selected filter for {selectedSystem}. Use the Quick Sync tab to trigger a sync test!
+                </div>
+              </div>
+            </template>
+          </div>
+        </lightning-tab>
+
+        <!-- TAB 3: QUICK SYNC ACTIONS -->
+        <lightning-tab label="🚀 Quick Sync Actions" value="actions">
+          <div class="slds-p-around_medium">
+            <h2 class="section-title">Manual & On-Demand Synchronization</h2>
+            <p class="section-desc slds-m-bottom_medium">
+              Trigger instant real-time synchronization for invoices, payment settlements, or ASC 606 revenue recognition amortizations to {selectedSystem}.
+            </p>
+
+            <div class="slds-grid slds-wrap slds-gutters">
+              <!-- Sync Invoice Card -->
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                <div class="slds-box action-card">
+                  <div class="action-card-header">
+                    <lightning-icon icon-name="standard:invoice" size="small" class="slds-m-right_x-small"></lightning-icon>
+                    <h3>Sync Invoice to {selectedSystem}</h3>
+                  </div>
+                  <p class="action-card-desc">Transmits sales invoice vouchers, line item rates, and GST taxes.</p>
+                  <lightning-combobox
+                    label="Select Recent Invoice"
+                    placeholder="Choose Invoice..."
+                    options={invoiceOptions}
+                    value={selectedInvoiceId}
+                    onchange={handleInvoiceSelect}
+                    class="slds-m-top_small">
+                  </lightning-combobox>
+                  <lightning-button
+                    variant="brand"
+                    label="Sync Invoice"
+                    icon-name="utility:send"
+                    onclick={handleTriggerInvoiceSync}
+                    disabled={isInvoiceSyncDisabled}
+                    class="slds-m-top_medium slds-button_stretch">
+                  </lightning-button>
+                </div>
+              </div>
+
+              <!-- Sync Payment Card -->
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                <div class="slds-box action-card">
+                  <div class="action-card-header">
+                    <lightning-icon icon-name="standard:payment" size="small" class="slds-m-right_x-small"></lightning-icon>
+                    <h3>Sync Payment to {selectedSystem}</h3>
+                  </div>
+                  <p class="action-card-desc">Transmits receipt vouchers, bank settlements, and UTR clearing lines.</p>
+                  <lightning-combobox
+                    label="Select Recent Payment"
+                    placeholder="Choose Payment..."
+                    options={paymentOptions}
+                    value={selectedPaymentId}
+                    onchange={handlePaymentSelect}
+                    class="slds-m-top_small">
+                  </lightning-combobox>
+                  <lightning-button
+                    variant="brand"
+                    label="Sync Payment"
+                    icon-name="utility:send"
+                    onclick={handleTriggerPaymentSync}
+                    disabled={isPaymentSyncDisabled}
+                    class="slds-m-top_medium slds-button_stretch">
+                  </lightning-button>
+                </div>
+              </div>
+
+              <!-- Sync ASC 606 Journal Card -->
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                <div class="slds-box action-card">
+                  <div class="action-card-header">
+                    <lightning-icon icon-name="standard:currency" size="small" class="slds-m-right_x-small"></lightning-icon>
+                    <h3>ASC 606 Revenue Journal</h3>
+                  </div>
+                  <p class="action-card-desc">Debits Deferred Revenue and Credits Sales Revenue for recognized schedules.</p>
+                  <div class="slds-grid slds-gutters slds-m-top_x-small">
+                    <div class="slds-col slds-size_1-of-2">
+                      <lightning-input type="date" label="From Date" value={journalFromDate} onchange={handleJournalFromChange}></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                      <lightning-input type="date" label="To Date" value={journalToDate} onchange={handleJournalToChange}></lightning-input>
+                    </div>
+                  </div>
+                  <lightning-button
+                    variant="brand"
+                    label="Sync Revenue Journal"
+                    icon-name="utility:currency"
+                    onclick={handleTriggerJournalSync}
+                    class="slds-m-top_medium slds-button_stretch">
+                  </lightning-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </lightning-tab>
+
+        <!-- TAB 4: FILE EXPORT (OFFLINE SYNC) -->
+        <lightning-tab label="💾 File Export (Offline Sync)" value="export">
+          <div class="slds-p-around_medium">
+            <h2 class="section-title">Batch Accounting File Exports</h2>
+            <p class="section-desc slds-m-bottom_medium">
+              For on-premises accounting servers or offline auditing, generate standard formatted batch import files ready for direct upload into {selectedSystem}.
+            </p>
+
+            <div class="slds-grid slds-wrap slds-gutters">
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                <div class="slds-box export-card">
+                  <div class="export-icon-wrapper tally-theme">
+                    <lightning-icon icon-name="doctype:xml" size="medium"></lightning-icon>
+                  </div>
+                  <h3 class="export-title">Tally Prime XML Batch</h3>
+                  <p class="export-desc">Standard Tally envelope XML format containing Sales and Receipt vouchers for current period.</p>
+                  <lightning-button
+                    variant="neutral"
+                    label="Download Tally XML"
+                    icon-name="utility:download"
+                    data-format="Tally"
+                    onclick={handleDownloadExport}
+                    class="slds-m-top_medium slds-button_stretch">
+                  </lightning-button>
+                </div>
+              </div>
+
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                <div class="slds-box export-card">
+                  <div class="export-icon-wrapper qbo-theme">
+                    <lightning-icon icon-name="doctype:json" size="medium"></lightning-icon>
+                  </div>
+                  <h3 class="export-title">QuickBooks Online JSON Batch</h3>
+                  <p class="export-desc">Pre-structured JSON batch import payload for QBO Invoices, Payments, and General Ledger.</p>
+                  <lightning-button
+                    variant="neutral"
+                    label="Download QBO JSON"
+                    icon-name="utility:download"
+                    data-format="QuickBooks"
+                    onclick={handleDownloadExport}
+                    class="slds-m-top_medium slds-button_stretch">
+                  </lightning-button>
+                </div>
+              </div>
+
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                <div class="slds-box export-card">
+                  <div class="export-icon-wrapper zoho-theme">
+                    <lightning-icon icon-name="doctype:csv" size="medium"></lightning-icon>
+                  </div>
+                  <h3 class="export-title">Zoho Books Import CSV</h3>
+                  <p class="export-desc">Standard RFC-compliant CSV batch file mapped to Zoho Books invoice and credit import columns.</p>
+                  <lightning-button
+                    variant="neutral"
+                    label="Download Zoho CSV"
+                    icon-name="utility:download"
+                    data-format="Zoho Books"
+                    onclick={handleDownloadExport}
+                    class="slds-m-top_medium slds-button_stretch">
+                  </lightning-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </lightning-tab>
+      </lightning-tabset>
+    </div>
+
+    <!-- Payload Viewer Modal -->
+    <template if:true={isPayloadModalOpen}>
+      <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium" aria-modal="true">
+        <div class="slds-modal__container">
+          <header class="slds-modal__header">
+            <lightning-button-icon
+              icon-name="utility:close"
+              alternative-text="Close"
+              title="Close"
+              size="large"
+              variant="bare-inverse"
+              class="slds-modal__close"
+              onclick={closePayloadModal}>
+            </lightning-button-icon>
+            <h2 class="slds-modal__title slds-hyphenate">Sync Transmission Inspector</h2>
+            <p class="slds-m-top_x-small">Review raw request and response payloads sent to {selectedSystem}</p>
+          </header>
+          <div class="slds-modal__content slds-p-around_medium modal-code-body">
+            <h4 class="payload-header">Request Payload:</h4>
+            <pre class="code-block">{selectedLogRequest}</pre>
+
+            <h4 class="payload-header slds-m-top_medium">Response Payload:</h4>
+            <pre class="code-block">{selectedLogResponse}</pre>
+          </div>
+          <footer class="slds-modal__footer">
+            <lightning-button label="Close Inspector" variant="neutral" onclick={closePayloadModal}></lightning-button>
+          </footer>
+        </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+  </div>
+</template>

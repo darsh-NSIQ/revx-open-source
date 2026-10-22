@@ -1,0 +1,183 @@
+@import "c/revquilaTheme";
+
+.rq-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9001;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--rq-ink) 55%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--rq-fg);
+  font-size: 14px;
+  line-height: 1.45;
+  animation: rq-fade-in 0.2s ease-out both;
+}
+
+.rq-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 560px);
+  max-height: min(88vh, 760px);
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--rq-card);
+  box-shadow:
+    0 0 0 1px var(--rq-line),
+    0 30px 80px color-mix(in srgb, var(--rq-ink) 38%, transparent);
+  outline: none;
+  animation: rq-pop 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.rq-panel.rq-small {
+  width: min(100%, 440px);
+}
+
+.rq-panel.rq-large {
+  width: min(100%, 820px);
+}
+
+/* for a whole document or a table of lines */
+.rq-panel.rq-wide {
+  width: min(100%, 1080px);
+  max-height: min(92vh, 980px);
+}
+
+.rq-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px 16px;
+  background:
+    radial-gradient(
+      420px circle at 100% -60px,
+      color-mix(in srgb, var(--rq-acc2) 24%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      300px circle at 0 -40px,
+      color-mix(in srgb, var(--rq-acc) 12%, transparent),
+      transparent 70%
+    );
+  border-bottom: 1px solid var(--rq-line);
+}
+
+.rq-titles {
+  min-width: 0;
+}
+
+.rq-titles h2 {
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.rq-x {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: var(--rq-mut);
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.3s;
+}
+
+.rq-x:hover {
+  background: var(--rq-spot);
+  color: var(--rq-acc);
+  transform: rotate(90deg);
+}
+
+.rq-x svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.rq-body {
+  padding: 18px 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.rq-bottom {
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--rq-line);
+  background: color-mix(in srgb, var(--rq-bg) 55%, var(--rq-card));
+}
+
+.rq-guard {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.rq-backdrop.rq-closing {
+  pointer-events: none;
+  animation: rq-fade-out 0.18s ease-in both;
+}
+
+.rq-backdrop.rq-closing .rq-panel {
+  animation: rq-drop 0.18s ease-in both;
+}
+
+@keyframes rq-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rq-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes rq-pop {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+}
+
+@keyframes rq-drop {
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+@keyframes rq-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+/* phone: the modal becomes a bottom sheet */
+@media (max-width: 520px) {
+  .rq-backdrop {
+    place-items: end center;
+    padding: 0;
+  }
+
+  .rq-panel,
+  .rq-panel.rq-small,
+  .rq-panel.rq-large,
+  .rq-panel.rq-wide {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    animation-name: rq-sheet;
+  }
+}

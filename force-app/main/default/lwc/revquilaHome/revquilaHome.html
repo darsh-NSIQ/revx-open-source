@@ -1,0 +1,211 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <c-revquila-brand></c-revquila-brand>
+        <div class="rq-who">
+          {greeting}
+          <span class="rq-avatar" aria-hidden="true">{initials}</span>
+        </div>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Home</p>
+          <h1>Quote to cash, <em>step by step</em>.</h1>
+        </div>
+      </header>
+
+      <template lwc:if={loadError}>
+        <p class="rq-verdict rq-tone-bad rq-load-error" role="alert">
+          {loadError}
+        </p>
+      </template>
+
+      <div class="rq-hero-row">
+        <button
+          class="rq-card rq-lift rq-cc rq-rise rq-d1"
+          data-page="command"
+          onclick={openPage}
+        >
+          <div class="rq-tile-top">
+            <span class="rq-ico">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+                <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+                <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+              </svg>
+            </span>
+            <span>
+              <strong>Command Center</strong>
+              <small>Today's numbers, one-tap approvals, renewals due</small>
+            </span>
+          </div>
+          <template lwc:if={hasKpis}>
+            <div class="rq-kpis">
+              <template for:each={kpis} for:item="kpi">
+                <div key={kpi.label} class="rq-kpi">
+                  <span>{kpi.label}</span>
+                  <b>{kpi.value}</b>
+                </div>
+              </template>
+            </div>
+          </template>
+          <template lwc:else>
+            <div class="rq-kpis" aria-hidden="true">
+              <div class="rq-kpi"><span>MRR</span><b>—</b></div>
+              <div class="rq-kpi"><span>Collected</span><b>—</b></div>
+              <div class="rq-kpi"><span>Overdue</span><b>—</b></div>
+            </div>
+          </template>
+        </button>
+
+        <button
+          class="rq-card rq-lift rq-setup rq-g-admin rq-rise rq-d2"
+          data-page="setup"
+          onclick={openPage}
+        >
+          <div class="rq-tile-top">
+            <span class="rq-ico">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"
+                ></path>
+              </svg>
+            </span>
+            <span>
+              <strong>Setup</strong>
+              <small>{setupNote}</small>
+            </span>
+          </div>
+          <ul class="rq-areas">
+            <template for:each={setupAreas} for:item="area">
+              <li key={area}>{area}</li>
+            </template>
+          </ul>
+        </button>
+      </div>
+
+      <div class="rq-flow-head rq-rise rq-d3">
+        <h2>The journey</h2>
+        <p class="rq-sub">Tap a step to open its app</p>
+      </div>
+
+      <div class="rq-flow">
+        <template for:each={steps} for:item="step">
+          <button
+            key={step.key}
+            class={step.stepClass}
+            style={step.stepStyle}
+            data-page={step.key}
+            onclick={openPage}
+          >
+            <span class="rq-num" aria-hidden="true">{step.number}</span>
+            <span class="rq-ico">
+              <template lwc:if={step.isCatalog}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M16.5 9.4 7.5 4.21"></path>
+                  <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                  ></path>
+                  <path d="M3.27 6.96 12 12.01l8.73-5.05"></path>
+                  <path d="M12 22.08V12"></path>
+                </svg>
+              </template>
+              <template lwc:if={step.isPricing}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M12 2H2v10l9.29 9.29a2.42 2.42 0 0 0 3.42 0l6.58-6.58a2.42 2.42 0 0 0 0-3.42L12 2Z"
+                  ></path>
+                  <path d="M7 7h.01"></path>
+                </svg>
+              </template>
+              <template lwc:if={step.isQuotes}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                  ></path>
+                  <path d="M14 2v6h6"></path>
+                  <path d="M16 13H8M16 17H8M10 9H8"></path>
+                </svg>
+              </template>
+              <template lwc:if={step.isApprovals}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <path d="m22 4-10 10.01-3-3"></path>
+                </svg>
+              </template>
+              <template lwc:if={step.isOrders}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+                  <path
+                    d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+                  ></path>
+                  <path d="m9 14 2 2 4-4"></path>
+                </svg>
+              </template>
+              <template lwc:if={step.isContracts}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                </svg>
+              </template>
+              <template lwc:if={step.isInvoices}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"
+                  ></path>
+                  <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
+                  <path d="M12 17.5v-11"></path>
+                </svg>
+              </template>
+              <template lwc:if={step.isSubscriptions}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m17 2 4 4-4 4"></path>
+                  <path d="M3 11v-1a4 4 0 0 1 4-4h14"></path>
+                  <path d="m7 22-4-4 4-4"></path>
+                  <path d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+                </svg>
+              </template>
+              <template lwc:if={step.isRevenue}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M18 20V10"></path>
+                  <path d="M12 20V4"></path>
+                  <path d="M6 20V14"></path>
+                </svg>
+              </template>
+              <template lwc:if={step.isRenewals}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"
+                  ></path>
+                  <path d="M16 2v4M8 2v4M3 10h5"></path>
+                  <circle cx="16" cy="16" r="6"></circle>
+                  <path d="M16 14v2l1.5 1.5"></path>
+                </svg>
+              </template>
+            </span>
+            <strong>{step.label}</strong>
+            <small>{step.figure}</small>
+          </button>
+        </template>
+      </div>
+
+      <div class="rq-flow-groups rq-rise rq-d9">
+        <template for:each={phases} for:item="phase">
+          <div key={phase.key} class={phase.bandClass} style={phase.bandStyle}>
+            {phase.label} <span>{phase.path}</span>
+          </div>
+        </template>
+      </div>
+    </div>
+    <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+  </div>
+</template>

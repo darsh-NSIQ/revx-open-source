@@ -1,0 +1,63 @@
+<apex:page controller="RevquilaPortalController" showHeader="false" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0" title="RevX Customer Portal - Account">
+  <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>{!companyName}</title>
+      <style type="text/css">
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: "Segoe UI", -apple-system, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #181c25; background: #f2f6fb; }
+        .rq-top { padding: 22px 24px; color: #ffffff; background: linear-gradient(135deg, #10233f, {!accent}); }
+        .rq-top h1 { margin: 4px 0 0; font-size: 26px; letter-spacing: -0.02em; }
+        .rq-top small { opacity: 0.8; letter-spacing: 0.1em; text-transform: uppercase; font-size: 11.5px; font-weight: 600; }
+        .rq-wrap { padding: 20px 24px 40px; display: flex; flex-direction: column; gap: 16px; }
+        .rq-card { padding: 18px; border-radius: 16px; background: #ffffff; box-shadow: 0 0 0 1px #dde3ee, 0 8px 24px rgba(16, 35, 63, 0.08); }
+        .rq-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+        .rq-fact { padding: 10px 12px; border-radius: 12px; background: #f4f7fb; }
+        .rq-fact span { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5c6678; }
+        .rq-fact b { font-size: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 8px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #5c6678; text-align: left; }
+        td { padding: 10px 8px; border-top: 1px solid #e3e8f0; vertical-align: top; }
+        .num { text-align: right; white-space: nowrap; }
+        td small { display: block; color: #5c6678; font-size: 12px; }
+        .rq-totals { margin-left: auto; width: min(100%, 360px); }
+        .rq-totals div { display: flex; justify-content: space-between; padding: 4px 0; }
+        .rq-totals .grand { margin-top: 6px; padding-top: 10px; border-top: 1px solid #e3e8f0; font-size: 18px; font-weight: 800; }
+        .rq-btn { display: inline-block; padding: 12px 18px; border: 0; border-radius: 12px; font-size: 15px; font-weight: 700; color: #ffffff; background: {!accent}; text-decoration: none; cursor: pointer; }
+        .rq-form { display: flex; flex-direction: column; gap: 10px; max-width: 460px; }
+        .rq-form input[type=text], .rq-form input[type=email] { width: 100%; padding: 10px 12px; border: 1px solid #d5dbe6; border-radius: 10px; font: inherit; }
+        .rq-note { padding: 10px 12px; border-radius: 10px; font-weight: 600; background: #e8f4ec; color: #2e844a; }
+        .rq-warn { background: #fff4e5; color: #a96404; }
+        .rq-list a { color: {!accent}; font-weight: 700; text-decoration: none; }
+        .rq-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #e3e8f0; }
+        .rq-row:first-child { border-top: 0; }
+        .tone-bad { color: #ba0517; }
+        pre { white-space: pre-wrap; font-family: inherit; margin: 0; }
+        @media (max-width: 560px) { .rq-hide { display: none; } }
+      </style>
+    </head>
+    <body>
+      <apex:variable var="v" value="" rendered="{!NOT(found)}">
+        <div class="rq-top"><small>{!companyName}</small><h1>This link has expired</h1></div>
+        <div class="rq-wrap"><div class="rq-card">The link is incomplete or no longer active. Ask {!companyName} for a new one.</div></div>
+      </apex:variable>
+      <apex:variable var="v" value="" rendered="{!found}">
+        <div class="rq-top"><small>{!companyName} · Your account</small><h1>{!accountName}</h1></div>
+        <div class="rq-wrap">
+          <div class="rq-card rq-list">
+            <h3 style="margin-top:0">Open invoices</h3>
+            <apex:repeat value="{!facts}" var="f">
+              <div class="rq-row"><span><apex:outputLink value="{!f.url}" rendered="{!NOT(ISBLANK(f.url))}">{!f.label}</apex:outputLink><apex:outputText value="{!f.label}" rendered="{!ISBLANK(f.url)}" /></span><b class="tone-{!f.tone}">{!f.value}</b></div>
+            </apex:repeat>
+            <apex:variable var="v" value="" rendered="{!facts.size == 0}"><p>Nothing is due. Thank you.</p></apex:variable>
+          </div>
+          <div class="rq-card rq-list">
+            <h3 style="margin-top:0">Subscriptions</h3>
+            <apex:repeat value="{!related}" var="r"><div class="rq-row"><span>{!r.label}</span><span>{!r.value}</span></div></apex:repeat>
+            <apex:variable var="v" value="" rendered="{!related.size == 0}"><p>No subscriptions.</p></apex:variable>
+          </div>
+        </div>
+      </apex:variable>
+    </body>
+  </html>
+</apex:page>

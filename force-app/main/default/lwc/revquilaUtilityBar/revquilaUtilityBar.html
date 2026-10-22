@@ -1,0 +1,103 @@
+<template>
+  <div class="rq-utility-dock">
+    <!-- Quick Search Bar -->
+    <div class="rq-search-box">
+      <svg viewBox="0 0 24 24" class="rq-search-icon" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        placeholder="Search RevX (Quotes, Invoices, Agreements)..."
+        value={searchTerm}
+        oninput={handleSearchInput}
+        class="rq-search-input"
+      />
+      <template lwc:if={searchTerm}>
+        <button class="rq-clear-btn" onclick={handleClearSearch} title="Clear">
+          &times;
+        </button>
+      </template>
+    </div>
+
+    <!-- Live Metrics Ticker -->
+    <div class="rq-kpi-ticker">
+      <div class="rq-pill alert" title="Open Unpaid Invoices">
+        <span class="rq-dot red"></span>
+        <span>{metrics.openInvoicesCount} Invoices Due</span>
+      </div>
+      <div class="rq-pill active" title="Active Recurring Subscriptions">
+        <span class="rq-dot green"></span>
+        <span>{metrics.activeSubsCount} Active Subs</span>
+      </div>
+      <div class="rq-pill mfg" title="Active Sales Agreements">
+        <span class="rq-dot purple"></span>
+        <span>{metrics.activeAgreementsCount} Agreements</span>
+      </div>
+    </div>
+
+    <!-- Search Results Popover -->
+    <template lwc:if={hasResults}>
+      <div class="rq-results-popover">
+        <div class="rq-popover-header">
+          <span>Search Results ({totalResultsCount})</span>
+          <button class="rq-close-link" onclick={handleClearSearch}>Close</button>
+        </div>
+
+        <div class="rq-results-body">
+          <!-- Quotes -->
+          <template lwc:if={hasQuotes}>
+            <div class="rq-res-group">
+              <span class="rq-group-title">CPQ Quotes</span>
+              <template for:each={results.quotes} for:item="q">
+                <div key={q.Id} class="rq-res-item" data-id={q.Id} onclick={handleNavigateRecord}>
+                  <span class="rq-item-name">{q.Name}</span>
+                  <span class="rq-item-meta">{q.AccountName} &bull; ${q.Total__c}</span>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- Invoices -->
+          <template lwc:if={hasInvoices}>
+            <div class="rq-res-group">
+              <span class="rq-group-title">Invoices</span>
+              <template for:each={results.invoices} for:item="inv">
+                <div key={inv.Id} class="rq-res-item" data-id={inv.Id} onclick={handleNavigateRecord}>
+                  <span class="rq-item-name">{inv.Name}</span>
+                  <span class="rq-item-meta">{inv.AccountName} &bull; Balance: ${inv.Balance__c}</span>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- Sales Agreements -->
+          <template lwc:if={hasAgreements}>
+            <div class="rq-res-group">
+              <span class="rq-group-title">Sales Agreements</span>
+              <template for:each={results.agreements} for:item="sa">
+                <div key={sa.Id} class="rq-res-item" data-id={sa.Id} onclick={handleNavigateRecord}>
+                  <span class="rq-item-name">{sa.Name}</span>
+                  <span class="rq-item-meta">{sa.AccountName} &bull; {sa.Total_Committed_Quantity__c} units</span>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- Accounts -->
+          <template lwc:if={hasAccounts}>
+            <div class="rq-res-group">
+              <span class="rq-group-title">Accounts</span>
+              <template for:each={results.accounts} for:item="acc">
+                <div key={acc.Id} class="rq-res-item" data-id={acc.Id} onclick={handleNavigateRecord}>
+                  <span class="rq-item-name">{acc.Name}</span>
+                  <span class="rq-item-meta">{acc.BillingCity}</span>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

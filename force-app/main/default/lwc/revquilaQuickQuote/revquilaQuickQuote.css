@@ -1,0 +1,170 @@
+@import "c/revquilaTheme";
+
+.rq-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.rq-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rq-block h3 {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rq-mut);
+}
+
+.rq-block-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.rq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px 14px;
+}
+
+.rq-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rq-mut);
+}
+
+/* the account once it is picked, with the way to pick another */
+.rq-picked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--rq-acc) 7%, transparent);
+  box-shadow: inset 0 0 0 1px var(--rq-line);
+}
+
+.rq-picked strong,
+.rq-picked small {
+  display: block;
+}
+
+.rq-picked small {
+  font-size: 12px;
+  color: var(--rq-mut);
+}
+
+.rq-change {
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--rq-acc);
+}
+
+.rq-change:hover {
+  text-decoration: underline;
+}
+
+/* ---------- account suggestions ---------- */
+.rq-combo {
+  position: relative;
+}
+
+.rq-suggest {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: 12px;
+  background: var(--rq-card);
+  box-shadow:
+    0 0 0 1px var(--rq-line),
+    var(--rq-shadow-lift);
+  animation: rq-rise 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.rq-suggest button {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.rq-suggest button:hover,
+.rq-suggest button:focus-visible {
+  background: var(--rq-spot);
+}
+
+.rq-suggest strong,
+.rq-suggest small {
+  display: block;
+}
+
+.rq-suggest small {
+  font-size: 12px;
+  color: var(--rq-mut);
+}
+
+.rq-suggest .rq-create strong {
+  color: var(--rq-acc);
+}
+
+/* ---------- copy the products of an earlier quote ---------- */
+.rq-bundles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.rq-bundle {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--rq-mut);
+  box-shadow: inset 0 0 0 1px var(--rq-line);
+  transition:
+    color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+
+.rq-bundle:hover {
+  color: var(--rq-acc);
+  box-shadow: inset 0 0 0 1px var(--rq-acc);
+}
+
+.rq-bundle.rq-on {
+  color: var(--rq-accfg);
+  background: var(--rq-acc);
+  box-shadow: none;
+}
+
+textarea.rq-input.rq-notes {
+  min-height: 64px;
+}
+
+.rq-save-error {
+  margin: 0;
+}
+
+.rq-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}

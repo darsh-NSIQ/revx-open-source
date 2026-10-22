@@ -1,0 +1,323 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+/* group colours: blue CPQ, teal revenue, violet admin, amber for something waiting */
+.rq-g-cpq {
+  --rq-c: var(--rq-acc);
+}
+.rq-g-rev {
+  --rq-c: var(--rq-teal);
+}
+.rq-g-admin {
+  --rq-c: #6d4fd9;
+}
+.rq-g-hot {
+  --rq-c: var(--rq-warn);
+}
+
+.rq-who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--rq-mut);
+}
+
+.rq-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--rq-accfg);
+  background: linear-gradient(135deg, var(--rq-acc-deep), var(--rq-acc2));
+}
+
+/* ---------- icons ---------- */
+.rq-ico {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  color: var(--rq-c);
+  background: color-mix(in srgb, var(--rq-c) 13%, #fff);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rq-c) 22%, transparent);
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s,
+    background 0.3s,
+    color 0.3s;
+}
+
+.rq-ico svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rq-card:hover .rq-ico {
+  color: var(--rq-accfg);
+  background: var(--rq-c);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--rq-c) 35%, transparent);
+  transform: scale(1.06) rotate(-3deg);
+}
+
+.rq-card.rq-lift:hover {
+  box-shadow:
+    0 0 0 2px var(--rq-c, var(--rq-acc)),
+    var(--rq-shadow-lift);
+}
+
+/* ---------- the hero: Command Center and Setup ---------- */
+/* the hero takes whatever height the journey leaves, so a short page still reaches the bottom */
+.rq-hero-row {
+  flex: 1 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.rq-hero-row .rq-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.rq-tile-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rq-tile-top > span:last-child {
+  min-width: 0;
+}
+
+.rq-tile-top strong {
+  display: block;
+  font-size: 16px;
+}
+
+.rq-tile-top small {
+  display: block;
+  font-size: 12.5px;
+  color: var(--rq-mut);
+}
+
+.rq-cc {
+  --rq-c: var(--rq-teal);
+  color: var(--rq-accfg);
+  background: linear-gradient(
+    135deg,
+    var(--rq-ink),
+    #1a3a66 60%,
+    var(--rq-acc)
+  );
+  box-shadow: 0 18px 40px
+    color-mix(in srgb, var(--rq-acc-deep) 35%, transparent);
+}
+
+.rq-cc .rq-tile-top small {
+  color: #b9c6dd;
+}
+
+.rq-cc .rq-ico {
+  color: var(--rq-accfg);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.rq-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: auto;
+}
+
+.rq-kpi {
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rq-kpi span {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b9c6dd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rq-kpi b {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-areas {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--rq-mut);
+}
+
+.rq-areas li::before {
+  content: "•";
+  margin-right: 6px;
+  color: var(--rq-c);
+}
+
+/* ---------- the journey ---------- */
+.rq-flow-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.rq-flow-head .rq-sub {
+  margin: 0;
+}
+
+.rq-flow {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* the dashed track behind the steps */
+.rq-flow::before {
+  content: "";
+  position: absolute;
+  top: 39px;
+  right: 5%;
+  left: 5%;
+  height: 2px;
+  border-top: 2px dashed var(--rq-line);
+}
+
+.rq-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 8px 12px;
+  text-align: center;
+}
+
+.rq-step .rq-ico {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 4px var(--rq-card),
+    0 0 0 5px var(--rq-line);
+}
+
+.rq-step strong {
+  font-size: 12.5px;
+}
+
+.rq-step small {
+  font-size: 11.5px;
+  line-height: 1.3;
+  color: var(--rq-mut);
+}
+
+.rq-num {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--rq-c);
+  background: color-mix(in srgb, var(--rq-c) 12%, #fff);
+}
+
+/* one band per lifecycle phase, under its steps (the same nine columns as the journey) */
+.rq-flow-groups {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rq-flow-group {
+  grid-column: span var(--rq-span, 1);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rq-c);
+  background: color-mix(in srgb, var(--rq-c) 10%, transparent);
+}
+
+.rq-flow-group span {
+  overflow: hidden;
+  font-weight: 500;
+  color: var(--rq-mut);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@container rq-page (max-width: 900px) {
+  .rq-hero-row,
+  .rq-flow-groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rq-flow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .rq-flow::before {
+    display: none;
+  }
+
+  .rq-flow-group {
+    grid-column: auto;
+  }
+}
+
+@container rq-page (max-width: 480px) {
+  .rq-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rq-kpi span {
+    white-space: normal;
+  }
+}

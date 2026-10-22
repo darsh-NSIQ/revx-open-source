@@ -1,0 +1,83 @@
+@import "c/revquilaTheme";
+
+:host {
+  container: rq-timeline / inline-size;
+}
+
+.rq-timeline {
+  --rq-when: 58px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.rq-event {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--rq-when) minmax(0, 1fr);
+  column-gap: 30px;
+  padding-bottom: 18px;
+}
+
+.rq-event:last-child {
+  padding-bottom: 0;
+}
+
+/* dot, then the line down to the next event */
+.rq-event::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: calc(var(--rq-when) + 10px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--rq-c);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--rq-c) 18%, transparent);
+}
+
+.rq-event::after {
+  content: "";
+  position: absolute;
+  top: 21px;
+  bottom: 1px;
+  left: calc(var(--rq-when) + 14.5px);
+  width: 1px;
+  background: var(--rq-line);
+}
+
+.rq-event:last-child::after {
+  display: none;
+}
+
+.rq-when {
+  grid-row: 1 / span 2;
+  padding-top: 1px;
+  font-size: 12px;
+  text-align: right;
+  color: var(--rq-mut);
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-event strong {
+  display: block;
+  font-weight: 700;
+}
+
+.rq-event small {
+  color: var(--rq-mut);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+@container rq-timeline (max-width: 340px) {
+  .rq-timeline {
+    --rq-when: 46px;
+  }
+
+  .rq-event {
+    column-gap: 26px;
+  }
+}

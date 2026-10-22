@@ -1,0 +1,247 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <div class="rq-crumbs">
+          <c-revquila-brand></c-revquila-brand>
+          <span class="rq-step-pill">RevOps Executive War Room</span>
+        </div>
+        <div class="rq-top-actions">
+          <button class="rq-btn rq-quiet" onclick={refreshData}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Strategic SaaS Analytics</p>
+          <h1>Executive revenue cockpit, <em>board-ready metrics</em>.</h1>
+          <p class="rq-sub">ARR Waterfall bridge, cohort dollar retention, and interactive growth sensitivity modeling.</p>
+        </div>
+      </header>
+
+      <!-- SaaS Vital Signs -->
+      <div class="rq-stats rq-rise rq-d2">
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Net Retention Rate (NRR)</span>
+          <b class="rq-stat-val rq-tone-good">{nrr}%</b>
+          <small>Net expansion momentum</small>
+        </div>
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Gross Retention (GRR)</span>
+          <b class="rq-stat-val">{grr}%</b>
+          <small>Base logo resilience</small>
+        </div>
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Rule of 40 Score</span>
+          <b class="rq-stat-val rq-tone-good">{ruleOf40}%</b>
+          <small>Growth + Profitability</small>
+        </div>
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">LTV : CAC Ratio</span>
+          <b class="rq-stat-val">{ltvCac}x</b>
+          <small>Payback: {cacPayback} mo</small>
+        </div>
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Magic Number</span>
+          <b class="rq-stat-val rq-tone-info">{magicNumber}</b>
+          <small>Sales efficiency</small>
+        </div>
+      </div>
+
+      <!-- ARR Waterfall Bridge Card -->
+      <div class="rq-card rq-rise rq-d3">
+        <div class="rq-card-header-row">
+          <div>
+            <h2 class="rq-section-title">ARR Waterfall Bridge (Annualized Recurring Run-Rate)</h2>
+            <p class="rq-sub">Visual breakdown of recurring revenue movements across fiscal period</p>
+          </div>
+          <div class="rq-legend">
+            <span class="rq-legend-item"><span class="rq-legend-box rq-bg-base"></span> Baseline</span>
+            <span class="rq-legend-item"><span class="rq-legend-box rq-bg-pos"></span> Expansion / New</span>
+            <span class="rq-legend-item"><span class="rq-legend-box rq-bg-neg"></span> Contraction / Churn</span>
+            <span class="rq-legend-item"><span class="rq-legend-box rq-bg-end"></span> Net Ending</span>
+          </div>
+        </div>
+
+        <template lwc:if={loading}>
+          <div class="rq-loading" role="status">
+            <span class="rq-spinner" aria-hidden="true"></span>
+            Assembling revenue waterfall…
+          </div>
+        </template>
+
+        <template lwc:if={hasWaterfall}>
+          <div class="rq-waterfall-container">
+            <template for:each={waterfall} for:item="item">
+              <div key={item.stage} class="rq-waterfall-col">
+                <div class="rq-bar-wrap">
+                  <span class="rq-bar-amount">{item.formatted}</span>
+                  <div class={item.barClass} style={item.barStyle}></div>
+                </div>
+                <div class="rq-waterfall-label">
+                  <strong>{item.label}</strong>
+                  <small>{item.subtitle}</small>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <!-- Interactive Scenario / Sensitivity Simulator -->
+      <div class="rq-card rq-sim-card rq-rise rq-d4">
+        <div class="rq-card-header-row">
+          <div>
+            <span class="rq-sim-badge">🎯 Growth & Runway Sensitivity Simulator</span>
+            <h2 class="rq-section-title">What-If Revenue Modeling</h2>
+            <p class="rq-sub">Slide pricing, churn, and win rate levers to simulate impact on Ending ARR and Runway:</p>
+          </div>
+        </div>
+
+        <div class="rq-sim-grid">
+          <!-- Controls Column -->
+          <div class="rq-sim-controls">
+            <div class="rq-slider-group">
+              <div class="rq-slider-header">
+                <label for="priceUplift">Annual Price Uplift</label>
+                <b>+{simPriceUplift}%</b>
+              </div>
+              <input
+                id="priceUplift"
+                type="range"
+                min="0"
+                max="20"
+                step="1"
+                value={simPriceUplift}
+                oninput={handlePriceSlider}
+                class="rq-slider"
+              />
+            </div>
+
+            <div class="rq-slider-group">
+              <div class="rq-slider-header">
+                <label for="churnReduction">Churn Reduction Target</label>
+                <b>-{simChurnRed}%</b>
+              </div>
+              <input
+                id="churnReduction"
+                type="range"
+                min="0"
+                max="5"
+                step="0.5"
+                value={simChurnRed}
+                oninput={handleChurnSlider}
+                class="rq-slider"
+              />
+            </div>
+
+            <div class="rq-slider-group">
+              <div class="rq-slider-header">
+                <label for="winRateUplift">Win Rate Improvement</label>
+                <b>+{simWinRate}%</b>
+              </div>
+              <input
+                id="winRateUplift"
+                type="range"
+                min="0"
+                max="15"
+                step="1"
+                value={simWinRate}
+                oninput={handleWinSlider}
+                class="rq-slider"
+              />
+            </div>
+          </div>
+
+          <!-- Impact Outcome Column -->
+          <div class="rq-sim-impact">
+            <div class="rq-impact-kpis">
+              <div class="rq-impact-box">
+                <span>Incremental ARR</span>
+                <b class="rq-tone-good">+${simDeltaFormatted}</b>
+              </div>
+              <div class="rq-impact-box">
+                <span>Projected Net ARR</span>
+                <b>${simProjEndingFormatted}</b>
+              </div>
+              <div class="rq-impact-box">
+                <span>Projected NRR</span>
+                <b class="rq-tone-info">{simProjectedNRR}%</b>
+              </div>
+              <div class="rq-impact-box">
+                <span>Cash Runway Added</span>
+                <b class="rq-tone-good">+{simRunway} Mo</b>
+              </div>
+            </div>
+            <div class="rq-cfo-insight">
+              <strong>💡 CFO Takeaway:</strong>
+              <p>{simSummary}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cohort Dollar Retention Matrix -->
+      <div class="rq-card rq-rise rq-d5">
+        <div class="rq-card-header-row">
+          <div>
+            <h2 class="rq-section-title">Cohort Dollar Retention Heatmap</h2>
+            <p class="rq-sub">Track net expansion over customer lifetime across quarterly acquisition vintages</p>
+          </div>
+        </div>
+
+        <div class="rq-table-wrap">
+          <table class="rq-table">
+            <thead>
+              <tr>
+                <th>Cohort Vintage</th>
+                <th>Customers</th>
+                <th>Starting ARR</th>
+                <th>Month 3</th>
+                <th>Month 6</th>
+                <th>Month 9</th>
+                <th>Month 12</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={cohorts} for:item="c">
+                <tr key={c.cohortName}>
+                  <td><strong>{c.cohortName}</strong></td>
+                  <td>{c.customerCount} Logos</td>
+                  <td>${c.formattedStart}</td>
+                  <td>
+                    <span class={c.m3Class}>{c.m3Label}</span>
+                  </td>
+                  <td>
+                    <span class={c.m6Class}>{c.m6Label}</span>
+                  </td>
+                  <td>
+                    <span class={c.m9Class}>{c.m9Label}</span>
+                  </td>
+                  <td>
+                    <span class={c.m12Class}>{c.m12Label}</span>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+    <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+  </div>
+</template>

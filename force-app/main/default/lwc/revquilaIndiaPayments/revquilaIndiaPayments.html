@@ -1,0 +1,582 @@
+<template>
+  <div class="rq-stage" onpointermove={handlePointerMove} onpointerleave={handlePointerLeave}>
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <!-- Topbar & Branding -->
+      <div class="rq-topbar rq-rise">
+        <div class="rq-crumbs">
+          <c-revquila-brand></c-revquila-brand>
+          <span class="rq-sep">/</span>
+          <span class="rq-crumb-current">India Payments &amp; Auto-Reconciliation</span>
+        </div>
+        <div class="rq-topbar-actions">
+          <button class="rq-btn rq-quiet" onclick={loadData} title="Refresh Live Data">
+            <svg viewBox="0 0 24 24" class="rq-btn-icon" aria-hidden="true">
+              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Hero Header & High-Level Metrics -->
+      <header class="rq-card rq-hero rq-rise rq-d1">
+        <div class="rq-hero-top">
+          <div class="rq-tile" aria-hidden="true">₹</div>
+          <div class="rq-hero-title">
+            <div class="rq-badge-row">
+              <span class="rq-badge good">India Payments Core</span>
+              <span class="rq-badge info">Razorpay Subscriptions &amp; UTR AI</span>
+            </div>
+            <h1>Payments, Mandates &amp; Bank Reconciliation</h1>
+            <p class="rq-sub">
+              UPI AutoPay recurring e-mandates, autonomous UTR statement reconciliation, milestone payment plans, and intelligent dunning retries.
+            </p>
+          </div>
+        </div>
+
+        <div class="rq-metrics-strip">
+          <div class="rq-metric-card">
+            <span class="rq-metric-label">Reconciled Deposits</span>
+            <span class="rq-metric-val">₹{formattedTotalReconciled}</span>
+            <span class="rq-metric-hint">Matched via UTR &amp; AI</span>
+          </div>
+          <div class="rq-metric-card">
+            <span class="rq-metric-label">Active Mandates</span>
+            <span class="rq-metric-val">{activeMandatesCount}</span>
+            <span class="rq-metric-hint">UPI AutoPay &amp; e-Mandates</span>
+          </div>
+          <div class="rq-metric-card">
+            <span class="rq-metric-label">Pending Installments</span>
+            <span class="rq-metric-val">{pendingInstallmentsCount}</span>
+            <span class="rq-metric-hint">Across active payment plans</span>
+          </div>
+          <div class="rq-metric-card">
+            <span class="rq-metric-label">Exception Inbox Items</span>
+            <span class="rq-metric-val rq-tone-bad">{exceptionCount}</span>
+            <span class="rq-metric-hint">Awaiting human approval</span>
+          </div>
+        </div>
+
+        <!-- Segmented Tab Navigation -->
+        <nav class="rq-nav-tabs">
+          <button class={tabReconciliationClass} data-tab="reconciliation" onclick={setTab}>
+            🏦 Bank Statement (CSV &amp; UTR)
+          </button>
+          <button class={tabMandatesClass} data-tab="mandates" onclick={setTab}>
+            📱 UPI AutoPay &amp; e-Mandates
+          </button>
+          <button class={tabInstallmentsClass} data-tab="installments" onclick={setTab}>
+            🗓️ Installments &amp; Payment Plans
+          </button>
+          <button class={tabCouponsClass} data-tab="coupons" onclick={setTab}>
+            🏷️ Coupons &amp; Free Trials
+          </button>
+          <button class={tabRetriesClass} data-tab="retries" onclick={setTab}>
+            ⚡ Smart Retries &amp; Dunning
+          </button>
+        </nav>
+      </header>
+
+      <!-- TAB 1: BANK STATEMENT RECONCILIATION -->
+      <template lwc:if={isTabReconciliation}>
+        <section class="rq-card rq-rise rq-d2">
+          <div class="rq-section-head">
+            <div>
+              <h2>Bank Statement Upload &amp; UTR Reconciliation</h2>
+              <p class="rq-sub">
+                Upload Indian bank statements (HDFC, ICICI, SBI, Axis, Kotak). RevX auto-matches UTR numbers and exact invoice amounts. Unmatched lines automatically route to the Exception Inbox.
+              </p>
+            </div>
+            <div class="rq-actions">
+              <button class="rq-btn rq-quiet" onclick={loadSampleCsv} disabled={uploadingCsv}>
+                ⚡ Load Sample HDFC Statement
+              </button>
+            </div>
+          </div>
+
+          <!-- Uploader Box -->
+          <div class="rq-uploader-box">
+            <div class="rq-form-grid">
+              <div class="rq-field">
+                <label class="rq-label">Target Bank Rail</label>
+                <select class="rq-select" onchange={handleBankChange}>
+                  <template for:each={bankOptions} for:item="opt">
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  </template>
+                </select>
+              </div>
+              <div class="rq-field">
+                <label class="rq-label">Select Statement File (.CSV)</label>
+                <input type="file" accept=".csv" class="rq-file-input" onchange={handleCsvUpload} disabled={uploadingCsv} />
+              </div>
+            </div>
+
+            <template lwc:if={uploadingCsv}>
+              <div class="rq-alert info">
+                <span class="rq-spinner-sm"></span> Processing transactions, verifying UTR hashes, and running fuzzy customer matching…
+              </div>
+            </template>
+            <template lwc:if={uploadSuccessMessage}>
+              <div class="rq-alert good">{uploadSuccessMessage}</div>
+            </template>
+            <template lwc:if={uploadErrorMessage}>
+              <div class="rq-alert bad">{uploadErrorMessage}</div>
+            </template>
+          </div>
+
+          <!-- Recent Uploaded Statements -->
+          <h3 class="rq-mt">Uploaded Statements</h3>
+          <template lwc:if={statements.length}>
+            <div class="rq-table-wrap">
+              <table class="rq-table">
+                <thead>
+                  <tr>
+                    <th>Statement ID</th>
+                    <th>Bank</th>
+                    <th>Upload Date</th>
+                    <th>Lines</th>
+                    <th>Matched</th>
+                    <th>Exceptions</th>
+                    <th class="rq-right">Total Deposited</th>
+                    <th class="rq-right">Reconciled</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={statements} for:item="s">
+                    <tr key={s.id}>
+                      <td><span class="rq-strong">{s.name}</span></td>
+                      <td>{s.bankName}</td>
+                      <td>{s.uploadDate}</td>
+                      <td>{s.totalLines}</td>
+                      <td><span class="rq-badge good">{s.matchedLines}</span></td>
+                      <td><span class="rq-badge warn">{s.mismatchedLines}</span></td>
+                      <td class="rq-right">₹{s.totalAmount}</td>
+                      <td class="rq-right rq-strong">₹{s.reconciledAmount}</td>
+                      <td><span class="rq-badge info">{s.status}</span></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template lwc:else>
+            <p class="rq-empty-text">No bank statements uploaded yet. Upload a CSV or click "Load Sample HDFC Statement" above.</p>
+          </template>
+        </section>
+      </template>
+
+      <!-- TAB 2: UPI AUTOPAY & E-MANDATES -->
+      <template lwc:if={isTabMandates}>
+        <section class="rq-card rq-rise rq-d2">
+          <div class="rq-section-head">
+            <div>
+              <h2>UPI AutoPay &amp; e-Mandates (Razorpay Recurring)</h2>
+              <p class="rq-sub">
+                Set up recurring debit mandates across customer subscriptions. Customers authorize once via PhonePe, Google Pay, Paytm or NetBanking.
+              </p>
+            </div>
+            <div class="rq-actions">
+              <button class="rq-btn rq-primary" onclick={openMandateModal}>
+                + Setup Recurring Mandate
+              </button>
+            </div>
+          </div>
+
+          <template lwc:if={mandates.length}>
+            <div class="rq-table-wrap">
+              <table class="rq-table">
+                <thead>
+                  <tr>
+                    <th>Subscription</th>
+                    <th>Customer</th>
+                    <th>Mandate Type</th>
+                    <th>Mandate ID</th>
+                    <th class="rq-right">Debit Ceiling</th>
+                    <th class="rq-right">MRR</th>
+                    <th>Auth Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={mandates} for:item="m">
+                    <tr key={m.mandateId}>
+                      <td><span class="rq-strong">{m.subscriptionNumber}</span></td>
+                      <td>{m.accountName}</td>
+                      <td><span class="rq-badge info">{m.mandateType}</span></td>
+                      <td><code>{m.mandateId}</code></td>
+                      <td class="rq-right">₹{m.formattedMax}</td>
+                      <td class="rq-right rq-strong">₹{m.mrr}</td>
+                      <td>{m.authDate}</td>
+                      <td><span class={m.statusBadgeClass}>{m.mandateStatus}</span></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template lwc:else>
+            <p class="rq-empty-text">No recurring mandates configured yet. Click "+ Setup Recurring Mandate" to create one.</p>
+          </template>
+        </section>
+      </template>
+
+      <!-- TAB 3: INSTALLMENTS & PAYMENT PLANS -->
+      <template lwc:if={isTabInstallments}>
+        <section class="rq-card rq-rise rq-d2">
+          <div class="rq-section-head">
+            <div>
+              <h2>Installment Schedules &amp; Milestone Plans</h2>
+              <p class="rq-sub">
+                Split large invoices into customized milestone schedules (50% upfront advance, 25% delivery, 25% final signoff) or equal periodic installments.
+              </p>
+            </div>
+            <div class="rq-actions">
+              <button class="rq-btn rq-primary" onclick={openInstallmentModal}>
+                + Create Payment Plan
+              </button>
+            </div>
+          </div>
+
+          <template lwc:if={installments.length}>
+            <div class="rq-table-wrap">
+              <table class="rq-table">
+                <thead>
+                  <tr>
+                    <th>Invoice</th>
+                    <th>Customer</th>
+                    <th>Milestone #</th>
+                    <th>Due Date</th>
+                    <th class="rq-right">Amount Due</th>
+                    <th class="rq-right">Paid</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={installments} for:item="inst">
+                    <tr key={inst.id}>
+                      <td><span class="rq-strong">{inst.invoiceNumber}</span></td>
+                      <td>{inst.accountName}</td>
+                      <td>Milestone {inst.sequence}</td>
+                      <td>{inst.dueDate}</td>
+                      <td class="rq-right rq-strong">₹{inst.formattedAmount}</td>
+                      <td class="rq-right">₹{inst.formattedPaid}</td>
+                      <td><span class={inst.statusBadgeClass}>{inst.status}</span></td>
+                      <td><small>{inst.notes}</small></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template lwc:else>
+            <p class="rq-empty-text">No active installments. Choose an open invoice and create a payment plan.</p>
+          </template>
+        </section>
+      </template>
+
+      <!-- TAB 4: COUPONS & FREE TRIALS -->
+      <template lwc:if={isTabCoupons}>
+        <section class="rq-card rq-rise rq-d2">
+          <div class="rq-section-head">
+            <div>
+              <h2>Promotional Coupons &amp; Free Trials</h2>
+              <p class="rq-sub">
+                Define promotional campaigns with percentage/fixed discounts and free trial durations. Applied directly to customer subscriptions.
+              </p>
+            </div>
+            <div class="rq-actions">
+              <button class="rq-btn rq-quiet" onclick={openApplyModal}>
+                ⚡ Apply to Subscription
+              </button>
+              <button class="rq-btn rq-primary" onclick={openCouponModal}>
+                + Create Promo Code
+              </button>
+            </div>
+          </div>
+
+          <template lwc:if={coupons.length}>
+            <div class="rq-grid-cards">
+              <template for:each={coupons} for:item="c">
+                <div key={c.id} class="rq-promo-card">
+                  <div class="rq-promo-header">
+                    <span class="rq-promo-code">{c.code}</span>
+                    <span class="rq-badge good">{c.discountValue}% OFF</span>
+                  </div>
+                  <h4>{c.name}</h4>
+                  <p class="rq-sub">
+                    Trial: <strong>{c.freeTrialDays} days complimentary</strong>
+                  </p>
+                  <div class="rq-promo-footer">
+                    <small>Redeemed: {c.timesRedeemed} / {c.maxRedemptions}</small>
+                    <span class="rq-badge info">{c.discountType}</span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+          <template lwc:else>
+            <p class="rq-empty-text">No promo codes defined yet. Click "+ Create Promo Code" to get started.</p>
+          </template>
+        </section>
+      </template>
+
+      <!-- TAB 5: SMART RETRIES & DUNNING -->
+      <template lwc:if={isTabRetries}>
+        <section class="rq-card rq-rise rq-d2">
+          <div class="rq-section-head">
+            <div>
+              <h2>Autonomous Smart Retries &amp; Dunning Sync</h2>
+              <p class="rq-sub">
+                Intelligent exponential payment retries (Day 1, 3, 5, 7 cadence). Synchronizes with Dunning stages and automatically escalates exhausted attempts to the Exception Inbox.
+              </p>
+            </div>
+          </div>
+
+          <div class="rq-cadence-timeline">
+            <div class="rq-step-card">
+              <div class="rq-step-badge">Initial Failure</div>
+              <h4>Day 0</h4>
+              <p>Debit fails. Log failure reason &amp; advance Dunning stage to Touch 1.</p>
+            </div>
+            <div class="rq-step-card">
+              <div class="rq-step-badge">Retry 1</div>
+              <h4>Day 1 (+24h)</h4>
+              <p>Execute autonomous debit during optimal bank clearing window.</p>
+            </div>
+            <div class="rq-step-card">
+              <div class="rq-step-badge">Retry 2</div>
+              <h4>Day 3 (+48h)</h4>
+              <p>Re-attempt debit; dispatch payment link email/SMS notification.</p>
+            </div>
+            <div class="rq-step-card">
+              <div class="rq-step-badge">Retry 3</div>
+              <h4>Day 5 (+48h)</h4>
+              <p>Firm collection reminder; warning of impending late fees.</p>
+            </div>
+            <div class="rq-step-card rq-escalate">
+              <div class="rq-step-badge bad">Exhausted</div>
+              <h4>Day 7+</h4>
+              <p>Route to Exception Inbox with High severity for human collector outreach.</p>
+            </div>
+          </div>
+
+          <h3 class="rq-mt">Interactive Retry Simulator</h3>
+          <div class="rq-sim-box">
+            <div class="rq-form-grid">
+              <div class="rq-field">
+                <label class="rq-label">Invoice Number or ID</label>
+                <input type="text" class="rq-input" value={retryInvoiceIdentifier} onchange={handleRetryInvChange} placeholder="e.g. INV-00101" />
+              </div>
+              <div class="rq-field">
+                <label class="rq-label">Simulated Failure Reason</label>
+                <input type="text" class="rq-input" value={retryReason} onchange={handleRetryReasonChange} />
+              </div>
+            </div>
+            <button class="rq-btn rq-primary" onclick={runRetrySimulator} disabled={retrySaving}>
+              Simulate Failed Payment &amp; Trigger Cadence
+            </button>
+
+            <template lwc:if={retryResult}>
+              <div class="rq-alert info rq-mt">
+                <strong>Result:</strong> {retryResult.message}
+              </div>
+            </template>
+          </div>
+        </section>
+      </template>
+    </div>
+
+    <!-- MODAL: SETUP MANDATE -->
+    <template lwc:if={showMandateModal}>
+      <div class="rq-modal-backdrop">
+        <div class="rq-modal">
+          <div class="rq-modal-head">
+            <h3>Setup Recurring Mandate</h3>
+            <button class="rq-modal-close" onclick={closeMandateModal}>✕</button>
+          </div>
+          <div class="rq-modal-body">
+            <div class="rq-field">
+              <label class="rq-label">Target Subscription</label>
+              <select class="rq-select" onchange={handleMandateSubChange}>
+                <template for:each={activeSubscriptions} for:item="sub">
+                  <option key={sub.id} value={sub.id}>{sub.label}</option>
+                </template>
+              </select>
+            </div>
+            <div class="rq-field">
+              <label class="rq-label">Payment Instrument Rail</label>
+              <select class="rq-select" onchange={handleMandateTypeChange}>
+                <option value="UPI_AutoPay">UPI AutoPay (Google Pay / PhonePe / Paytm)</option>
+                <option value="e_Mandate_NetBanking">e-Mandate (NetBanking NPCI / NACH)</option>
+                <option value="Debit_Card">Recurring Debit Card Mandate</option>
+              </select>
+            </div>
+
+            <template lwc:if={mandateResult}>
+              <div class="rq-alert good rq-mt">
+                <p><strong>{mandateResult.message}</strong></p>
+                <p>Mandate ID: <code>{mandateResult.mandateId}</code></p>
+                <a href={mandateResult.authUrl} target="_blank" class="rq-link">Open Customer Authorization URL ↗</a>
+              </div>
+            </template>
+          </div>
+          <div class="rq-modal-foot">
+            <button class="rq-btn rq-quiet" onclick={closeMandateModal}>Cancel</button>
+            <button class="rq-btn rq-primary" onclick={saveMandate} disabled={mandateSaving}>
+              Initiate Mandate
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- MODAL: SETUP INSTALLMENTS -->
+    <template lwc:if={showInstallmentModal}>
+      <div class="rq-modal-backdrop">
+        <div class="rq-modal">
+          <div class="rq-modal-head">
+            <h3>Create Payment Plan</h3>
+            <button class="rq-modal-close" onclick={closeInstallmentModal}>✕</button>
+          </div>
+          <div class="rq-modal-body">
+            <div class="rq-field">
+              <label class="rq-label">Select Open Invoice</label>
+              <select class="rq-select" onchange={handleInstInvoiceChange}>
+                <template for:each={openInvoices} for:item="inv">
+                  <option key={inv.id} value={inv.id}>{inv.label}</option>
+                </template>
+              </select>
+            </div>
+            <div class="rq-field">
+              <label class="rq-label">Milestone Split Structure</label>
+              <select class="rq-select" onchange={handleInstSplitChange}>
+                <option value="equal">Equal Periodic Splits</option>
+                <option value="milestone_50_25_25">Milestone 50% Advance / 25% Delivery / 25% Signoff</option>
+              </select>
+            </div>
+            <div class="rq-field">
+              <label class="rq-label">Number of Installments (if equal splits)</label>
+              <input type="number" min="2" max="12" class="rq-input" value={installmentCount} onchange={handleInstCountChange} />
+            </div>
+          </div>
+          <div class="rq-modal-foot">
+            <button class="rq-btn rq-quiet" onclick={closeInstallmentModal}>Cancel</button>
+            <button class="rq-btn rq-primary" onclick={saveInstallments} disabled={installmentSaving}>
+              Generate Installment Schedule
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- MODAL: CREATE COUPON -->
+    <template lwc:if={showCouponModal}>
+      <div class="rq-modal-backdrop">
+        <div class="rq-modal">
+          <div class="rq-modal-head">
+            <h3>Create Promotional Coupon</h3>
+            <button class="rq-modal-close" onclick={closeCouponModal}>✕</button>
+          </div>
+          <div class="rq-modal-body">
+            <div class="rq-field">
+              <label class="rq-label">Coupon Code</label>
+              <input type="text" class="rq-input" data-field="code" placeholder="e.g. DIWALI25" onchange={handleCouponField} />
+            </div>
+            <div class="rq-field">
+              <label class="rq-label">Promotion Name</label>
+              <input type="text" class="rq-input" data-field="name" placeholder="e.g. Diwali Festive Offer" onchange={handleCouponField} />
+            </div>
+            <div class="rq-field">
+              <label class="rq-label">Discount Percentage (%)</label>
+              <input type="number" class="rq-input" data-field="value" value="20" onchange={handleCouponField} />
+            </div>
+            <div class="rq-field">
+              <label class="rq-label">Complimentary Free Trial (Days)</label>
+              <input type="number" class="rq-input" data-field="trial" value="14" onchange={handleCouponField} />
+            </div>
+            <div class="rq-field">
+              <label class="rq-label">Max Allowed Redemptions</label>
+              <input type="number" class="rq-input" data-field="max" value="100" onchange={handleCouponField} />
+            </div>
+          </div>
+          <div class="rq-modal-foot">
+            <button class="rq-btn rq-quiet" onclick={closeCouponModal}>Cancel</button>
+            <button class="rq-btn rq-primary" onclick={saveCoupon} disabled={couponSaving}>
+              Save Promo Code
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- MODAL: APPLY COUPON -->
+    <template lwc:if={showApplyCouponModal}>
+      <div class="rq-modal-backdrop">
+        <div class="rq-modal">
+          <div class="rq-modal-head">
+            <h3>Apply Promo Code to Subscription</h3>
+            <button class="rq-modal-close" onclick={closeApplyModal}>✕</button>
+          </div>
+          <div class="rq-modal-body">
+            <div class="rq-field">
+              <label class="rq-label">Target Subscription</label>
+              <select class="rq-select" onchange={handleApplySubChange}>
+                <template for:each={activeSubscriptions} for:item="sub">
+                  <option key={sub.id} value={sub.id}>{sub.label}</option>
+                </template>
+              </select>
+            </div>
+            <div class="rq-field">
+              <label class="rq-label">Promo Code</label>
+              <input type="text" class="rq-input" placeholder="e.g. FESTIVE20" onchange={handleApplyCodeChange} />
+            </div>
+            <template lwc:if={applyResult}>
+              <div class="rq-alert good rq-mt">
+                {applyResult.message}
+              </div>
+            </template>
+          </div>
+          <div class="rq-modal-foot">
+            <button class="rq-btn rq-quiet" onclick={closeApplyModal}>Cancel</button>
+            <button class="rq-btn rq-primary" onclick={saveApplyCoupon} disabled={applySaving}>
+              Apply Code
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- MODAL: RESOLVE BANK LINE -->
+    <template lwc:if={showResolveModal}>
+      <div class="rq-modal-backdrop">
+        <div class="rq-modal">
+          <div class="rq-modal-head">
+            <h3>Manually Reconcile Bank Transaction</h3>
+            <button class="rq-modal-close" onclick={closeResolve}>✕</button>
+          </div>
+          <div class="rq-modal-body">
+            <p class="rq-sub">Select the open invoice to credit this bank deposit against. This will generate a payment and clear the pending Exception Item.</p>
+            <div class="rq-field rq-mt">
+              <label class="rq-label">Select Invoice</label>
+              <select class="rq-select" onchange={handleInvoiceSelect}>
+                <template for:each={openInvoices} for:item="inv">
+                  <option key={inv.id} value={inv.id}>{inv.label}</option>
+                </template>
+              </select>
+            </div>
+          </div>
+          <div class="rq-modal-foot">
+            <button class="rq-btn rq-quiet" onclick={closeResolve}>Cancel</button>
+            <button class="rq-btn rq-primary" onclick={saveResolve} disabled={resolvingSaving}>
+              Reconcile &amp; Record Payment
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

@@ -1,0 +1,9 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+@container rq-page (max-width: 640px) {
+  .rq-stack .rq-cell-meta small {
+    display: none;
+  }
+}

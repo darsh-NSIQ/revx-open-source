@@ -1,0 +1,134 @@
+<template>
+  <!-- Command Bar Backdrop & Modal -->
+  <template lwc:if={isOpen}>
+    <div class="rq-cmd-overlay" onclick={handleBackdropClick}>
+      <div class="rq-cmd-modal" onclick={stopPropagation} role="dialog" aria-modal="true" aria-label="RevX AI Command Palette">
+        
+        <!-- Header / Search input -->
+        <div class="rq-cmd-search-wrap">
+          <svg viewBox="0 0 24 24" class="rq-cmd-search-icon" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input
+            type="text"
+            class="rq-cmd-input"
+            placeholder="Type a command (e.g. 'create a quote for Acme, 50 licenses, 10% discount, Net 30')..."
+            value={promptValue}
+            oninput={handleInputChange}
+            onkeydown={handleInputKeyDown}
+            lwc:ref="cmdInput"
+            autofocus
+          />
+          <template lwc:if={loading}>
+            <div class="rq-cmd-spinner" title="AI Processing..."></div>
+          </template>
+          <button
+            class={micButtonClass}
+            onclick={toggleVoiceInput}
+            title={micButtonTitle}
+            type="button"
+          >
+            <svg viewBox="0 0 24 24" class="rq-mic-icon" aria-hidden="true">
+              <path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+              <path fill="currentColor" d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+          </button>
+          <button class="rq-cmd-esc-badge" onclick={close} title="Close (Esc)">ESC</button>
+        </div>
+
+        <!-- Quick Action Prompt Chips -->
+        <template lwc:if={showSuggestions}>
+          <div class="rq-cmd-suggestions">
+            <p class="rq-cmd-section-title">SUGGESTED ACTIONS</p>
+            <div class="rq-chips-grid">
+              <template for:each={suggestedChips} for:item="chip">
+                <button
+                  key={chip.id}
+                  class="rq-chip-btn"
+                  data-prompt={chip.prompt}
+                  onclick={handleChipClick}
+                >
+                  <span class="rq-chip-badge">{chip.category}</span>
+                  <span class="rq-chip-text">{chip.label}</span>
+                </button>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <!-- Action Preview & Confirmation Section -->
+        <template lwc:if={previewData}>
+          <div class="rq-cmd-preview-box">
+            <div class="rq-preview-header">
+              <div class="rq-preview-title-row">
+                <span class={previewStatusBadgeClass}>{previewData.actionLabel}</span>
+                <span class="rq-preview-provider">{previewData.provider}</span>
+              </div>
+              <p class="rq-preview-intent">{previewData.intentDescription}</p>
+            </div>
+
+            <!-- Parameters Pills -->
+            <template lwc:if={hasParameters}>
+              <div class="rq-preview-params">
+                <template for:each={parameterList} for:item="param">
+                  <div key={param.key} class="rq-param-pill">
+                    <span class="rq-param-label">{param.label}:</span>
+                    <strong class="rq-param-val">{param.value}</strong>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- Markdown / Detail Summary -->
+            <div class="rq-preview-body">
+              <lightning-formatted-rich-text value={previewHtml}></lightning-formatted-rich-text>
+            </div>
+
+            <!-- Status & Result Notice -->
+            <template lwc:if={previewData.resultMessage}>
+              <div class={resultNoticeClass}>
+                <p>{previewData.resultMessage}</p>
+                <template lwc:if={previewData.resultUrl}>
+                  <a href={previewData.resultUrl} target="_blank" class="rq-result-link">Open Record →</a>
+                </template>
+              </div>
+            </template>
+
+            <!-- Action Controls -->
+            <div class="rq-cmd-footer-actions">
+              <button class="rq-btn-secondary" onclick={handleReset}>Cancel</button>
+
+              <template lwc:if={previewData.requiresConfirmation}>
+                <button class="rq-btn-primary" onclick={handleConfirmExecute} disabled={executing}>
+                  <template lwc:if={executing}>Executing...</template>
+                  <template lwc:else>Confirm &amp; Execute Action</template>
+                </button>
+              </template>
+
+              <template lwc:if={previewData.requiresApproval}>
+                <button class="rq-btn-warning" onclick={handleGoToExceptions}>
+                  Open in Exception Inbox →
+                </button>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <!-- Command Palette Footer Shortcut Hints -->
+        <footer class="rq-cmd-footer">
+          <div class="rq-shortcut-hint">
+            <kbd>Enter</kbd> <span>Run Command</span>
+          </div>
+          <div class="rq-shortcut-hint">
+            <kbd>Esc</kbd> <span>Close</span>
+          </div>
+          <div class="rq-shortcut-hint">
+            <kbd>Cmd+K</kbd> <span>Toggle Anywhere</span>
+          </div>
+        </footer>
+
+      </div>
+    </div>
+  </template>
+</template>

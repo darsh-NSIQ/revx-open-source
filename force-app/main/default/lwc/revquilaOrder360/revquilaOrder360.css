@@ -1,0 +1,195 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+/* ---------- path: four steps on one track ---------- */
+.rq-path {
+  --rq-p: 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* the track runs between the centres of the first and last nodes */
+.rq-path::before,
+.rq-path::after {
+  content: "";
+  position: absolute;
+  top: 13px;
+  left: calc(100% / 8);
+  height: 3px;
+  border-radius: 3px;
+}
+
+.rq-path::before {
+  right: calc(100% / 8);
+  background: var(--rq-line);
+}
+
+.rq-path::after {
+  width: calc(100% * 6 / 8 * var(--rq-p));
+  background: linear-gradient(90deg, var(--rq-acc), var(--rq-acc2));
+  transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.rq-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--rq-mut);
+}
+
+.rq-node {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--rq-card);
+  box-shadow: 0 0 0 2px var(--rq-line);
+  transition:
+    background 0.4s,
+    box-shadow 0.4s;
+}
+
+.rq-node svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--rq-accfg);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transition: opacity 0.3s 0.2s;
+}
+
+.rq-step.rq-done {
+  color: var(--rq-fg);
+}
+
+.rq-step.rq-done .rq-node {
+  background: var(--rq-acc);
+  box-shadow: 0 0 0 2px var(--rq-acc);
+}
+
+.rq-step.rq-done .rq-node svg {
+  opacity: 1;
+}
+
+.rq-step.rq-next {
+  --rq-halo: var(--rq-acc);
+  color: var(--rq-acc);
+}
+
+.rq-step.rq-waiting {
+  --rq-halo: var(--rq-warn);
+  color: var(--rq-warn);
+}
+
+.rq-step.rq-next .rq-node,
+.rq-step.rq-waiting .rq-node {
+  box-shadow:
+    0 0 0 2px var(--rq-halo),
+    0 0 0 2px color-mix(in srgb, var(--rq-halo) 40%, transparent);
+  animation: rq-halo 1.8s ease-out infinite;
+}
+
+.rq-step.rq-blocked {
+  color: var(--rq-bad);
+}
+
+.rq-step.rq-blocked .rq-node {
+  background: var(--rq-bad);
+  box-shadow: 0 0 0 2px var(--rq-bad);
+}
+
+.rq-step.rq-blocked .rq-node::after {
+  content: "×";
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--rq-accfg);
+}
+
+.rq-step.rq-blocked .rq-node svg {
+  display: none;
+}
+
+/* ---------- line items ---------- */
+.rq-card-head .rq-sub {
+  margin-top: 2px;
+}
+
+.rq-lines .rq-over {
+  font-weight: 700;
+  color: var(--rq-warn);
+}
+
+/* notes on the left, totals on the right; the totals keep their side when there are no notes */
+.rq-under {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+  gap: 18px;
+  align-items: start;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rq-line);
+}
+
+.rq-under .rq-totals {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rq-notes h3 {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rq-mut);
+}
+
+.rq-notes p {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+@keyframes rq-halo {
+  to {
+    box-shadow:
+      0 0 0 2px var(--rq-halo),
+      0 0 0 11px transparent;
+  }
+}
+
+.rq-hero .rq-verdict {
+  margin-top: 14px;
+}
+
+.rq-form .rq-brief {
+  margin-top: 0;
+}
+
+@container rq-page (max-width: 560px) {
+  .rq-step {
+    font-size: 10.5px;
+  }
+
+  .rq-under {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

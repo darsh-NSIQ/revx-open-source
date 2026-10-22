@@ -1,0 +1,110 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+/* how far through the term it is */
+.rq-term {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rq-term .rq-sub {
+  margin: 0;
+}
+
+.rq-lines {
+  margin-top: 8px;
+}
+
+.rq-act-col {
+  width: 1%;
+  padding-inline: 6px 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---------- MRR over the term: one bar per change, tallest is the highest MRR ---------- */
+.rq-bars {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-items: end;
+  height: 170px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rq-bars li {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 5px;
+  height: 100%;
+  text-align: center;
+}
+
+.rq-bars strong {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-bars small {
+  font-size: 11.5px;
+  color: var(--rq-mut);
+}
+
+.rq-bar {
+  align-self: end;
+  height: calc(100% * var(--rq-p));
+  min-height: 3px;
+  border-radius: 8px 8px 3px 3px;
+  background: linear-gradient(180deg, var(--rq-acc2), var(--rq-acc));
+  transform-origin: bottom;
+  animation: rq-up 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--rq-i) * 90ms + 0.3s);
+  transition: height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---------- side cards ---------- */
+.rq-renew {
+  margin-top: 14px;
+}
+
+.rq-nothing {
+  margin-top: 10px;
+}
+
+/* ---------- modals ---------- */
+.rq-dialog-body {
+  margin: 0;
+}
+
+.rq-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rq-mut);
+}
+
+.rq-seg {
+  align-self: flex-start;
+}
+
+.rq-kv.rq-panel {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--rq-bg);
+  animation: rq-rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.rq-fine {
+  margin: 0;
+}
+
+@keyframes rq-up {
+  from {
+    transform: scaleY(0);
+  }
+}

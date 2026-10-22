@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Billing_Started__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>On: the billing schedule and revenue schedule were created when the order was activated.</description>
+    <label>Billing Started</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

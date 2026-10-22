@@ -1,0 +1,118 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+.rq-step-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--rq-tint);
+  color: var(--rq-acc);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rq-top-actions .rq-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  margin-right: 4px;
+}
+
+.rq-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.rq-sim-card {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.04), rgba(37, 99, 235, 0.08));
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+.rq-sim-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--rq-acc);
+  margin-bottom: 4px;
+}
+
+.rq-sim-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: flex-end;
+  margin-top: 10px;
+}
+
+.rq-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rq-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rq-mut);
+}
+
+.rq-select,
+.rq-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--rq-line);
+  background: var(--rq-card);
+  color: var(--rq-ink);
+  font-size: 13px;
+}
+
+.rq-btn-ingest {
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rq-sub-id {
+  font-size: 11px;
+  color: var(--rq-mut);
+  font-weight: normal;
+}
+
+.rq-meter-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rq-meter-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--rq-line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.rq-meter-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.rq-meter-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--rq-mut);
+}
+
+.rq-accrued-text {
+  font-size: 14px;
+  color: var(--rq-good, #16a34a);
+}

@@ -1,0 +1,627 @@
+<template>
+  <div class="td-studio">
+    <!-- Top Studio Navbar -->
+    <header class="td-topbar">
+      <div class="td-brand-group">
+        <c-revquila-brand></c-revquila-brand>
+        <div class="td-divider" aria-hidden="true"></div>
+        <div class="td-template-selector">
+          <label for="template-select" class="rq-hint">Preset:</label>
+          <select id="template-select" class="rq-input" onchange={handlePresetChange}>
+            <template for:each={presets} for:item="preset">
+              <option key={preset.id} value={preset.id} selected={preset.selected}>
+                {preset.name}
+              </option>
+            </template>
+          </select>
+        </div>
+      </div>
+
+      <div class="td-view-modes">
+        <button
+          class={designerModeClass}
+          data-mode="designer"
+          onclick={handleViewMode}
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+          Designer Canvas
+        </button>
+        <button
+          class={previewModeClass}
+          data-mode="preview"
+          onclick={handleViewMode}
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          Print Preview
+        </button>
+      </div>
+
+      <div class="td-actions">
+        <button class="rq-btn rq-quiet" onclick={resetDefaults} title="Revert all changes to defaults">
+          Reset
+        </button>
+        <button class="rq-btn rq-quiet" onclick={exportTestPdf} disabled={exportingPdf}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="rq-btn-icon">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export PDF
+        </button>
+        <button class="rq-btn rq-primary" onclick={saveAndPublish} disabled={saving}>
+          Save &amp; Publish
+        </button>
+      </div>
+    </header>
+
+    <!-- 3-Column Studio Workspace -->
+    <div class="td-workspace">
+      <!-- Left Panel: Section Structure & Reordering -->
+      <aside class="td-panel-left">
+        <div class="td-panel-header">
+          <h2>Document Sections</h2>
+          <p>Drag or use arrows to reorder, toggle visibility</p>
+        </div>
+
+        <div class="td-section-list">
+          <template for:each={sections} for:item="sec" for:index="index">
+            <div
+              key={sec.id}
+              class={sec.cardClass}
+              data-id={sec.id}
+              onclick={selectSection}
+            >
+              <div class="td-card-left">
+                <span class="td-drag-handle" title="Section drag handle">
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="9" cy="5" r="1.5"></circle>
+                    <circle cx="15" cy="5" r="1.5"></circle>
+                    <circle cx="9" cy="12" r="1.5"></circle>
+                    <circle cx="15" cy="12" r="1.5"></circle>
+                    <circle cx="9" cy="19" r="1.5"></circle>
+                    <circle cx="15" cy="19" r="1.5"></circle>
+                  </svg>
+                </span>
+                <div class="td-card-info">
+                  <span class="td-card-title">{sec.name}</span>
+                  <span class="td-card-subtitle">{sec.summary}</span>
+                </div>
+              </div>
+
+              <div class="td-card-actions" onclick={stopPropagation}>
+                <button
+                  class="td-icon-btn"
+                  title="Move section up"
+                  data-id={sec.id}
+                  data-dir="up"
+                  onclick={moveSection}
+                  disabled={sec.isFirst}
+                >
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                </button>
+                <button
+                  class="td-icon-btn"
+                  title="Move section down"
+                  data-id={sec.id}
+                  data-dir="down"
+                  onclick={moveSection}
+                  disabled={sec.isLast}
+                >
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <button
+                  class="td-icon-btn"
+                  title={sec.visibleTitle}
+                  data-id={sec.id}
+                  onclick={toggleSectionVisibility}
+                >
+                  <template lwc:if={sec.visible}>
+                    <svg viewBox="0 0 24 24">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </template>
+                  <template lwc:else>
+                    <svg viewBox="0 0 24 24">
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                    </svg>
+                  </template>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </aside>
+
+      <!-- Center Panel: Live WYSIWYG Document Canvas -->
+      <main class="td-panel-center">
+        <!-- Floating Canvas Zoom Bar -->
+        <div class="td-canvas-controls">
+          <span>{docConfig.pageSize} Paper</span>
+          <span>·</span>
+          <span>Layout: <strong>{docConfig.layout}</strong></span>
+          <span>·</span>
+          <span>Theme: <strong>{activePresetName}</strong></span>
+        </div>
+
+        <!-- Rendered Document Paper Sheet -->
+        <div class={paperClass} style={paperInlineStyle}>
+          <!-- Watermark -->
+          <template lwc:if={showWatermark}>
+            <div class="td-doc-watermark" aria-hidden="true">
+              {watermarkText}
+            </div>
+          </template>
+
+          <!-- Rendered Blocks in Active Order -->
+          <template for:each={orderedSections} for:item="block">
+            <template lwc:if={block.visible}>
+              <div
+                key={block.id}
+                class={block.wrapperClass}
+                data-id={block.id}
+                onclick={selectSectionFromCanvas}
+              >
+                <template lwc:if={isDesignerMode}>
+                  <div class="td-block-badge">
+                    <span>{block.name}</span>
+                  </div>
+                </template>
+
+                <!-- SECTION 1: HEADER & LOGO -->
+                <template lwc:if={block.isHeader}>
+                  <div class="td-header-row" style={headerFlexStyle}>
+                    <div class="td-logo-area">
+                      <template lwc:if={docConfig.showLogo}>
+                        <div class="td-logo-badge">
+                          <span>Rev</span><span style={accentTextStyle}>X</span>
+                        </div>
+                      </template>
+                      <div class="td-company-info">
+                        <strong>{company.name}</strong><br />
+                        {company.address}<br />
+                        {company.city}, {company.state} {company.postalCode}<br />
+                        <template lwc:if={company.registrationNumber}>
+                          <span>Tax Reg: {company.registrationNumber}</span>
+                        </template>
+                      </div>
+                    </div>
+                    <div class="td-doc-heading">
+                      <h1 style={accentTextStyle}>{documentTitle}</h1>
+                      <span>{sampleData.number}</span>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- SECTION 2: METADATA & PLACE OF SUPPLY -->
+                <template lwc:if={block.isMeta}>
+                  <div class="td-meta-grid">
+                    <div class="td-meta-item">
+                      <dt>Issue Date</dt>
+                      <dd>{sampleData.date}</dd>
+                    </div>
+                    <div class="td-meta-item">
+                      <dt>Valid Until / Due</dt>
+                      <dd>{sampleData.dueDate}</dd>
+                    </div>
+                    <div class="td-meta-item">
+                      <dt>Payment Terms</dt>
+                      <dd>{sampleData.paymentTerms}</dd>
+                    </div>
+                    <div class="td-meta-item">
+                      <dt>Reference / PO</dt>
+                      <dd>{sampleData.reference}</dd>
+                    </div>
+                    <div class="td-meta-item">
+                      <dt>Sales Representative</dt>
+                      <dd>{sampleData.owner}</dd>
+                    </div>
+                    <div class="td-meta-item">
+                      <dt>Place of Supply</dt>
+                      <dd>{sampleData.placeOfSupply}</dd>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- SECTION 3: PARTIES (BILL TO / SHIP TO) -->
+                <template lwc:if={block.isParties}>
+                  <div class="td-parties-row">
+                    <div class="td-party-col">
+                      <h4>Bill To</h4>
+                      <strong>{sampleData.customerName}</strong>
+                      <p>
+                        {sampleData.contact}<br />
+                        {sampleData.customerAddress}<br />
+                        Tax Reg: {sampleData.customerTaxId}
+                      </p>
+                    </div>
+                    <div class="td-party-col">
+                      <h4>Ship / Deliver To</h4>
+                      <strong>{sampleData.customerName}</strong>
+                      <p>
+                        Attn: Operations &amp; Procurement<br />
+                        {sampleData.customerAddress}<br />
+                        Delivery Window: Net 7 Days
+                      </p>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- SECTION 4: LINE ITEMS & PRODUCTS TABLE -->
+                <template lwc:if={block.isLines}>
+                  <table class="td-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 32px">#</th>
+                        <th>Item &amp; Description</th>
+                        <th class="td-num">Qty</th>
+                        <th class="td-num">Unit Price</th>
+                        <template lwc:if={docConfig.showDiscount}>
+                          <th class="td-num">Discount</th>
+                        </template>
+                        <th class="td-num">Net Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template for:each={sampleData.lines} for:item="line">
+                        <tr key={line.id}>
+                          <td>{line.no}</td>
+                          <td>
+                            <strong>{line.name}</strong>
+                            <template lwc:if={docConfig.showUnit}>
+                              <br /><small class="rq-hint">{line.unit}</small>
+                            </template>
+                          </td>
+                          <td class="td-num">{line.qty}</td>
+                          <td class="td-num">{line.price}</td>
+                          <template lwc:if={docConfig.showDiscount}>
+                            <td class="td-num">{line.discount}</td>
+                          </template>
+                          <td class="td-num"><strong>{line.total}</strong></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </template>
+
+                <!-- SECTION 5: TOTALS & TAX BREAKDOWN -->
+                <template lwc:if={block.isTotals}>
+                  <div class="td-totals-container">
+                    <div class="td-totals-box">
+                      <div class="td-total-line">
+                        <span>Subtotal</span>
+                        <span>{sampleData.subtotal}</span>
+                      </div>
+                      <template lwc:if={docConfig.showDiscount}>
+                        <div class="td-total-line" style="color: var(--rq-good, #15803d)">
+                          <span>Total Discount</span>
+                          <span>- {sampleData.discountTotal}</span>
+                        </div>
+                      </template>
+                      <template lwc:if={docConfig.showTaxBreakup}>
+                        <div class="td-total-line">
+                          <span>Taxable Amount</span>
+                          <span>{sampleData.netTotal}</span>
+                        </div>
+                        <template for:each={sampleData.taxBreakup} for:item="t">
+                          <div key={t.label} class="td-total-line">
+                            <span>{t.label} ({t.rate})</span>
+                            <span>{t.amount}</span>
+                          </div>
+                        </template>
+                      </template>
+                      <div class="td-total-grand" style={accentGrandTotalStyle}>
+                        <span>Total Due</span>
+                        <span>{sampleData.grandTotal}</span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- SECTION 6: TERMS & CONDITIONS -->
+                <template lwc:if={block.isTerms}>
+                  <div class="td-terms-area">
+                    <h4>Terms &amp; Conditions</h4>
+                    <p>{docConfig.terms}</p>
+                  </div>
+                </template>
+
+                <!-- SECTION 7: BANK & REMITTANCE -->
+                <template lwc:if={block.isBank}>
+                  <template lwc:if={docConfig.showBankDetails}>
+                    <div class="td-terms-area">
+                      <h4>Bank &amp; Wire Transfer Details</h4>
+                      <p>{docConfig.bankDetails}</p>
+                    </div>
+                  </template>
+                </template>
+
+                <!-- SECTION 8: SIGNATURES -->
+                <template lwc:if={block.isSignatures}>
+                  <template lwc:if={docConfig.showSignature}>
+                    <div class="td-sig-row">
+                      <div class="td-sig-box">
+                        <span class="td-sig-title">Authorized Signatory</span>
+                        <div class="td-sig-line">
+                          <span>RevX Electronic Signature</span>
+                        </div>
+                        <span class="td-sig-name">{docConfig.signatory}</span>
+                        <span class="td-sig-title">{company.name}</span>
+                      </div>
+                      <div class="td-sig-box">
+                        <span class="td-sig-title">Client Acceptance</span>
+                        <div class="td-sig-line"></div>
+                        <span class="td-sig-name">Authorized Client Signer</span>
+                        <span class="td-sig-title">{sampleData.customerName}</span>
+                      </div>
+                    </div>
+                  </template>
+                </template>
+
+                <!-- SECTION 9: FOOTER -->
+                <template lwc:if={block.isFooter}>
+                  <div class="td-doc-footer-text">
+                    <p>{docConfig.footer}</p>
+                  </div>
+                </template>
+
+              </div>
+            </template>
+          </template>
+        </div>
+      </main>
+
+      <!-- Right Panel: Inspector & Style Controls -->
+      <aside class="td-panel-right">
+        <div class="td-tabs-bar">
+          <button
+            class={styleTabClass}
+            data-tab="style"
+            onclick={handleInspectorTab}
+          >
+            Style &amp; Theme
+          </button>
+          <button
+            class={contentTabClass}
+            data-tab="content"
+            onclick={handleInspectorTab}
+          >
+            Content &amp; Clauses
+          </button>
+          <button
+            class={dataTabClass}
+            data-tab="data"
+            onclick={handleInspectorTab}
+          >
+            Data &amp; Currency
+          </button>
+        </div>
+
+        <div class="td-inspector-body">
+          <!-- TAB 1: STYLE & THEME -->
+          <template lwc:if={isTabStyle}>
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="layout-mode">Layout Design</label>
+              <select id="layout-mode" class="rq-input" data-field="layout" onchange={handleDocConfig}>
+                <option value="modern" selected={isLayoutModern}>Modern SaaS (Clean &amp; Bold)</option>
+                <option value="classic" selected={isLayoutClassic}>Corporate Classic (Formal Borders)</option>
+                <option value="minimal" selected={isLayoutMinimal}>Executive Minimalist (Light Air)</option>
+              </select>
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label">Brand Accent Color</label>
+              <div class="td-color-swatches">
+                <template for:each={swatches} for:item="swatch">
+                  <div
+                    key={swatch.hex}
+                    class={swatch.cls}
+                    style={swatch.style}
+                    title={swatch.name}
+                    data-hex={swatch.hex}
+                    onclick={pickAccentColor}
+                  ></div>
+                </template>
+              </div>
+              <input
+                type="text"
+                class="rq-input"
+                placeholder="#0176d3"
+                value={docConfig.accent}
+                data-field="accent"
+                oninput={handleDocConfig}
+                style="margin-top: 6px;"
+              />
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="font-family">Typography Font</label>
+              <select id="font-family" class="rq-input" data-field="font" onchange={handleDocConfig}>
+                <option value="sans" selected={isFontSans}>Inter / Modern Sans</option>
+                <option value="serif" selected={isFontSerif}>Playfair / Editorial Serif</option>
+              </select>
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="page-size">Page Size</label>
+              <select id="page-size" class="rq-input" data-field="pageSize" onchange={handleDocConfig}>
+                <option value="A4" selected={isA4}>A4 (International Standard)</option>
+                <option value="Letter" selected={isLetter}>US Letter</option>
+              </select>
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="logo-pos">Logo Alignment</label>
+              <select id="logo-pos" class="rq-input" data-field="logoPosition" onchange={handleDocConfig}>
+                <option value="left" selected={isLogoLeft}>Left Aligned</option>
+                <option value="right" selected={isLogoRight}>Right Aligned</option>
+              </select>
+            </div>
+          </template>
+
+          <!-- TAB 2: CONTENT & CLAUSES -->
+          <template lwc:if={isTabContent}>
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label">Table Display Options</label>
+              <div class="td-checks-list">
+                <label class="td-check-row">
+                  <span>Show Discount Column</span>
+                  <input
+                    type="checkbox"
+                    checked={docConfig.showDiscount}
+                    data-field="showDiscount"
+                    onchange={handleDocConfig}
+                  />
+                </label>
+                <label class="td-check-row">
+                  <span>Show Product Units</span>
+                  <input
+                    type="checkbox"
+                    checked={docConfig.showUnit}
+                    data-field="showUnit"
+                    onchange={handleDocConfig}
+                  />
+                </label>
+                <label class="td-check-row">
+                  <span>Show Tax Breakdown</span>
+                  <input
+                    type="checkbox"
+                    checked={docConfig.showTaxBreakup}
+                    data-field="showTaxBreakup"
+                    onchange={handleDocConfig}
+                  />
+                </label>
+                <label class="td-check-row">
+                  <span>Show Bank Details Block</span>
+                  <input
+                    type="checkbox"
+                    checked={docConfig.showBankDetails}
+                    data-field="showBankDetails"
+                    onchange={handleDocConfig}
+                  />
+                </label>
+                <label class="td-check-row">
+                  <span>Show Signature Line</span>
+                  <input
+                    type="checkbox"
+                    checked={docConfig.showSignature}
+                    data-field="showSignature"
+                    onchange={handleDocConfig}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="quote-title-field">Document Title</label>
+              <input
+                id="quote-title-field"
+                class="rq-input"
+                type="text"
+                value={docConfig.quoteTitle}
+                data-field="quoteTitle"
+                oninput={handleDocConfig}
+              />
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="terms-text">Terms &amp; Legal Clauses</label>
+              <textarea
+                id="terms-text"
+                class="rq-input"
+                rows="4"
+                data-field="terms"
+                oninput={handleDocConfig}
+              >{docConfig.terms}</textarea>
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="bank-text">Bank Wire Instructions</label>
+              <textarea
+                id="bank-text"
+                class="rq-input"
+                rows="3"
+                data-field="bankDetails"
+                oninput={handleDocConfig}
+              >{docConfig.bankDetails}</textarea>
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="signatory-name">Signatory Name / Title</label>
+              <input
+                id="signatory-name"
+                class="rq-input"
+                type="text"
+                value={docConfig.signatory}
+                data-field="signatory"
+                oninput={handleDocConfig}
+              />
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="footer-text">Footer Note</label>
+              <input
+                id="footer-text"
+                class="rq-input"
+                type="text"
+                value={docConfig.footer}
+                data-field="footer"
+                oninput={handleDocConfig}
+              />
+            </div>
+          </template>
+
+          <!-- TAB 3: DATA & CURRENCY -->
+          <template lwc:if={isTabData}>
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="sample-kind">Document Sample Type</label>
+              <select id="sample-kind" class="rq-input" onchange={handleSampleKind}>
+                <option value="quote" selected={isSampleQuote}>Sales Quote / Proposal</option>
+                <option value="order" selected={isSampleOrder}>Order Confirmation</option>
+                <option value="invoice" selected={isSampleInvoice}>B2B Tax Invoice</option>
+              </select>
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label" for="sample-currency">Preview Currency &amp; Region</label>
+              <select id="sample-currency" class="rq-input" onchange={handleCurrencyChange}>
+                <option value="USD" selected={isCurrencyUSD}>USD ($) · United States</option>
+                <option value="INR" selected={isCurrencyINR}>INR (₹) · India (GST Ready)</option>
+                <option value="EUR" selected={isCurrencyEUR}>EUR (€) · Europe (VAT)</option>
+                <option value="GBP" selected={isCurrencyGBP}>GBP (£) · United Kingdom</option>
+              </select>
+            </div>
+
+            <div class="td-ctrl-group">
+              <label class="td-ctrl-label">Watermark</label>
+              <label class="td-check-row">
+                <span>Show "DRAFT" Watermark</span>
+                <input
+                  type="checkbox"
+                  checked={docConfig.draftWatermark}
+                  data-field="draftWatermark"
+                  onchange={handleDocConfig}
+                />
+              </label>
+            </div>
+          </template>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Toast Notification & Sticky Chatbot -->
+    <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+    <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+  </div>
+</template>

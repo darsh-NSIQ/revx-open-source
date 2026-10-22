@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Scope__c</fullName>
+    <description>What the threshold counts: the line&apos;s quantity, its term in months, or the quote&apos;s net amount.</description>
+    <label>Applies From</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>quantity</fullName>
+                <default>false</default>
+                <label>Quantity</label>
+            </value>
+            <value>
+                <fullName>term</fullName>
+                <default>false</default>
+                <label>Term in months</label>
+            </value>
+            <value>
+                <fullName>amount</fullName>
+                <default>false</default>
+                <label>Quote amount</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

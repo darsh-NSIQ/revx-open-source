@@ -1,0 +1,241 @@
+<template>
+  <div class="deal-intelligence-container">
+    <!-- Header Card -->
+    <header class="slds-page-header slds-page-header_record-home header-card">
+      <div class="slds-page-header__row">
+        <div class="slds-page-header__col-title">
+          <div class="slds-media">
+            <div class="slds-media__figure">
+              <span class="slds-icon_container slds-icon-standard-opportunity header-icon">
+                <lightning-icon icon-name="standard:opportunity" alternative-text="Deal Intelligence" size="medium"></lightning-icon>
+              </span>
+            </div>
+            <div class="slds-media__body">
+              <div class="slds-page-header__name">
+                <div class="slds-page-header__name-title">
+                  <h1>
+                    <span class="slds-page-header__title slds-truncate title-text" title="AI Deal Intelligence">
+                      RevX AI Deal Intelligence & Win-Rate Predictor
+                    </span>
+                  </h1>
+                </div>
+              </div>
+              <p class="slds-page-header__name-meta subtitle-text">
+                Pricing elasticity, margin preservation, win-probability forecasting, and prescriptive negotiation co-pilot.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="slds-page-header__col-actions">
+          <div class="slds-grid slds-grid_vertical-align-center">
+            <!-- Quote Selector if not on record page -->
+            <template if:false={isRecordContext}>
+              <lightning-combobox
+                label="Select Quote"
+                variant="label-hidden"
+                placeholder="Choose Quote to Evaluate..."
+                options={quoteOptions}
+                value={selectedQuoteId}
+                onchange={handleQuoteSelect}
+                class="quote-selector slds-m-right_small">
+              </lightning-combobox>
+            </template>
+
+            <lightning-button
+              variant="brand"
+              label="Re-Analyze Deal"
+              icon-name="utility:refresh"
+              onclick={handleReanalyze}
+              disabled={isLoading}>
+            </lightning-button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Loading Spinner -->
+    <template if:true={isLoading}>
+      <div class="slds-p-around_large slds-text-align_center">
+        <lightning-spinner alternative-text="Analyzing Deal Dynamics..." size="medium"></lightning-spinner>
+      </div>
+    </template>
+
+    <!-- Main Content Body -->
+    <template if:false={isLoading}>
+      <template if:true={hasData}>
+        <!-- Top Metrics & Circular Gauge Grid -->
+        <div class="slds-grid slds-wrap slds-gutters slds-m-top_medium">
+          <!-- Column 1: Deal Score Gauge -->
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12">
+            <div class="slds-box gauge-card">
+              <div class="gauge-header">
+                <span class="gauge-title">DEAL HEALTH SCORE</span>
+                <span class={ratingBadgeClass}>{dealData.ratingTier}</span>
+              </div>
+
+              <!-- SVG Circular Score Ring -->
+              <div class="circle-gauge-wrap">
+                <svg viewBox="0 0 120 120" class="circular-chart">
+                  <path
+                    class="circle-bg"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    class={circleStrokeClass}
+                    stroke-dasharray={gaugeDashArray}
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div class="gauge-score-content">
+                  <span class="gauge-score-num">{dealData.dealScore}</span>
+                  <span class="gauge-score-max">/ 100</span>
+                </div>
+              </div>
+
+              <!-- Win Probability Bar -->
+              <div class="win-prob-section slds-m-top_small">
+                <div class="slds-grid slds-grid_align-spread slds-m-bottom_xx-small">
+                  <span class="win-prob-label">Predicted Win Rate</span>
+                  <span class="win-prob-val">{dealData.winProbability}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" style={winProbProgressStyle}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Financial & Contract Factor Breakdown -->
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12">
+            <div class="slds-box metrics-card">
+              <h3 class="card-section-title">Core Deal Factors & Unit Economics</h3>
+              
+              <div class="slds-grid slds-wrap slds-gutters slds-m-top_small">
+                <!-- Current Discount Metric -->
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                  <div class="metric-box">
+                    <span class="m-label">Current Discount</span>
+                    <span class="m-value">{dealData.currentDiscountPct}%</span>
+                    <span class="m-subtext">Optimal: {dealData.optimalDiscountPct}%</span>
+                  </div>
+                </div>
+
+                <!-- Gross Margin Metric -->
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                  <div class="metric-box">
+                    <span class="m-label">Gross Margin</span>
+                    <span class="m-value">{dealData.currentMarginPct}%</span>
+                    <span class={marginBadgeClass}>{dealData.marginHealth}</span>
+                  </div>
+                </div>
+
+                <!-- Payment Terms Metric -->
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                  <div class="metric-box">
+                    <span class="m-label">Payment Terms</span>
+                    <span class="m-value slds-truncate" title={dealData.paymentTerms}>{dealData.paymentTerms}</span>
+                    <span class="m-subtext">Cash velocity factor</span>
+                  </div>
+                </div>
+
+                <!-- Margin Protection Metric -->
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                  <div class="metric-box">
+                    <span class="m-label">Margin Recovery</span>
+                    <span class="m-value slds-text-color_success">+${dealData.potentialMarginSavings}</span>
+                    <span class="m-subtext">At optimal discount</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Factor Drivers Score Breakdown Chips -->
+              <div class="slds-m-top_medium">
+                <span class="factors-label">Algorithmic Scoring Contribution:</span>
+                <div class="slds-grid slds-wrap factor-chips-wrap slds-m-top_x-small">
+                  <template for:each={factorList} for:item="factor">
+                    <div key={factor.name} class="factor-chip">
+                      <span class="factor-chip-name">{factor.name}:</span>
+                      <strong class="factor-chip-pts">{factor.points} pts</strong>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prescriptive Recommendations Section -->
+        <div class="slds-m-top_medium">
+          <div class="slds-box rec-card">
+            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small">
+              <div>
+                <h3 class="card-section-title">⚡ Prescriptive AI Optimizations</h3>
+                <p class="section-desc">One-click actions to maximize deal win-rate and protect company gross margins.</p>
+              </div>
+            </div>
+
+            <template if:true={hasRecommendations}>
+              <div class="slds-grid slds-wrap slds-gutters">
+                <template for:each={dealData.recommendations} for:item="rec">
+                  <div key={rec.id} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_small">
+                    <div class="recommendation-box">
+                      <div class="rec-top-row">
+                        <span class="rec-title">{rec.title}</span>
+                        <span class={rec.badgeClass}>{rec.impactLabel}</span>
+                      </div>
+                      <p class="rec-description">{rec.description}</p>
+                      
+                      <div class="rec-footer slds-m-top_small">
+                        <template if:true={rec.canAutoApply}>
+                          <lightning-button
+                            variant="brand"
+                            label="⚡ Apply Recommendation"
+                            size="small"
+                            data-discount={rec.suggestedDiscount}
+                            data-terms={rec.suggestedTerms}
+                            onclick={handleApplyRec}>
+                          </lightning-button>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <template if:false={hasRecommendations}>
+              <div class="slds-text-color_success slds-p-around_medium optimal-deal-state">
+                <lightning-icon icon-name="utility:check" variant="success" size="small" class="slds-m-right_x-small"></lightning-icon>
+                <strong>Deal is Optimized!</strong> Current pricing and payment terms are in the optimal sweet spot for maximum close rate.
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Strategic Insights & Negotiation Playbook -->
+        <div class="slds-m-top_medium">
+          <div class="slds-box insights-card">
+            <h3 class="card-section-title">💡 Strategic Sales Insights & Negotiation Playbook</h3>
+            <ul class="slds-list_dotted slds-m-top_small insights-list">
+              <template for:each={dealData.strategicInsights} for:item="insight">
+                <li key={insight} class="insight-bullet">{insight}</li>
+              </template>
+            </ul>
+          </div>
+        </div>
+      </template>
+
+      <!-- Empty State -->
+      <template if:false={hasData}>
+        <div class="slds-illustration slds-illustration_small empty-state-box slds-m-top_medium">
+          <lightning-icon icon-name="utility:opportunity" size="large" class="empty-icon"></lightning-icon>
+          <div class="slds-text-heading_medium slds-m-top_small">Select a Quote to Begin Analysis</div>
+          <div class="slds-text-body_regular slds-m-top_xx-small">
+            Choose any quote above or navigate to a Quote record page to see real-time AI deal scoring, win probabilities, and prescriptive advice.
+          </div>
+        </div>
+      </template>
+    </template>
+  </div>
+</template>

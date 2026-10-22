@@ -1,0 +1,473 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <div class="rq-crumbs">
+          <c-revquila-brand></c-revquila-brand>
+          <button class="rq-back" onclick={goToQuotes}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 12H5M11 6l-6 6 6 6"></path>
+            </svg>
+            Quotes
+          </button>
+        </div>
+      </div>
+
+      <template lwc:if={loading}>
+        <div class="rq-card rq-loading rq-rise rq-d1" role="status">
+          <span class="rq-spinner" aria-hidden="true"></span>
+          Loading…
+        </div>
+      </template>
+
+      <template lwc:if={quote}>
+        <header class="rq-card rq-hero rq-rise rq-d1">
+          <div class="rq-hero-top">
+            <div class="rq-tile" aria-hidden="true">Q</div>
+            <div class="rq-hero-title">
+              <p class="rq-eyebrow">{eyebrow}</p>
+              <div class="rq-name-row">
+                <h1>{quote.account}</h1>
+                <span class={quote.pillClass}>{quote.statusLabel}</span>
+                <template lwc:if={quote.primary}>
+                  <span class="rq-pill rq-tone-acc" title="Primary Quote synced to Opportunity">Primary</span>
+                </template>
+              </div>
+              <p class="rq-sub">{quote.opportunity}</p>
+            </div>
+            <div class="rq-actions">
+              <template lwc:if={canMakePrimary}>
+                <button
+                  class="rq-btn rq-quiet"
+                  onclick={makePrimary}
+                  title="Make this the primary quote for the opportunity"
+                >
+                  Make Primary
+                </button>
+              </template>
+              <template lwc:if={canSyncOpportunity}>
+                <button
+                  class="rq-btn rq-quiet"
+                  onclick={syncToOpportunity}
+                  title="Sync quote lines and totals to Salesforce Opportunity"
+                >
+                  Sync to Opp
+                </button>
+              </template>
+              <button
+                class="rq-btn rq-quiet rq-btn-ai"
+                onclick={openAiAdvisor}
+                title="RevX AI Deal Advisor"
+              >
+                <svg viewBox="0 0 24 24" class="rq-ai-btn-icon" aria-hidden="true">
+                  <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2z"></path>
+                </svg>
+                AI Advisor
+              </button>
+              <template lwc:if={canEsign}>
+                <button
+                  class="rq-btn rq-quiet rq-btn-esign"
+                  onclick={openEsign}
+                  title={esignButtonTitle}
+                >
+                  <svg viewBox="0 0 24 24" class="rq-esign-btn-icon" aria-hidden="true">
+                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                    <path d="M2 2l7.586 7.586"></path>
+                    <circle cx="11" cy="11" r="2"></circle>
+                  </svg>
+                  {esignButtonLabel}
+                </button>
+              </template>
+              <button class="rq-btn rq-quiet" onclick={openPreview}>
+                Preview PDF
+              </button>
+              <button
+                class="rq-btn rq-quiet"
+                onclick={goToTemplates}
+                title="Open Visual Drag-and-Drop Template Designer"
+              >
+                Design Template
+              </button>
+              <template lwc:if={canEdit}>
+                <button class="rq-btn rq-quiet" onclick={openEdit}>Edit</button>
+              </template>
+              <template lwc:if={canRevise}>
+                <button
+                  class="rq-btn rq-quiet"
+                  data-kind="revise"
+                  onclick={openDialog}
+                >
+                  Revise
+                </button>
+              </template>
+              <button
+                class="rq-btn rq-quiet"
+                data-kind="clone"
+                onclick={openDialog}
+              >
+                Clone
+              </button>
+              <template lwc:if={canReject}>
+                <button class="rq-btn rq-quiet rq-to-bad" onclick={openReject}>
+                  Reject
+                </button>
+              </template>
+              <template lwc:if={action}>
+                <button class="rq-btn rq-primary" onclick={openAction}>
+                  {action.label}
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <dl class="rq-facts">
+            <template for:each={facts} for:item="fact">
+              <div key={fact.label} class="rq-fact">
+                <dt>{fact.label}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            </template>
+          </dl>
+
+          <ol class="rq-path" style={pathStyle}>
+            <template for:each={milestones} for:item="milestone">
+              <li key={milestone.label} class={milestone.stepClass}>
+                <span class="rq-node">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12.5l4.5 4.5L19 7.5"></path>
+                  </svg>
+                </span>
+                {milestone.label}
+              </li>
+            </template>
+          </ol>
+        </header>
+
+        <div class="rq-cols">
+          <div class="rq-col-main">
+            <section class="rq-card rq-rise rq-d2">
+              <div class="rq-card-head">
+                <div>
+                  <h2>Line items</h2>
+                  <p class="rq-sub">{lineSummary}</p>
+                </div>
+                <template lwc:if={quote.editable}>
+                  <button class="rq-btn rq-quiet rq-sm" onclick={openEdit}>
+                    Edit products
+                  </button>
+                </template>
+              </div>
+              <div class="rq-tw">
+                <table class="rq-lines">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th class="rq-right">Qty</th>
+                      <th class="rq-right rq-hide-sm">List price</th>
+                      <th class="rq-right">Discount</th>
+                      <th class="rq-right">Net</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={lineRows} for:item="line">
+                      <tr key={line.key}>
+                        <td>
+                          <span class="rq-strong">{line.name}</span>
+                          <small>{line.unit}</small>
+                        </td>
+                        <td class="rq-right">{line.qty}</td>
+                        <td class="rq-right rq-hide-sm">{line.price}</td>
+                        <td class={line.discountClass}>{line.discount}</td>
+                        <td class="rq-right rq-strong">{line.net}</td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+              <div class="rq-under">
+                <div class="rq-notes">
+                  <template lwc:if={quote.notes}>
+                    <h3>Notes for the customer</h3>
+                    <p>{quote.notes}</p>
+                  </template>
+                </div>
+                <dl class="rq-totals">
+                  <template for:each={totals} for:item="total">
+                    <div key={total.label} class={total.rowClass}>
+                      <dt>{total.label}</dt>
+                      <dd>{total.value}</dd>
+                    </div>
+                  </template>
+                </dl>
+              </div>
+            </section>
+          </div>
+
+          <div class="rq-col-mid">
+            <section class="rq-card rq-rise rq-d3">
+              <h2>Timeline</h2>
+              <p class="rq-sub">Everything that has happened to this quote</p>
+              <c-revquila-timeline events={timeline}></c-revquila-timeline>
+            </section>
+          </div>
+
+          <aside class="rq-side">
+            <section class="rq-card rq-lift rq-rise rq-d3">
+              <h2>Pricing policy</h2>
+              <ul class="rq-checks">
+                <template for:each={checks} for:item="check">
+                  <li key={check.label} class={check.itemClass}>
+                    <span class="rq-mark" aria-hidden="true">{check.mark}</span>
+                    <span>
+                      {check.label}
+                      <small>{check.note}</small>
+                    </span>
+                    <b>{check.value}</b>
+                  </li>
+                </template>
+              </ul>
+              <p class={verdictClass}>{quote.verdict.text}</p>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d4">
+              <div class="rq-card-head">
+                <h2>Discount what-if</h2>
+                <span class={whatIfResult.verdictClass}>
+                  {whatIfResult.verdict}
+                </span>
+              </div>
+              <label class="rq-slider">
+                <span>{whatIfResult.heading}</span>
+                <input
+                  type="range"
+                  min="0"
+                  max={whatIfMax}
+                  step="1"
+                  value={whatIfDiscount}
+                  oninput={handleWhatIf}
+                />
+              </label>
+              <dl class="rq-kv">
+                <div class="rq-kv-row">
+                  <dt>Net amount</dt>
+                  <dd>{whatIfResult.net}</dd>
+                </div>
+                <div class="rq-kv-row">
+                  <dt>Grand total</dt>
+                  <dd>{whatIfResult.total}</dd>
+                </div>
+                <div class="rq-kv-row">
+                  <dt>Against this quote</dt>
+                  <dd>{whatIfResult.changeLabel}</dd>
+                </div>
+              </dl>
+              <template lwc:if={canApplyWhatIf}>
+                <button
+                  class="rq-btn rq-quiet rq-sm rq-apply"
+                  onclick={applyWhatIf}
+                >
+                  Apply to every line
+                </button>
+              </template>
+              <template lwc:if={whatIfHint}>
+                <p class="rq-fine">{whatIfHint}</p>
+              </template>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d5">
+              <h2>Documents</h2>
+              <ul class="rq-items">
+                <li class="rq-item">
+                  <span>
+                    Quote PDF
+                    <small>{pdfDetail}</small>
+                  </span>
+                  <button class="rq-btn rq-quiet rq-sm" onclick={openPreview}>
+                    Preview
+                  </button>
+                </li>
+                <template lwc:if={quote.isSigned}>
+                  <li class="rq-item rq-signed-doc-item">
+                    <span>
+                      Digital Signature
+                      <small>Signed by {quote.signedByName} · {quote.signedOn}</small>
+                    </span>
+                    <button class="rq-btn rq-quiet rq-sm" onclick={openEsign}>
+                      Audit
+                    </button>
+                  </li>
+                  <li class="rq-item rq-signed-doc-item">
+                    <span>
+                      Certificate of Completion
+                      <small>Official Legal PDF · SHA-256 Sealed</small>
+                    </span>
+                    <button class="rq-btn rq-quiet rq-sm" onclick={openCertificatePdf}>
+                      View PDF
+                    </button>
+                  </li>
+                </template>
+              </ul>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d5">
+              <h2>Versions &amp; Revisions</h2>
+              <dl class="rq-kv">
+                <div class="rq-kv-row">
+                  <dt>Current Version</dt>
+                  <dd><span class="rq-pill rq-tone-acc">v{quote.version}</span></dd>
+                </div>
+              </dl>
+              <p class="rq-fine">Snapshot revisions, diff comparisons, and restoration are tracked in Enterprise Trust.</p>
+              <button class="rq-btn rq-quiet rq-sm" onclick={goToEnterpriseTrust} title="Compare versions and review change diffs">
+                Compare Versions &amp; Diffs
+              </button>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d6">
+              <h2>Customer</h2>
+              <dl class="rq-kv">
+                <template for:each={customer} for:item="row">
+                  <div key={row.label} class="rq-kv-row">
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                </template>
+              </dl>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d7">
+              <h2>Related records</h2>
+              <ul class="rq-items">
+                <template for:each={related} for:item="record">
+                  <li key={record.type} class={record.itemClass}>
+                    <span>
+                      <small class="rq-kind">{record.type}</small>
+                      {record.name}
+                    </span>
+                    <template lwc:if={record.exists}>
+                      <span class="rq-item-acts">
+                        <template lwc:if={record.state}>
+                          <span class="rq-pill rq-tone-acc"
+                            >{record.state}</span
+                          >
+                        </template>
+                        <template lwc:if={record.opens}>
+                          <button
+                            class="rq-btn rq-quiet rq-sm"
+                            data-invoice={record.invoiceId}
+                            data-subscription={record.subscriptionId}
+                            data-order={record.orderId}
+                            data-contract={record.contractId}
+                            onclick={openRelated}
+                          >
+                            Open
+                          </button>
+                        </template>
+                      </span>
+                    </template>
+                  </li>
+                </template>
+              </ul>
+            </section>
+          </aside>
+        </div>
+      </template>
+
+      <template lwc:if={missing}>
+        <div class="rq-card rq-missing rq-rise rq-d1">
+          <h2>We couldn't find that quote</h2>
+          <p class="rq-sub">
+            The link may be incomplete, or the quote was removed.
+          </p>
+          <button class="rq-btn rq-primary" onclick={goToQuotes}>
+            Back to quotes
+          </button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <template lwc:if={dialog}>
+    <c-revquila-modal
+      heading={dialog.heading}
+      size="small"
+      onclose={closeDialog}
+      lwc:ref="dialogModal"
+    >
+      <p class="rq-dialog-body">{dialog.body}</p>
+      <div class="rq-brief">
+        <span>
+          <strong>{quote.account}</strong>
+          <small>{eyebrow}</small>
+        </span>
+        <b>{netLabel}</b>
+      </div>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelDialog}>Cancel</button>
+        <button
+          class="rq-btn rq-primary"
+          data-autofocus="true"
+          disabled={busy}
+          onclick={confirmDialog}
+        >
+          {dialog.confirmLabel}
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <template lwc:if={rejecting}>
+    <c-revquila-reject-modal
+      quote-title={rejectTitle}
+      onclose={closeReject}
+      onreject={handleReject}
+    ></c-revquila-reject-modal>
+  </template>
+
+  <template lwc:if={editing}>
+    <c-revquila-quick-quote
+      quote-id={quote.id}
+      onclose={closeEdit}
+      onsaved={handleSaved}
+    ></c-revquila-quick-quote>
+  </template>
+
+  <template lwc:if={previewing}>
+    <c-revquila-document-modal
+      document={document}
+      onclose={closePreview}
+    ></c-revquila-document-modal>
+  </template>
+
+  <template lwc:if={showAiAdvisor}>
+    <c-revquila-modal
+      heading="RevX AI Deal Advisor"
+      size="medium"
+      onclose={closeAiAdvisor}
+    >
+      <c-revquila-ai-advisor quote-id={recordId}></c-revquila-ai-advisor>
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-primary" onclick={closeAiAdvisor}>Close</button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <template lwc:if={showEsign}>
+    <c-revquila-esign-modal
+      quote-id={recordId}
+      onclose={closeEsign}
+      onsigned={handleSigned}
+    ></c-revquila-esign-modal>
+  </template>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot record-id={recordId}></c-revquila-ai-chatbot>
+</template>

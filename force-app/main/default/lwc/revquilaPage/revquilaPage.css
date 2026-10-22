@@ -1,0 +1,190 @@
+/*
+ * Page shell for full Revquila screens (tabs and 360 views).
+ * Use after the theme: @import "c/revquilaTheme"; @import "c/revquilaPage";
+ *
+ * A page fills whatever space it is given. Layout breakpoints are container
+ * queries on rq-page (the stage), not media queries, so a page adapts to the
+ * width it actually has rather than to the width of the browser window.
+ */
+
+/* fill the space Lightning gives the page, however tall its header is */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.rq-stage {
+  container: rq-page / inline-size;
+  position: relative;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  /* clip, not hidden: hidden would make the stage a scroll container and stop sticky bars sticking to the window */
+  overflow: clip;
+  border-radius: 20px;
+  background: var(--rq-bg);
+  color: var(--rq-fg);
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: 0 0 0 1px var(--rq-line);
+}
+
+/* edge to edge once fillPage() has cancelled Lightning's template padding */
+:host(.rq-bleed) .rq-stage {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* accent glow with a slow light sweep */
+.rq-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      700px circle at 85% -120px,
+      color-mix(in srgb, var(--rq-acc2) 30%, transparent),
+      transparent 65%
+    ),
+    radial-gradient(
+      600px circle at 5% 0,
+      color-mix(in srgb, var(--rq-acc) 16%, transparent),
+      transparent 60%
+    );
+}
+
+.rq-fx::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.75) 50%,
+    transparent 58%
+  );
+  background-size: 300% 100%;
+  animation: rq-sweep 9s ease-in-out infinite;
+}
+
+/* full width at every size: no max-width, so nothing is left empty at the sides */
+.rq-main {
+  position: relative;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 24px 28px;
+}
+
+/* logo row at the top of every page */
+.rq-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rq-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+@keyframes rq-sweep {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -60% 0;
+  }
+}
+
+/*
+ * Narrow page. A table marked rq-stack drops its header and shows each row as
+ * two lines: title and value on top, meta and state below. Mark the cells
+ * rq-cell-title, rq-cell-meta, rq-cell-value, rq-cell-state; rq-cell-extra is hidden.
+ */
+@container rq-page (max-width: 640px) {
+  .rq-main {
+    gap: 14px;
+    padding: 16px 14px 22px;
+  }
+
+  .rq-stack thead,
+  .rq-stack .rq-cell-title small {
+    display: none;
+  }
+
+  .rq-stack tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 3px 12px;
+    align-items: center;
+    padding: 11px 2px;
+    border-top: 1px solid var(--rq-line);
+  }
+
+  .rq-stack tr td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+
+  .rq-stack tr td.rq-cell-title {
+    grid-area: 1 / 1;
+    font-weight: 600;
+  }
+
+  .rq-stack tr td.rq-cell-meta {
+    grid-area: 2 / 1;
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--rq-mut);
+  }
+
+  .rq-stack tr td.rq-cell-value {
+    grid-area: 1 / 2;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .rq-stack tr td.rq-cell-state {
+    grid-area: 2 / 2;
+    justify-self: end;
+  }
+
+  .rq-stack tr td.rq-cell-extra {
+    display: none;
+  }
+
+  /* tint the whole row on hover instead of sliding the first cell */
+  .rq-stack tr.rq-go:hover {
+    background: var(--rq-spot);
+  }
+
+  .rq-stack tr.rq-go:hover td {
+    padding-left: 0;
+    background: none;
+    color: inherit;
+  }
+
+  .rq-stack tr.rq-go:hover td.rq-cell-meta {
+    color: var(--rq-mut);
+  }
+}
+
+@container rq-page (max-width: 560px) {
+  th,
+  td {
+    padding-inline: 6px;
+  }
+
+  th {
+    letter-spacing: 0.04em;
+  }
+}

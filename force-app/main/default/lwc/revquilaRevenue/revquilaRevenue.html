@@ -1,0 +1,595 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <c-revquila-brand></c-revquila-brand>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Revenue Recognition (ASC 606 / IFRS 15)</p>
+          <h1>Earned revenue, <em>SSP obligations &amp; period close</em>.</h1>
+        </div>
+        <div class="rq-actions">
+          <button class="rq-btn rq-quiet" onclick={openExport}>
+            Export journal &amp; Sync
+          </button>
+          <template lwc:if={canRecognize}>
+            <button
+              class="rq-btn rq-quiet"
+              onclick={handleBackfill}
+              disabled={backfilling}
+            >
+              Backfill schedules
+            </button>
+            <button class="rq-btn rq-primary" onclick={handleRecognizeNow}>
+              Recognise now
+            </button>
+          </template>
+        </div>
+      </header>
+
+      <!-- Sub-Nav Segmented Controls -->
+      <nav class="rq-subnav rq-rise rq-d2" aria-label="Revenue Recognition Views">
+        <button class={waterfallBtnClass} onclick={showWaterfallTab}>
+          📊 Waterfall &amp; Schedules
+        </button>
+        <button class={reportsBtnClass} onclick={showReportsTab}>
+          📑 ASC 606 Reports
+        </button>
+        <button class={periodLocksBtnClass} onclick={showPeriodLocksTab}>
+          🔒 Month-End Close &amp; Period Locks
+        </button>
+      </nav>
+
+      <!-- VIEW 1: WATERFALL & SCHEDULES -->
+      <template lwc:if={isWaterfallView}>
+        <section class="rq-stats">
+          <template for:each={stats} for:item="stat">
+            <div key={stat.label} class={stat.cardClass}>
+              <span class="rq-stat-label">{stat.label}</span>
+              <span class="rq-stat-value">{stat.value}</span>
+              <span class="rq-stat-note">{stat.note}</span>
+            </div>
+          </template>
+        </section>
+
+        <!-- Waterfall Chart -->
+        <section class="rq-card rq-rise rq-d6">
+          <div class="rq-card-head">
+            <div>
+              <h2>12-Month Revenue Waterfall</h2>
+              <p class="rq-sub">Scheduled vs recognized revenue across periods</p>
+            </div>
+            <div class="rq-legend">
+              <span><i class="rq-legend-dot rq-rec"></i> Recognised</span>
+              <span><i class="rq-legend-dot rq-sched"></i> Scheduled</span>
+            </div>
+          </div>
+          <div class="rq-waterfall-grid">
+            <template for:each={waterfallBars} for:item="bar">
+              <div key={bar.key} class="rq-wf-col">
+                <span class="rq-wf-amount">{bar.recognizedLabel}</span>
+                <div class="rq-wf-bars">
+                  <div
+                    class="rq-wf-bar rq-rec"
+                    style={bar.recognizedStyle}
+                    title="Recognised"
+                  ></div>
+                  <div
+                    class="rq-wf-bar rq-sched"
+                    style={bar.scheduledStyle}
+                    title="Scheduled"
+                  ></div>
+                </div>
+                <span class="rq-wf-label">{bar.label}</span>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <!-- Toolbar -->
+        <section class="rq-card rq-toolbar rq-rise rq-d7" lwc:ref="toolbar">
+          <div class="rq-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M16.5 16.5L21 21"></path>
+            </svg>
+            <input
+              class="rq-input"
+              type="search"
+              placeholder="Search account, POB, schedule or invoice number"
+              aria-label="Search schedules"
+              value={search}
+              oninput={handleSearch}
+            />
+          </div>
+          <div class="rq-chips" role="group" aria-label="Filter schedules">
+            <template for:each={chips} for:item="chip">
+              <button
+                key={chip.key}
+                class={chip.chipClass}
+                aria-pressed={chip.pressed}
+                data-key={chip.key}
+                onclick={handleFilter}
+              >
+                {chip.label} <b>{chip.count}</b>
+              </button>
+            </template>
+          </div>
+        </section>
+
+        <!-- Schedules Table -->
+        <section class="rq-card rq-stretch rq-rise rq-d8">
+          <div class="rq-card-head">
+            <h2>{summary}</h2>
+            <p class="rq-sub">ASC 606 Standalone Selling Price (SSP) Allocated Figures</p>
+          </div>
+
+          <template lwc:if={hasSchedules}>
+            <div class="rq-tw">
+              <table class="rq-stack">
+                <thead>
+                  <tr>
+                    <th>Schedule</th>
+                    <th>Account</th>
+                    <th>POB Obligation</th>
+                    <th>Method</th>
+                    <th>Service Period</th>
+                    <th class="rq-right">Allocated (SSP)</th>
+                    <th class="rq-right">Recognised</th>
+                    <th class="rq-right">Deferred</th>
+                    <th class="rq-right">Unbilled Asset</th>
+                    <th>Status</th>
+                    <th class="rq-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={schedules} for:item="s">
+                    <tr key={s.id}>
+                      <td class="rq-cell-meta">
+                        <strong>{s.name}</strong>
+                        <template lwc:if={s.invoiceNumber}>
+                          <button
+                            class="rq-link"
+                            data-id={s.invoiceId}
+                            onclick={openInvoice}
+                          >
+                            {s.invoiceNumber}
+                          </button>
+                        </template>
+                      </td>
+                      <td class="rq-cell-title">{s.account}</td>
+                      <td>
+                        <span class="rq-pill">{s.pobLabel}</span>
+                        <div style="font-size:11px;color:var(--rq-muted,#64748b);">SSP: {s.sspFormatted}</div>
+                      </td>
+                      <td>
+                        <span class="rq-pill">{s.methodLabel}</span>
+                      </td>
+                      <td>{s.periodLabel}</td>
+                      <td class="rq-right">
+                        <strong>{s.allocatedFormatted}</strong>
+                      </td>
+                      <td class="rq-right rq-cell-value">
+                        {s.recognizedFormatted}
+                      </td>
+                      <td class="rq-right">{s.deferredFormatted}</td>
+                      <td class="rq-right" style="color:#0284c7;font-weight:600;">{s.contractAssetFormatted}</td>
+                      <td class="rq-cell-state">
+                        <span class={s.pillClass}>{s.statusLabel}</span>
+                      </td>
+                      <td class="rq-right">
+                        <template lwc:if={s.canRecognizeMilestone}>
+                          <button
+                            class="rq-btn rq-quiet rq-sm"
+                            data-id={s.id}
+                            onclick={handleRecognizeSchedule}
+                          >
+                            Recognise
+                          </button>
+                        </template>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <c-revquila-pager
+              total={totalCount}
+              page={page}
+              page-size={pageSize}
+              noun="schedule"
+              onpagechange={handlePageChange}
+              onsizechange={handlePageSize}
+            ></c-revquila-pager>
+          </template>
+
+          <template lwc:elseif={loading}>
+            <div class="rq-loading" role="status">
+              <span class="rq-spinner" aria-hidden="true"></span>
+              Loading revenue schedules…
+            </div>
+          </template>
+
+          <template lwc:else>
+            <div class="rq-empty">
+              <p>No revenue schedules match your search or filter.</p>
+            </div>
+          </template>
+        </section>
+      </template>
+
+      <!-- VIEW 2: ASC 606 REPORTS -->
+      <template lwc:if={isReportsView}>
+        <!-- Report Date Filter Controls -->
+        <section class="rq-card rq-toolbar rq-rise rq-d3">
+          <div style="display:flex;gap:16px;align-items:flex-end;width:100%;flex-wrap:wrap;">
+            <div>
+              <label class="rq-label">From Date</label>
+              <input type="date" class="rq-input" value={reportFrom} onchange={handleReportFromChange} />
+            </div>
+            <div>
+              <label class="rq-label">To Date</label>
+              <input type="date" class="rq-input" value={reportTo} onchange={handleReportToChange} />
+            </div>
+            <div>
+              <button class="rq-btn rq-primary" onclick={loadReports} disabled={loadingReports}>
+                {runReportsBtnLabel}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Deferred Revenue Rollforward Card -->
+        <section class="rq-card rq-rise rq-d4">
+          <div class="rq-card-head">
+            <div>
+              <h2>Deferred Revenue Rollforward</h2>
+              <p class="rq-sub">Reconciliation from beginning to ending deferred balances (ASC 606)</p>
+            </div>
+          </div>
+          <template lwc:if={formattedRollforward}>
+            <div class="rq-rf-card">
+              <div class="rq-rf-item">
+                <span class="rq-rf-label">Beginning Deferred</span>
+                <span class="rq-rf-val">{formattedRollforward.beginning}</span>
+              </div>
+              <div class="rq-rf-item">
+                <span class="rq-rf-label">(+) New Billings Added</span>
+                <span class="rq-rf-val" style="color:#059669;">+{formattedRollforward.billings}</span>
+              </div>
+              <div class="rq-rf-item">
+                <span class="rq-rf-label">(-) Recognized Revenue</span>
+                <span class="rq-rf-val" style="color:#d97706;">-{formattedRollforward.recognized}</span>
+              </div>
+              <div class="rq-rf-item">
+                <span class="rq-rf-label">(-/+) Credit Adjustments</span>
+                <span class="rq-rf-val" style="color:#dc2626;">-{formattedRollforward.adjustments}</span>
+              </div>
+              <div class="rq-rf-item rq-rf-ending">
+                <span class="rq-rf-label">(=) Ending Deferred</span>
+                <span class="rq-rf-val">{formattedRollforward.ending}</span>
+              </div>
+            </div>
+          </template>
+        </section>
+
+        <!-- Billings vs. Revenue Table -->
+        <section class="rq-card rq-rise rq-d5" style="margin-top:20px;">
+          <div class="rq-card-head">
+            <div>
+              <h2>Billings vs. Revenue By Period</h2>
+              <p class="rq-sub">Compares gross invoiced billings against earned revenue</p>
+            </div>
+          </div>
+          <template lwc:if={hasBillingsVsRevenue}>
+            <div class="rq-tw">
+              <table class="rq-stack">
+                <thead>
+                  <tr>
+                    <th>Accounting Period</th>
+                    <th class="rq-right">Gross Billings</th>
+                    <th class="rq-right">Recognized Revenue</th>
+                    <th class="rq-right">Net Deferred Variance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={formattedBillingsVsRevenue} for:item="b">
+                    <tr key={b.monthKey}>
+                      <td><strong>{b.monthLabel}</strong></td>
+                      <td class="rq-right">{b.billedFormatted}</td>
+                      <td class="rq-right rq-cell-value">{b.recognizedFormatted}</td>
+                      <td class="rq-right" style="font-weight:600;">{b.varianceFormatted}</td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template lwc:else>
+            <div class="rq-empty">
+              <p>No billing or revenue records in the selected date range.</p>
+            </div>
+          </template>
+        </section>
+
+        <!-- Revenue by Product Breakdown -->
+        <section class="rq-card rq-rise rq-d6" style="margin-top:20px;">
+          <div class="rq-card-head">
+            <div>
+              <h2>Revenue by Product &amp; Performance Obligation</h2>
+              <p class="rq-sub">Product-level ASC 606 allocation breakdown</p>
+            </div>
+          </div>
+          <template lwc:if={hasRevenueByProduct}>
+            <div class="rq-tw">
+              <table class="rq-stack">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>POB Obligation</th>
+                    <th>Recognition Method</th>
+                    <th class="rq-right">Total Allocated</th>
+                    <th class="rq-right">Recognized</th>
+                    <th class="rq-right">Deferred</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={formattedRevenueByProduct} for:item="p">
+                    <tr key={p.productId}>
+                      <td><strong>{p.productName}</strong></td>
+                      <td><span class="rq-pill">{p.pobType}</span></td>
+                      <td><span class="rq-pill">{p.revenueMethod}</span></td>
+                      <td class="rq-right">{p.totalFormatted}</td>
+                      <td class="rq-right rq-cell-value">{p.recognizedFormatted}</td>
+                      <td class="rq-right">{p.deferredFormatted}</td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+        </section>
+      </template>
+
+      <!-- VIEW 3: PERIOD LOCKS GOVERNANCE -->
+      <template lwc:if={isPeriodLocksView}>
+        <section class="rq-card rq-rise rq-d3">
+          <div class="rq-card-head">
+            <div>
+              <h2>Accounting Period Close Governance</h2>
+              <p class="rq-sub">Month-end close control: Locked periods strictly prevent changes to recognized or deferred schedules.</p>
+            </div>
+            <div>
+              <button class="rq-btn rq-primary" onclick={openLockModal}>
+                + Close &amp; Lock Month
+              </button>
+            </div>
+          </div>
+
+          <template lwc:if={hasPeriodLocks}>
+            <div class="rq-tw">
+              <table class="rq-stack">
+                <thead>
+                  <tr>
+                    <th>Period Name</th>
+                    <th>Date Window</th>
+                    <th>Status</th>
+                    <th>Locked By</th>
+                    <th>Reopened By &amp; Reason</th>
+                    <th>Notes</th>
+                    <th class="rq-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template for:each={formattedPeriodLocks} for:item="pl">
+                    <tr key={pl.id}>
+                      <td><strong>{pl.name}</strong></td>
+                      <td>{pl.periodRange}</td>
+                      <td>
+                        <span class={pl.badgeClass}>{pl.status}</span>
+                      </td>
+                      <td>{pl.lockedByName}</td>
+                      <td>
+                        <template lwc:if={pl.reopenedReason}>
+                          <div><strong>{pl.reopenedByName}:</strong> {pl.reopenedReason}</div>
+                        </template>
+                        <template lwc:else>
+                          <span>—</span>
+                        </template>
+                      </td>
+                      <td>{pl.notes}</td>
+                      <td class="rq-right">
+                        <template lwc:if={pl.canReopen}>
+                          <button
+                            class="rq-btn rq-quiet rq-sm"
+                            data-id={pl.id}
+                            data-name={pl.name}
+                            onclick={openReopenModal}
+                          >
+                            Reopen Period
+                          </button>
+                        </template>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template lwc:elseif={loadingLocks}>
+            <div class="rq-loading" role="status">
+              <span class="rq-spinner" aria-hidden="true"></span>
+              Loading period locks…
+            </div>
+          </template>
+          <template lwc:else>
+            <div class="rq-empty">
+              <p>No accounting period locks have been created yet. Click "+ Close &amp; Lock Month" to close a period.</p>
+            </div>
+          </template>
+        </section>
+      </template>
+    </div>
+  </div>
+
+  <!-- Export & Accounting Sync Modal -->
+  <template lwc:if={showExportModal}>
+    <c-revquila-modal
+      title="Accounting System Sync &amp; Export"
+      onclose={closeExport}
+    >
+      <div style="margin-bottom:16px;">
+        <label class="rq-label">Export Format / Integration Engine</label>
+        <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">
+          <label style="display:flex;gap:6px;align-items:center;cursor:pointer;">
+            <input type="radio" name="syncFmt" value="csv" checked onchange={handleSyncFormatChange} />
+            <span>CSV Journal</span>
+          </label>
+          <label style="display:flex;gap:6px;align-items:center;cursor:pointer;">
+            <input type="radio" name="syncFmt" value="tally" onchange={handleSyncFormatChange} />
+            <span>Tally Prime (XML)</span>
+          </label>
+          <label style="display:flex;gap:6px;align-items:center;cursor:pointer;">
+            <input type="radio" name="syncFmt" value="quickbooks" onchange={handleSyncFormatChange} />
+            <span>QuickBooks Online (JSON)</span>
+          </label>
+          <label style="display:flex;gap:6px;align-items:center;cursor:pointer;">
+            <input type="radio" name="syncFmt" value="zoho" onchange={handleSyncFormatChange} />
+            <span>Zoho Books (JSON)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="rq-form-grid">
+        <div>
+          <label class="rq-label">From date</label>
+          <input
+            type="date"
+            class="rq-input"
+            value={exportFrom}
+            onchange={handleExportFromChange}
+          />
+        </div>
+        <div>
+          <label class="rq-label">To date</label>
+          <input
+            type="date"
+            class="rq-input"
+            value={exportTo}
+            onchange={handleExportToChange}
+          />
+        </div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label class="rq-switch">
+          <input
+            type="checkbox"
+            checked={markExported}
+            onchange={handleMarkExportedChange}
+          />
+          <span class="rq-track"></span>
+          Mark lines as exported in Salesforce
+        </label>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+        <button class="rq-btn rq-quiet rq-sm" onclick={previewSync} disabled={generatingSync}>
+          {generateSyncBtnLabel}
+        </button>
+      </div>
+
+      <template lwc:if={syncPreview}>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label class="rq-label">Generated Sync Payload Preview</label>
+            <button class="rq-link rq-sm" onclick={copySyncPayload}>Copy to clipboard</button>
+          </div>
+          <pre class="rq-sync-preview">{syncPreview}</pre>
+        </div>
+      </template>
+
+      <div slot="footer" class="rq-actions">
+        <button class="rq-btn rq-quiet" onclick={closeExport}>Cancel</button>
+        <button
+          class="rq-btn rq-primary"
+          onclick={runExport}
+          disabled={exporting}
+        >
+          {exportButtonLabel}
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <!-- Lock Accounting Period Modal -->
+  <template lwc:if={showLockModal}>
+    <c-revquila-modal
+      title="Close &amp; Lock Accounting Period"
+      onclose={closeLockModal}
+    >
+      <p style="margin-bottom:16px;color:var(--rq-muted,#64748b);">
+        Closing an accounting period locks all revenue schedule lines in this window. Any subsequent modifications will require documented finance manager authorization.
+      </p>
+      <div class="rq-form-grid">
+        <div>
+          <label class="rq-label">Period Start Date</label>
+          <input type="date" class="rq-input" value={lockStartDate} onchange={handleLockStartDateChange} />
+        </div>
+        <div>
+          <label class="rq-label">Period End Date</label>
+          <input type="date" class="rq-input" value={lockEndDate} onchange={handleLockEndDateChange} />
+        </div>
+      </div>
+      <div>
+        <label class="rq-label">Closing Notes / Audit Reference</label>
+        <textarea class="rq-input" rows="3" value={lockNotes} onchange={handleLockNotesChange}></textarea>
+      </div>
+      <div slot="footer" class="rq-actions">
+        <button class="rq-btn rq-quiet" onclick={closeLockModal}>Cancel</button>
+        <button class="rq-btn rq-primary" onclick={submitLockPeriod} disabled={locking}>
+          {lockBtnLabel}
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <!-- Reopen Accounting Period Modal -->
+  <template lwc:if={showReopenModal}>
+    <c-revquila-modal
+      title="Reopen Accounting Period"
+      onclose={closeReopenModal}
+    >
+      <p style="margin-bottom:12px;color:#b91c1c;font-weight:500;">
+        You are reopening <strong>{reopenLockName}</strong>. All adjustments will be logged under ASC 606 audit standards.
+      </p>
+      <div>
+        <label class="rq-label">Mandatory Justification Reason</label>
+        <textarea
+          class="rq-input"
+          rows="3"
+          placeholder="State the audit or restatement reason for reopening this closed period..."
+          value={reopenReason}
+          onchange={handleReopenReasonChange}
+        ></textarea>
+      </div>
+      <div slot="footer" class="rq-actions">
+        <button class="rq-btn rq-quiet" onclick={closeReopenModal}>Cancel</button>
+        <button class="rq-btn rq-primary" onclick={submitReopenPeriod} disabled={reopening}>
+          {reopenBtnLabel}
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <c-revquila-toast></c-revquila-toast>
+  <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+</template>

@@ -1,0 +1,33 @@
+<template>
+  <c-revquila-modal
+    heading="Reject this quote?"
+    subheading={quoteTitle}
+    size="small"
+    onclose={handleClose}
+    lwc:ref="modal"
+  >
+    <div class={fieldClass}>
+      <label for="reason">Reason for the sales rep</label>
+      <textarea
+        id="reason"
+        class="rq-input"
+        placeholder="e.g. Re-quote at 15%, or add a two-year term to justify the discount."
+        data-autofocus="true"
+        oninput={handleInput}
+      ></textarea>
+      <template lwc:if={error}>
+        <span class="rq-error" role="alert">{error}</span>
+      </template>
+    </div>
+    <p class="rq-fine">
+      The quote goes back to the rep, with this reason on its timeline.
+    </p>
+
+    <div slot="footer" class="rq-actions-end">
+      <button class="rq-btn rq-quiet" onclick={handleCancel}>Cancel</button>
+      <button class="rq-btn rq-danger" onclick={handleReject}>
+        Reject quote
+      </button>
+    </div>
+  </c-revquila-modal>
+</template>

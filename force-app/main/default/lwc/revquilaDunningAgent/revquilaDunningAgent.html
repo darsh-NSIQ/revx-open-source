@@ -1,0 +1,290 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <div class="rq-crumbs">
+          <c-revquila-brand></c-revquila-brand>
+          <span class="rq-step-pill">Autonomous Dunning & Collections</span>
+        </div>
+        <div class="rq-top-actions">
+          <button class="rq-btn rq-quiet" onclick={refreshData}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Cash Recovery Automation</p>
+          <h1>Accelerate cash collection, <em>protect retention</em>.</h1>
+          <p class="rq-sub">Automated multi-channel recovery, promise-to-pay tracking, and compliant late fee management.</p>
+        </div>
+      </header>
+
+      <!-- KPI Summary Cards -->
+      <div class="rq-stats rq-rise rq-d2">
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Total Overdue</span>
+          <b class="rq-stat-val rq-tone-bad">${formattedTotalOverdue}</b>
+          <small>{overdueCount} invoices past due</small>
+        </div>
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Recovery Rate</span>
+          <b class="rq-stat-val rq-tone-good">{recoveryRate}%</b>
+          <small>Industry top quartile</small>
+        </div>
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Active Promises</span>
+          <b class="rq-stat-val rq-tone-info">{activePromises}</b>
+          <small>Follow-up scheduled</small>
+        </div>
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Avg Days to Recover</span>
+          <b class="rq-stat-val">{avgDays} Days</b>
+          <small>-4.2 days vs last month</small>
+        </div>
+      </div>
+
+      <!-- Aging Buckets -->
+      <div class="rq-card rq-rise rq-d3">
+        <div class="rq-card-header-row">
+          <div>
+            <h2 class="rq-section-title">AR Aging Buckets</h2>
+            <p class="rq-sub">Outstanding receivables distributed across aging delinquency windows:</p>
+          </div>
+        </div>
+        <div class="rq-aging-grid">
+          <div class="rq-aging-tile">
+            <span class="rq-aging-range">1 – 30 Days</span>
+            <b class="rq-aging-amount">${bucket1}</b>
+            <span class="rq-badge rq-badge-info">Normal Follow-up</span>
+          </div>
+          <div class="rq-aging-tile">
+            <span class="rq-aging-range">31 – 60 Days</span>
+            <b class="rq-aging-amount">${bucket2}</b>
+            <span class="rq-badge rq-badge-warn">Escalated</span>
+          </div>
+          <div class="rq-aging-tile">
+            <span class="rq-aging-range">61 – 90 Days</span>
+            <b class="rq-aging-amount">${bucket3}</b>
+            <span class="rq-badge rq-badge-warn">Firm Notice</span>
+          </div>
+          <div class="rq-aging-tile">
+            <span class="rq-aging-range">90+ Days</span>
+            <b class="rq-aging-amount">${bucket4}</b>
+            <span class="rq-badge rq-badge-bad">Legal / Hold Risk</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playbook Workflow Banner -->
+      <div class="rq-card rq-playbook-card rq-rise rq-d4">
+        <div class="rq-playbook-header">
+          <span class="rq-playbook-tag">⚡ Automated Playbook Flow</span>
+          <span class="rq-sub">Dynamic progression based on delinquency & responsiveness</span>
+        </div>
+        <div class="rq-stages-flow">
+          <div class="rq-stage-box">
+            <span class="rq-stage-dot rq-dot-1"></span>
+            <strong>Day 1-7</strong>
+            <small>Friendly Email + Pay Link</small>
+          </div>
+          <span class="rq-arrow">→</span>
+          <div class="rq-stage-box">
+            <span class="rq-stage-dot rq-dot-2"></span>
+            <strong>Day 8-21</strong>
+            <small>Urgent SMS / WhatsApp</small>
+          </div>
+          <span class="rq-arrow">→</span>
+          <div class="rq-stage-box">
+            <span class="rq-stage-dot rq-dot-3"></span>
+            <strong>Day 22-45</strong>
+            <small>Firm Demand Notice</small>
+          </div>
+          <span class="rq-arrow">→</span>
+          <div class="rq-stage-box">
+            <span class="rq-stage-dot rq-dot-4"></span>
+            <strong>Day 46-60</strong>
+            <small>Compliant Late Fee (+2%)</small>
+          </div>
+          <span class="rq-arrow">→</span>
+          <div class="rq-stage-box">
+            <span class="rq-stage-dot rq-dot-5"></span>
+            <strong>Day 60+</strong>
+            <small>Account Hold Warning</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overdue Invoices List -->
+      <div class="rq-card rq-rise rq-d5">
+        <div class="rq-card-header-row">
+          <div>
+            <h2 class="rq-section-title">Delinquent Invoices ({overdueCount})</h2>
+            <p class="rq-sub">One-click recovery reminders, payment links, and promise tracking</p>
+          </div>
+        </div>
+
+        <template lwc:if={loading}>
+          <div class="rq-loading" role="status">
+            <span class="rq-spinner" aria-hidden="true"></span>
+            Loading dunning records…
+          </div>
+        </template>
+
+        <template lwc:if={hasInvoices}>
+          <div class="rq-table-wrap">
+            <table class="rq-table">
+              <thead>
+                <tr>
+                  <th>Invoice & Account</th>
+                  <th>Due Date</th>
+                  <th>Overdue</th>
+                  <th>Balance</th>
+                  <th>Late Fee</th>
+                  <th>Dunning Stage</th>
+                  <th class="rq-text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={invoices} for:item="inv">
+                  <tr key={inv.id}>
+                    <td>
+                      <strong>{inv.invoiceNumber}</strong>
+                      <div class="rq-acc-sub">
+                        {inv.accountName}
+                        <template lwc:if={inv.isPaused}>
+                          <span class="rq-badge rq-badge-warn">Dunning Paused</span>
+                        </template>
+                      </div>
+                    </td>
+                    <td>{inv.dueOn}</td>
+                    <td>
+                      <span class="rq-badge rq-badge-bad">+{inv.daysOverdue}d</span>
+                    </td>
+                    <td>
+                      <strong class="rq-tone-bad">${inv.balance}</strong>
+                      <div class="rq-text-mut">{inv.currencyCode}</div>
+                    </td>
+                    <td>
+                      <template lwc:if={inv.lateFee}>
+                        <span class="rq-tone-bad">+${inv.lateFee}</span>
+                      </template>
+                      <template lwc:else>—</template>
+                    </td>
+                    <td>
+                      <span class={inv.stageBadgeClass}>{inv.dunningStageLabel}</span>
+                    </td>
+                    <td class="rq-text-right rq-actions-cell">
+                      <button
+                        class="rq-btn rq-quiet rq-action-btn"
+                        data-id={inv.id}
+                        data-channel="WhatsApp"
+                        onclick={handleSendReminder}
+                        title="Send WhatsApp Pay Link"
+                        type="button"
+                      >
+                        💬 WhatsApp
+                      </button>
+                      <button
+                        class="rq-btn rq-quiet rq-action-btn"
+                        data-id={inv.id}
+                        data-channel="Email"
+                        onclick={handleSendReminder}
+                        title="Resend Email Notice"
+                        type="button"
+                      >
+                        ✉️ Email
+                      </button>
+                      <button
+                        class="rq-btn rq-quiet rq-action-btn"
+                        data-id={inv.id}
+                        onclick={openPromiseModal}
+                        title="Log Promise to Pay"
+                        type="button"
+                      >
+                        🤝 Promise
+                      </button>
+                      <button
+                        class="rq-btn rq-quiet rq-action-btn"
+                        data-id={inv.id}
+                        onclick={handleApplyLateFee}
+                        title="Apply 2% Late Fee"
+                        type="button"
+                      >
+                        ⚡ Late Fee
+                      </button>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
+        <template lwc:if={noInvoices}>
+          <div class="rq-empty-state">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <h3>Zero Overdue Invoices!</h3>
+            <p>All active accounts are fully settled and in good standing.</p>
+          </div>
+        </template>
+      </div>
+
+    </div>
+
+    <!-- Promise to Pay Modal -->
+    <template lwc:if={showPromiseModal}>
+      <c-revquila-modal
+        heading="Log Customer Promise to Pay"
+        size="small"
+        onclose={closePromiseModal}
+      >
+        <div class="rq-form-body">
+          <p class="rq-sub">Logging a promise will pause automatic aggressive reminders until the agreed date.</p>
+          <div class="rq-field-group">
+            <label class="rq-label" for="promiseDate">Agreed Payment Date</label>
+            <input
+              id="promiseDate"
+              class="rq-input"
+              type="date"
+              value={promiseDate}
+              onchange={handlePromiseDateChange}
+            />
+          </div>
+          <div class="rq-field-group">
+            <label class="rq-label" for="promiseNote">Remarks / Wire Reference</label>
+            <textarea
+              id="promiseNote"
+              class="rq-input"
+              rows="3"
+              placeholder="e.g. CFO confirmed batch payment will be executed on Friday via ACH/Wire..."
+              oninput={handlePromiseNoteChange}
+            >{promiseNote}</textarea>
+          </div>
+        </div>
+        <div slot="footer" class="rq-actions-end">
+          <button class="rq-btn rq-quiet" onclick={closePromiseModal}>Cancel</button>
+          <button class="rq-btn rq-primary" onclick={savePromise} disabled={savingPromise}>
+            Save Promise to Pay
+          </button>
+        </div>
+      </c-revquila-modal>
+    </template>
+
+    <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+    <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+  </div>
+</template>

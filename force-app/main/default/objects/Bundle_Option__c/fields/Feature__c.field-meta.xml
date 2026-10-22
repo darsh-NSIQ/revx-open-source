@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Feature__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>The feature (option group) this option belongs to, when the bundle has features.</description>
+    <label>Feature</label>
+    <referenceTo>Bundle_Feature__c</referenceTo>
+    <relationshipLabel>Options</relationshipLabel>
+    <relationshipName>Options</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Tax_Breakup__c</fullName>
+    <description>The tax lines as JSON: [{label, rate, amount}]. Kept so the document shows the tax exactly as it was charged, whatever the settings are later.</description>
+    <label>Tax Breakup</label>
+    <length>4000</length>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>LongTextArea</type>
+    <visibleLines>3</visibleLines>
+</CustomField>

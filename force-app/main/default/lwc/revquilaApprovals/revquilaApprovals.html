@@ -1,0 +1,191 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <c-revquila-brand></c-revquila-brand>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Approvals</p>
+          <h1>Decide fast, <em>knowing what it costs</em>.</h1>
+        </div>
+        <template lwc:if={hasSelection}>
+          <button class="rq-btn rq-primary" onclick={handleBulkApprove}>
+            {bulkLabel}
+          </button>
+        </template>
+      </header>
+
+      <section class="rq-stats">
+        <template for:each={stats} for:item="stat">
+          <div key={stat.label} class={stat.cardClass}>
+            <span class="rq-stat-label">{stat.label}</span>
+            <span class="rq-stat-value">{stat.value}</span>
+            <span class="rq-stat-note">{stat.note}</span>
+          </div>
+        </template>
+      </section>
+
+      <section class="rq-card rq-toolbar rq-rise rq-d6" lwc:ref="toolbar">
+        <div class="rq-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M16.5 16.5L21 21"></path>
+          </svg>
+          <input
+            class="rq-input"
+            type="search"
+            placeholder="Search account, quote number, rep"
+            aria-label="Search approvals"
+            value={search}
+            oninput={handleSearch}
+          />
+        </div>
+        <div class="rq-chips" role="group" aria-label="Filter by decision">
+          <template for:each={chips} for:item="chip">
+            <button
+              key={chip.key}
+              class={chip.chipClass}
+              aria-pressed={chip.pressed}
+              data-key={chip.key}
+              onclick={handleFilter}
+            >
+              {chip.label} <b>{chip.count}</b>
+            </button>
+          </template>
+        </div>
+        <template lwc:if={canSelectAll}>
+          <button class="rq-btn rq-quiet rq-sm" onclick={handleSelectAll}>
+            {selectAllLabel}
+          </button>
+        </template>
+      </section>
+
+      <template lwc:if={readOnlyNote}>
+        <p class="rq-verdict rq-tone-warn rq-load-error">
+          You can see what is waiting, but approving and rejecting takes the
+          RevX Admin permission set.
+        </p>
+      </template>
+
+      <template lwc:if={hasCards}>
+        <section class="rq-queue">
+          <template for:each={paging.rows} for:item="card">
+            <article key={card.id} class={card.cardClass} style={card.rowStyle}>
+              <div class="rq-approval-top">
+                <template lwc:if={card.decidable}>
+                  <input
+                    class="rq-tick"
+                    type="checkbox"
+                    aria-label={card.selectLabel}
+                    checked={card.checked}
+                    data-id={card.id}
+                    onchange={handleSelect}
+                  />
+                </template>
+                <div class="rq-approval-title">
+                  <strong>{card.title}</strong>
+                  <small>{card.detail}</small>
+                </div>
+                <template lwc:if={card.outcomeLabel}>
+                  <span class={card.outcomeClass} title={card.decision}
+                    >{card.outcomeLabel}</span
+                  >
+                </template>
+              </div>
+
+              <p class="rq-products">{card.products}</p>
+
+              <template lwc:if={card.overLimit}>
+                <div class="rq-scale" style={card.scaleStyle}>
+                  <div class="rq-scale-track">
+                    <span class="rq-scale-fill"></span>
+                    <span class="rq-scale-limit"></span>
+                  </div>
+                  <small>{card.discountLabel}</small>
+                </div>
+              </template>
+              <p class="rq-cost">{card.cost}</p>
+              <template lwc:if={card.note}>
+                <p class="rq-note">“{card.note}”</p>
+              </template>
+
+              <div class="rq-approval-acts">
+                <button
+                  class="rq-btn rq-quiet rq-sm"
+                  data-id={card.id}
+                  onclick={openQuote}
+                >
+                  Open quote
+                </button>
+                <template lwc:if={card.decidable}>
+                  <button
+                    class="rq-btn rq-sm rq-reject"
+                    data-id={card.id}
+                    onclick={openReject}
+                  >
+                    Reject
+                  </button>
+                  <button
+                    class="rq-btn rq-sm rq-approve"
+                    data-id={card.id}
+                    onclick={handleApprove}
+                  >
+                    Approve
+                  </button>
+                </template>
+              </div>
+            </article>
+          </template>
+        </section>
+        <c-revquila-pager
+          total={paging.total}
+          page={paging.page}
+          page-size={pageSize}
+          sizes={pageSizes}
+          noun="approval"
+          onpagechange={handlePage}
+          onsizechange={handlePageSize}
+        ></c-revquila-pager>
+      </template>
+      <template lwc:if={loading}>
+        <div class="rq-card rq-loading rq-rise rq-d2" role="status">
+          <span class="rq-spinner" aria-hidden="true"></span>
+          Loading…
+        </div>
+      </template>
+      <template lwc:if={loadError}>
+        <p class="rq-verdict rq-tone-bad rq-load-error" role="alert">
+          {loadError}
+        </p>
+      </template>
+      <template lwc:if={showEmpty}>
+        <section class="rq-card rq-empty rq-stretch rq-rise rq-d7">
+          <h2>{emptyText}</h2>
+          <p class="rq-sub">
+            A quote lands here when its discount or payment terms are outside
+            the pricing policy in Setup.
+          </p>
+        </section>
+      </template>
+    </div>
+  </div>
+
+  <template lwc:if={rejecting}>
+    <c-revquila-reject-modal
+      quote-title={rejectTitle}
+      onclose={closeReject}
+      onreject={handleReject}
+    ></c-revquila-reject-modal>
+  </template>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+</template>

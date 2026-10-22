@@ -1,0 +1,388 @@
+.deal-intelligence-container {
+  background-color: #f8fafc;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.header-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 1rem 1.25rem;
+}
+
+.header-icon {
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+  border-radius: 8px;
+  padding: 6px;
+  display: inline-flex;
+}
+
+.title-text {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.subtitle-text {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+.quote-selector {
+  width: 280px;
+}
+
+/* Gauge Card */
+.gauge-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.gauge-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.gauge-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+/* SVG Circular Gauge */
+.circle-gauge-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0.5rem auto;
+}
+
+.circular-chart {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.circle-bg {
+  fill: none;
+  stroke: #e2e8f0;
+  stroke-width: 2.8;
+}
+
+.circle-stroke {
+  fill: none;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.8s ease-in-out;
+}
+
+.score-hot {
+  stroke: #10b981;
+}
+
+.score-strong {
+  stroke: #059669;
+}
+
+.score-moderate {
+  stroke: #f59e0b;
+}
+
+.score-risk {
+  stroke: #ef4444;
+}
+
+.gauge-score-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.gauge-score-num {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: block;
+  line-height: 1;
+}
+
+.gauge-score-max {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Win Prob Section */
+.win-prob-section {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.win-prob-label {
+  font-size: 0.775rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.win-prob-val {
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+  border-radius: 4px;
+  transition: width 0.6s ease-in-out;
+}
+
+/* Metrics Card */
+.metrics-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 1.25rem;
+  height: 100%;
+}
+
+.card-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.metric-box {
+  background-color: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 6px;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.m-label {
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.m-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 0.2rem;
+}
+
+.m-subtext {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+}
+
+/* Badges */
+.rating-badge {
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 12px;
+}
+
+.badge-hot {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.badge-strong {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.badge-moderate {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.badge-risk {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.margin-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 4px;
+  margin-top: 0.2rem;
+  width: fit-content;
+}
+
+.margin-healthy {
+  background-color: #ecfdf5;
+  color: #047857;
+}
+
+.margin-acceptable {
+  background-color: #fef9c3;
+  color: #854d0e;
+}
+
+.margin-eroded {
+  background-color: #fff1f2;
+  color: #be123c;
+}
+
+/* Factor Chips */
+.factors-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.factor-chips-wrap {
+  gap: 8px;
+}
+
+.factor-chip {
+  background-color: #f1f5f9;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.775rem;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.factor-chip-name {
+  color: #64748b;
+}
+
+.factor-chip-pts {
+  color: #0f172a;
+}
+
+/* Prescriptive Recommendations Card */
+.rec-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 1.25rem;
+}
+
+.recommendation-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.rec-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.4rem;
+}
+
+.rec-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.rec-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.rec-badge-margin {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.rec-badge-win {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.rec-badge-cash {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.rec-description {
+  font-size: 0.8rem;
+  color: #475569;
+  line-height: 1.4;
+  flex-grow: 1;
+}
+
+.optimal-deal-state {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+}
+
+/* Insights Card */
+.insights-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 1.25rem;
+}
+
+.insights-list {
+  padding-left: 1.25rem;
+}
+
+.insight-bullet {
+  font-size: 0.825rem;
+  color: #334155;
+  line-height: 1.5;
+  margin-bottom: 0.35rem;
+}
+
+.empty-state-box {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #64748b;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}

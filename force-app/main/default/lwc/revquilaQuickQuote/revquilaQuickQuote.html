@@ -1,0 +1,279 @@
+<template>
+  <c-revquila-modal
+    heading={heading}
+    subheading={subheading}
+    size="wide"
+    onclose={handleClose}
+    lwc:ref="modal"
+  >
+    <div class="rq-form">
+      <section class="rq-block">
+        <h3>Customer</h3>
+        <div class="rq-grid">
+          <template lwc:if={picking}>
+            <div class={accountFieldClass}>
+              <label for="account">Account</label>
+              <div class="rq-combo">
+                <input
+                  id="account"
+                  class="rq-input"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Search your accounts, or type a new name"
+                  value={accountText}
+                  data-autofocus="true"
+                  oninput={handleAccountInput}
+                  onfocus={handleAccountFocus}
+                />
+                <template lwc:if={showMatches}>
+                  <ul class="rq-suggest">
+                    <template for:each={matchRows} for:item="match">
+                      <li key={match.id}>
+                        <button data-id={match.id} onclick={handlePickAccount}>
+                          <strong>{match.name}</strong>
+                          <small>{match.detail}</small>
+                        </button>
+                      </li>
+                    </template>
+                    <template lwc:if={canCreate}>
+                      <li>
+                        <button class="rq-create" onclick={handleCreateAccount}>
+                          <strong>{createLabel}</strong>
+                          <small>A new account in Salesforce</small>
+                        </button>
+                      </li>
+                    </template>
+                  </ul>
+                </template>
+              </div>
+              <template lwc:if={errors.account}>
+                <span class="rq-error" role="alert">{errors.account}</span>
+              </template>
+            </div>
+          </template>
+          <template lwc:else>
+            <div class="rq-field">
+              <span class="rq-label">Account</span>
+              <div class="rq-picked">
+                <span>
+                  <strong>{accountText}</strong>
+                  <small>{accountDetail}</small>
+                </span>
+                <template lwc:if={picked}>
+                  <button class="rq-change" onclick={clearAccount}>
+                    Change
+                  </button>
+                </template>
+              </div>
+            </div>
+          </template>
+
+          <div class="rq-field">
+            <label for="contact">Contact (who signs)</label>
+            <select
+              id="contact"
+              class="rq-input"
+              data-field="contactId"
+              onchange={handleInput}
+            >
+              <template for:each={contactOptions} for:item="option">
+                <option
+                  key={option.id}
+                  value={option.id}
+                  selected={option.selected}
+                >
+                  {option.label}
+                </option>
+              </template>
+            </select>
+          </div>
+
+          <template lwc:if={hasCountries}>
+            <div class="rq-field">
+              <label for="country">Country (decides tax and currency)</label>
+              <select id="country" class="rq-input" onchange={handleCountry}>
+                <template for:each={countryOptions} for:item="option">
+                  <option
+                    key={option.code}
+                    value={option.code}
+                    selected={option.selected}
+                  >
+                    {option.label}
+                  </option>
+                </template>
+              </select>
+            </div>
+          </template>
+          <div class="rq-field">
+            <template lwc:if={hasRegions}>
+              <label for="state">{regionLabel} (decides the tax)</label>
+              <select
+                id="state"
+                class="rq-input"
+                data-field="state"
+                onchange={handleInput}
+              >
+                <template for:each={regions} for:item="region">
+                  <option
+                    key={region.name}
+                    value={region.name}
+                    selected={region.selected}
+                  >
+                    {region.name}
+                  </option>
+                </template>
+              </select>
+            </template>
+            <template lwc:else>
+              <label for="region">{regionLabel} (decides the tax)</label>
+              <input
+                id="region"
+                class="rq-input"
+                type="text"
+                autocomplete="off"
+                value={state}
+                data-field="state"
+                oninput={handleInput}
+              />
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <section class="rq-block">
+        <h3>Deal</h3>
+        <div class="rq-grid">
+          <template lwc:if={hasOpportunities}>
+            <div class="rq-field">
+              <label for="opportunityId">Opportunity</label>
+              <select
+                id="opportunityId"
+                class="rq-input"
+                onchange={handleOpportunity}
+              >
+                <template for:each={opportunityOptions} for:item="option">
+                  <option
+                    key={option.id}
+                    value={option.id}
+                    selected={option.selected}
+                  >
+                    {option.label}
+                  </option>
+                </template>
+              </select>
+            </div>
+          </template>
+          <div class="rq-field">
+            <label for="opportunity">Reference</label>
+            <input
+              id="opportunity"
+              class="rq-input"
+              type="text"
+              autocomplete="off"
+              placeholder="e.g. 25-seat rollout"
+              value={opportunity}
+              data-field="opportunity"
+              oninput={handleInput}
+            />
+          </div>
+          <div class="rq-field">
+            <label for="terms">Payment terms</label>
+            <select
+              id="terms"
+              class="rq-input"
+              data-field="terms"
+              onchange={handleInput}
+            >
+              <template for:each={termOptions} for:item="option">
+                <option
+                  key={option.name}
+                  value={option.name}
+                  selected={option.selected}
+                >
+                  {option.name}
+                </option>
+              </template>
+            </select>
+          </div>
+          <div class={validDaysFieldClass}>
+            <label for="validDays">Valid for (days)</label>
+            <input
+              id="validDays"
+              class="rq-input"
+              type="number"
+              min="1"
+              max="365"
+              step="1"
+              value={validDays}
+              data-field="validDays"
+              oninput={handleInput}
+            />
+            <template lwc:if={errors.validDays}>
+              <span class="rq-error" role="alert">{errors.validDays}</span>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <section class="rq-block">
+        <div class="rq-block-head">
+          <h3>Products</h3>
+          <template lwc:if={hasCopyOptions}>
+            <div
+              class="rq-bundles"
+              role="group"
+              aria-label="Copy the products of an earlier quote"
+            >
+              <span class="rq-label">Copy from</span>
+              <template for:each={copyOptions} for:item="option">
+                <button
+                  key={option.id}
+                  class={option.copyClass}
+                  aria-pressed={option.pressed}
+                  title={option.detail}
+                  data-id={option.id}
+                  onclick={handleCopy}
+                >
+                  {option.label}
+                </button>
+              </template>
+            </div>
+          </template>
+        </div>
+        <c-revquila-line-editor
+          lines={lines}
+          region={state}
+          country={country}
+          terms={terms}
+          onchange={handleLines}
+          lwc:ref="editor"
+        ></c-revquila-line-editor>
+      </section>
+
+      <section class="rq-block">
+        <div class="rq-field">
+          <label for="notes">Notes for the customer (printed on the PDF)</label>
+          <textarea
+            id="notes"
+            class="rq-input rq-notes"
+            placeholder="e.g. Pricing assumes a go-live before the end of the quarter."
+            data-field="notes"
+            lwc:ref="notes"
+            oninput={handleInput}
+          ></textarea>
+        </div>
+      </section>
+
+      <template lwc:if={saveError}>
+        <p class="rq-error rq-save-error" role="alert">{saveError}</p>
+      </template>
+    </div>
+
+    <div slot="footer" class="rq-actions-end">
+      <button class="rq-btn rq-quiet" onclick={handleCancel}>Cancel</button>
+      <button class="rq-btn rq-primary" disabled={saving} onclick={handleSave}>
+        {saveLabel}
+      </button>
+    </div>
+  </c-revquila-modal>
+</template>

@@ -1,0 +1,382 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <div class="rq-crumbs">
+          <c-revquila-brand></c-revquila-brand>
+          <button class="rq-back" onclick={goToOrders}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 12H5M11 6l-6 6 6 6"></path>
+            </svg>
+            Orders
+          </button>
+        </div>
+      </div>
+
+      <template lwc:if={loading}>
+        <div class="rq-card rq-loading rq-rise rq-d1" role="status">
+          <span class="rq-spinner" aria-hidden="true"></span>
+          Loading…
+        </div>
+      </template>
+
+      <template lwc:if={order}>
+        <header class="rq-card rq-hero rq-rise rq-d1">
+          <div class="rq-hero-top">
+            <div class="rq-tile" aria-hidden="true">O</div>
+            <div class="rq-hero-title">
+              <p class="rq-eyebrow">{eyebrow}</p>
+              <div class="rq-name-row">
+                <h1>{order.account}</h1>
+                <span class={order.pillClass}>{order.statusLabel}</span>
+              </div>
+              <p class="rq-sub">{order.opportunity}</p>
+            </div>
+            <div class="rq-actions">
+              <button class="rq-btn rq-quiet" onclick={openEdit}>
+                Edit order
+              </button>
+              <button class="rq-btn rq-quiet" onclick={openPreview}>
+                Preview PDF
+              </button>
+              <template lwc:if={canCancel}>
+                <button
+                  class="rq-btn rq-quiet rq-to-bad"
+                  data-kind="cancel"
+                  onclick={openDialog}
+                >
+                  Cancel
+                </button>
+              </template>
+              <template lwc:if={canActivate}>
+                <button
+                  class="rq-btn rq-primary"
+                  data-kind="activate"
+                  onclick={openDialog}
+                >
+                  Activate
+                </button>
+              </template>
+              <template lwc:if={canInvoice}>
+                <button
+                  class="rq-btn rq-primary"
+                  data-kind="invoice"
+                  onclick={openDialog}
+                >
+                  Create invoice
+                </button>
+              </template>
+              <template lwc:if={hasInvoice}>
+                <button class="rq-btn rq-primary" onclick={openInvoice}>
+                  Open invoice
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <dl class="rq-facts">
+            <template for:each={facts} for:item="fact">
+              <div key={fact.label} class="rq-fact">
+                <dt>{fact.label}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            </template>
+          </dl>
+
+          <ol class="rq-path" style={pathStyle}>
+            <template for:each={steps} for:item="step">
+              <li key={step.label} class={step.stepClass}>
+                <span class="rq-node">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12.5l4.5 4.5L19 7.5"></path>
+                  </svg>
+                </span>
+                {step.label}
+              </li>
+            </template>
+          </ol>
+          <template lwc:if={cancelNote}>
+            <p class="rq-verdict rq-tone-bad">{cancelNote}</p>
+          </template>
+        </header>
+
+        <div class="rq-cols">
+          <div class="rq-col-main">
+            <section class="rq-card rq-rise rq-d2">
+              <div class="rq-card-head">
+                <div>
+                  <h2>Line items</h2>
+                  <p class="rq-sub">{lineSummary}</p>
+                </div>
+              </div>
+              <div class="rq-tw">
+                <table class="rq-lines">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th class="rq-right">Qty</th>
+                      <th class="rq-right rq-hide-sm">Price</th>
+                      <th class="rq-right">Discount</th>
+                      <th class="rq-right">Net</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={lineRows} for:item="line">
+                      <tr key={line.key}>
+                        <td>
+                          <span class="rq-strong">{line.name}</span>
+                          <small>{line.unit}</small>
+                        </td>
+                        <td class="rq-right">{line.qty}</td>
+                        <td class="rq-right rq-hide-sm">{line.price}</td>
+                        <td class="rq-right">{line.discount}</td>
+                        <td class="rq-right rq-strong">{line.net}</td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+              <div class="rq-under">
+                <div class="rq-notes">
+                  <template lwc:if={order.notes}>
+                    <h3>Notes for the customer</h3>
+                    <p>{order.notes}</p>
+                  </template>
+                </div>
+                <dl class="rq-totals">
+                  <template for:each={totals} for:item="total">
+                    <div key={total.label} class={total.rowClass}>
+                      <dt>{total.label}</dt>
+                      <dd>{total.value}</dd>
+                    </div>
+                  </template>
+                </dl>
+              </div>
+            </section>
+          </div>
+
+          <div class="rq-col-mid">
+            <section class="rq-card rq-rise rq-d3">
+              <h2>Timeline</h2>
+              <p class="rq-sub">Everything that has happened to this order</p>
+              <c-revquila-timeline events={timeline}></c-revquila-timeline>
+            </section>
+          </div>
+
+          <aside class="rq-side">
+            <section class="rq-card rq-lift rq-rise rq-d4">
+              <h2>Documents</h2>
+              <ul class="rq-items">
+                <li class="rq-item">
+                  <span>
+                    Order confirmation PDF
+                    <small>The order as booked, for the customer</small>
+                  </span>
+                  <button class="rq-btn rq-quiet rq-sm" onclick={openPreview}>
+                    Preview
+                  </button>
+                </li>
+              </ul>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d5">
+              <h2>Customer</h2>
+              <dl class="rq-kv">
+                <template for:each={customer} for:item="row">
+                  <div key={row.label} class="rq-kv-row">
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                </template>
+              </dl>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d6">
+              <h2>Related records</h2>
+              <ul class="rq-items">
+                <template for:each={related} for:item="record">
+                  <li key={record.type} class={record.itemClass}>
+                    <span>
+                      <small class="rq-kind">{record.type}</small>
+                      {record.name}
+                    </span>
+                    <template lwc:if={record.exists}>
+                      <span class="rq-item-acts">
+                        <template lwc:if={record.state}>
+                          <span class="rq-pill rq-tone-acc"
+                            >{record.state}</span
+                          >
+                        </template>
+                        <button
+                          class="rq-btn rq-quiet rq-sm"
+                          data-quote={record.quoteId}
+                          data-contract={record.contractId}
+                          data-subscription={record.subscriptionId}
+                          data-invoice={record.invoiceId}
+                          onclick={openRelated}
+                        >
+                          Open
+                        </button>
+                      </span>
+                    </template>
+                  </li>
+                </template>
+              </ul>
+            </section>
+          </aside>
+        </div>
+      </template>
+
+      <template lwc:if={missing}>
+        <div class="rq-card rq-missing rq-rise rq-d1">
+          <h2>We couldn't find that order</h2>
+          <p class="rq-sub">
+            The link may be incomplete, or the order was removed.
+          </p>
+          <button class="rq-btn rq-primary" onclick={goToOrders}>
+            Back to orders
+          </button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <template lwc:if={dialog}>
+    <c-revquila-modal
+      heading={dialog.heading}
+      subheading={order.account}
+      size="small"
+      onclose={closeDialog}
+      lwc:ref="dialogModal"
+    >
+      <div class="rq-form">
+        <p class="rq-dialog-body">{dialog.body}</p>
+        <div class="rq-brief">
+          <span>
+            <strong>{order.account}</strong>
+            <small>{eyebrow}</small>
+          </span>
+          <b>{order.totalLabel}</b>
+        </div>
+        <template lwc:if={dialog.reason}>
+          <div class={reasonFieldClass}>
+            <label for="reason">Reason</label>
+            <input
+              id="reason"
+              class="rq-input"
+              type="text"
+              autocomplete="off"
+              placeholder="e.g. Customer withdrew the purchase order"
+              data-autofocus="true"
+              oninput={handleReason}
+            />
+            <template lwc:if={reasonError}>
+              <span class="rq-error" role="alert">{reasonError}</span>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelDialog}>Back</button>
+        <button class={confirmClass} disabled={busy} onclick={confirmDialog}>
+          {dialog.confirmLabel}
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <template lwc:if={isEditing}>
+    <c-revquila-modal
+      heading="Edit Order"
+      subheading={eyebrow}
+      onclose={cancelEdit}
+    >
+      <div class="rq-form">
+        <div class="rq-form-grid">
+          <div class="rq-field">
+            <label for="order-date">Order date</label>
+            <input
+              id="order-date"
+              class="rq-input"
+              type="date"
+              value={editForm.orderDate}
+              data-field="orderDate"
+              onchange={handleEditInput}
+            />
+          </div>
+          <div class="rq-field">
+            <label for="order-terms">Payment terms</label>
+            <input
+              id="order-terms"
+              class="rq-input"
+              type="text"
+              value={editForm.terms}
+              data-field="terms"
+              placeholder="e.g. Net 30"
+              oninput={handleEditInput}
+            />
+          </div>
+          <div class="rq-field">
+            <label for="order-ref">Reference / PO #</label>
+            <input
+              id="order-ref"
+              class="rq-input"
+              type="text"
+              value={editForm.reference}
+              data-field="reference"
+              placeholder="e.g. PO-98421"
+              oninput={handleEditInput}
+            />
+          </div>
+          <div class="rq-field">
+            <label for="order-region">Region / State</label>
+            <input
+              id="order-region"
+              class="rq-input"
+              type="text"
+              value={editForm.region}
+              data-field="region"
+              placeholder="e.g. California or MH"
+              oninput={handleEditInput}
+            />
+          </div>
+          <div class="rq-field rq-span-all">
+            <label for="order-notes">Notes</label>
+            <textarea
+              id="order-notes"
+              class="rq-input"
+              rows="3"
+              data-field="notes"
+              placeholder="Special delivery notes or fulfillment instructions…"
+              oninput={handleEditInput}
+            >{editForm.notes}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelEdit} disabled={editBusy}>Cancel</button>
+        <button class="rq-btn rq-primary" onclick={saveEditOrder} disabled={editBusy}>
+          Save changes
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <template lwc:if={previewing}>
+    <c-revquila-document-modal
+      document={document}
+      onclose={closePreview}
+    ></c-revquila-document-modal>
+  </template>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot record-id={recordId}></c-revquila-ai-chatbot>
+</template>

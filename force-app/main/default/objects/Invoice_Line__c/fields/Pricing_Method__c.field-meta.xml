@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pricing_Method__c</fullName>
+    <description>How the price was worked out: unit, tiered, block, percent_of_total or usage.</description>
+    <externalId>false</externalId>
+    <label>Pricing Method</label>
+    <length>20</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

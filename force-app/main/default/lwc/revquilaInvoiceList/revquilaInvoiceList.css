@@ -1,0 +1,96 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+/* ---------- ageing: one band per age group, as wide as its share of the money ---------- */
+.rq-ageing {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.rq-seg-bar {
+  flex: 1 1 0;
+  min-width: 118px;
+  padding: 0 4px 6px 0;
+  border-radius: 10px;
+  text-align: left;
+  transition:
+    transform 0.25s,
+    background 0.2s;
+}
+
+.rq-seg-bar:hover {
+  transform: translateY(-2px);
+}
+
+.rq-band {
+  display: block;
+  height: 10px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: var(--rq-c);
+  opacity: 0.85;
+  transform-origin: left;
+  animation: rq-grow 1s 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transition:
+    height 0.2s,
+    opacity 0.2s;
+}
+
+.rq-seg-bar:hover .rq-band,
+.rq-seg-bar.rq-on .rq-band {
+  height: 14px;
+  opacity: 1;
+}
+
+.rq-seg-bar.rq-on .rq-band {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rq-c) 25%, transparent);
+}
+
+.rq-seg-bar strong,
+.rq-seg-bar small {
+  display: block;
+  padding-left: 2px;
+}
+
+.rq-seg-bar strong {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-seg-bar small {
+  font-size: 12px;
+  color: var(--rq-mut);
+}
+
+/* the stat tiles take the colour of what they report */
+.rq-stat.rq-tone-none {
+  --rq-c: var(--rq-fg);
+}
+
+td small.rq-late {
+  font-weight: 600;
+  color: var(--rq-bad);
+}
+
+/* ---------- reminder dialog ---------- */
+.rq-items.rq-flush {
+  margin-top: 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.rq-item b {
+  font-variant-numeric: tabular-nums;
+}
+
+@container rq-page (max-width: 640px) {
+  .rq-ageing {
+    flex-wrap: wrap;
+  }
+
+  .rq-stack .rq-cell-meta small {
+    display: none;
+  }
+}

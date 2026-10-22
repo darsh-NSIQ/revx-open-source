@@ -1,0 +1,195 @@
+<template>
+  <div class="rq-editor">
+    <template lwc:if={hasRows}>
+      <div class="rq-lines" role="list">
+        <div class="rq-line rq-line-head" aria-hidden="true">
+          <span>Product</span>
+          <span class="rq-right">Qty</span>
+          <span class="rq-right">Discount %</span>
+          <span class="rq-right">Net</span>
+          <span></span>
+        </div>
+        <template for:each={rowViews} for:item="row">
+          <div key={row.id} class="rq-line" role="listitem">
+            <div class="rq-cell-product">
+              <select
+                class="rq-input"
+                aria-label="Product"
+                data-id={row.id}
+                onchange={handleProduct}
+              >
+                <template for:each={row.options} for:item="option">
+                  <option
+                    key={option.key}
+                    value={option.key}
+                    selected={option.selected}
+                  >
+                    {option.label}
+                  </option>
+                </template>
+              </select>
+              <template lwc:if={row.custom}>
+                <div class="rq-custom">
+                  <input
+                    class={row.nameClass}
+                    type="text"
+                    placeholder="Item name, e.g. Data migration"
+                    aria-label="Item name"
+                    value={row.name}
+                    data-id={row.id}
+                    data-field="name"
+                    oninput={handleField}
+                  />
+                  <input
+                    class={row.priceClass}
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="Unit price"
+                    aria-label="Unit price"
+                    value={row.price}
+                    data-id={row.id}
+                    data-field="price"
+                    oninput={handleField}
+                  />
+                  <input
+                    class="rq-input"
+                    type="text"
+                    placeholder="Unit, e.g. one-time"
+                    aria-label="Unit"
+                    value={row.unit}
+                    data-id={row.id}
+                    data-field="unit"
+                    oninput={handleField}
+                  />
+                </div>
+              </template>
+              <template lwc:else>
+                <small>{row.priceLabel} {row.unitLabel}</small>
+                <template lwc:if={row.bundleNote}>
+                  <small class="rq-bundle-note">{row.bundleNote}</small>
+                </template>
+              </template>
+            </div>
+            <label class="rq-cell-qty">
+              <span>Qty</span>
+              <input
+                class={row.qtyClass}
+                type="number"
+                min="1"
+                step="1"
+                value={row.qty}
+                data-id={row.id}
+                data-field="qty"
+                oninput={handleField}
+              />
+            </label>
+            <label class="rq-cell-discount">
+              <span>Discount %</span>
+              <input
+                class={row.discountClass}
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={row.discount}
+                data-id={row.id}
+                data-field="discount"
+                oninput={handleField}
+              />
+            </label>
+            <div class="rq-cell-net">
+              <span>Net</span>
+              <b>{row.netLabel}</b>
+              <template lwc:if={row.ruleNote}>
+                <small class="rq-rule-note">{row.ruleNote}</small>
+              </template>
+            </div>
+            <button
+              class="rq-remove"
+              aria-label={row.removeLabel}
+              title="Remove line"
+              disabled={row.removeDisabled}
+              data-id={row.id}
+              onclick={handleRemove}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"
+                ></path>
+              </svg>
+            </button>
+            <template lwc:if={row.problem}>
+              <span class="rq-error rq-line-error" role="alert">
+                {row.problem}
+              </span>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+    <template lwc:else>
+      <p class="rq-none">No products yet. Add one below.</p>
+    </template>
+    <template lwc:if={needsLine}>
+      <span class="rq-error" role="alert">Add at least one product.</span>
+    </template>
+    <template lwc:if={productsError}>
+      <span class="rq-error" role="alert">{productsError}</span>
+    </template>
+
+    <div class="rq-adders">
+      <template for:each={suggestions} for:item="product">
+        <button
+          key={product.key}
+          class={product.addClass}
+          data-key={product.key}
+          onclick={handleSuggestion}
+        >
+          + {product.label} <small>{product.price}</small>
+        </button>
+      </template>
+      <button class="rq-add rq-add-custom" onclick={handleAddCustom}>
+        + Custom item
+      </button>
+    </div>
+
+    <div class="rq-bottom">
+      <div class="rq-tools">
+        <div class="rq-bulk">
+          <label for="bulk">Same discount on every line</label>
+          <div class="rq-bulk-row">
+            <input
+              id="bulk"
+              class="rq-input"
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              placeholder="%"
+              value={bulkDiscount}
+              oninput={handleBulkInput}
+            />
+            <button class="rq-btn rq-quiet rq-sm" onclick={handleBulkApply}>
+              Apply
+            </button>
+            <template lwc:if={overLimit}>
+              <button class="rq-btn rq-quiet rq-sm" onclick={handleCap}>
+                {capLabel}
+              </button>
+            </template>
+          </div>
+        </div>
+        <p class={policy.noteClass}>{policy.text}</p>
+      </div>
+      <dl class="rq-sums">
+        <template for:each={totals} for:item="row">
+          <div key={row.label} class={row.rowClass}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        </template>
+      </dl>
+    </div>
+  </div>
+</template>

@@ -1,0 +1,230 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <c-revquila-brand></c-revquila-brand>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Invoices</p>
+          <h1>What is billed, <em>what is still owed</em>.</h1>
+        </div>
+        <template lwc:if={canRemind}>
+          <button class="rq-btn rq-primary" onclick={openRemind}>
+            {remindLabel}
+          </button>
+        </template>
+      </header>
+
+      <section class="rq-stats">
+        <template for:each={stats} for:item="stat">
+          <div key={stat.label} class={stat.cardClass}>
+            <span class="rq-stat-label">{stat.label}</span>
+            <span class="rq-stat-value">{stat.value}</span>
+            <span class="rq-stat-note">{stat.note}</span>
+          </div>
+        </template>
+      </section>
+
+      <template lwc:if={hasAgeing}>
+        <section class="rq-card rq-rise rq-d6">
+          <div class="rq-card-head">
+            <h2>Ageing of unpaid invoices</h2>
+            <p class="rq-sub">Tap a band to list its invoices</p>
+          </div>
+          <div class="rq-ageing" role="group" aria-label="Filter by age">
+            <template for:each={ageing} for:item="band">
+              <button
+                key={band.key}
+                class={band.segmentClass}
+                style={band.segmentStyle}
+                aria-pressed={band.pressed}
+                data-key={band.key}
+                onclick={handleBucket}
+              >
+                <span class="rq-band"></span>
+                <strong>{band.amountLabel}</strong>
+                <small>{band.label} · {band.countLabel}</small>
+              </button>
+            </template>
+          </div>
+        </section>
+      </template>
+
+      <section class="rq-card rq-toolbar rq-rise rq-d7" lwc:ref="toolbar">
+        <div class="rq-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M16.5 16.5L21 21"></path>
+          </svg>
+          <input
+            class="rq-input"
+            type="search"
+            placeholder="Search account, invoice or quote number"
+            aria-label="Search invoices"
+            value={search}
+            oninput={handleSearch}
+          />
+        </div>
+        <div class="rq-chips" role="group" aria-label="Filter by status">
+          <template for:each={chips} for:item="chip">
+            <button
+              key={chip.key}
+              class={chip.chipClass}
+              aria-pressed={chip.pressed}
+              data-key={chip.key}
+              onclick={handleFilter}
+            >
+              {chip.label} <b>{chip.count}</b>
+            </button>
+          </template>
+        </div>
+      </section>
+
+      <section class="rq-card rq-stretch rq-rise rq-d8">
+        <div class="rq-card-head">
+          <h2>{summary}</h2>
+          <p class="rq-sub">{amountNote}</p>
+        </div>
+        <template lwc:if={hasInvoices}>
+          <div class="rq-tw">
+            <table class="rq-stack">
+              <thead>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Account</th>
+                  <th class="rq-hide-md">Due</th>
+                  <th class="rq-right rq-hide-md">Amount</th>
+                  <th class="rq-right">Balance</th>
+                  <th>Status</th>
+                  <th class="rq-chev-col"><span class="rq-sr">Open</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={paging.rows} for:item="invoice">
+                  <tr
+                    key={invoice.id}
+                    class="rq-go rq-rise"
+                    style={invoice.rowStyle}
+                    data-id={invoice.id}
+                    onclick={openInvoice}
+                  >
+                    <td class="rq-cell-meta">
+                      <button class="rq-link">{invoice.number}</button>
+                      <small>Issued {invoice.issuedLabel}</small>
+                    </td>
+                    <td class="rq-cell-title">
+                      <span class="rq-strong">{invoice.account}</span>
+                      <small>{invoice.contact}</small>
+                    </td>
+                    <td class="rq-hide-md rq-cell-extra">
+                      {invoice.dueLabel}
+                      <small class={invoice.dueClass}>{invoice.dueNote}</small>
+                    </td>
+                    <td class="rq-right rq-hide-md rq-cell-extra">
+                      {invoice.amountLabel}
+                    </td>
+                    <td class="rq-right rq-amount rq-cell-value">
+                      {invoice.balanceLabel}
+                    </td>
+                    <td class="rq-cell-state">
+                      <span class={invoice.pillClass}
+                        >{invoice.statusLabel}</span
+                      >
+                    </td>
+                    <td class="rq-chev-col rq-cell-extra">
+                      <svg
+                        class="rq-chev"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 6l6 6-6 6"></path>
+                      </svg>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <c-revquila-pager
+            total={paging.total}
+            page={paging.page}
+            page-size={pageSize}
+            noun="invoice"
+            onpagechange={handlePage}
+            onsizechange={handlePageSize}
+          ></c-revquila-pager>
+        </template>
+        <template lwc:if={loading}>
+          <div class="rq-loading" role="status">
+            <span class="rq-spinner" aria-hidden="true"></span>
+            Loading…
+          </div>
+        </template>
+        <template lwc:if={loadError}>
+          <p class="rq-verdict rq-tone-bad" role="alert">{loadError}</p>
+        </template>
+        <template lwc:if={isEmpty}>
+          <div class="rq-empty">
+            <h2>No invoices yet</h2>
+            <p class="rq-sub">
+              An invoice is raised from a signed quote, on the quote's page.
+            </p>
+          </div>
+        </template>
+        <template lwc:if={noMatch}>
+          <div class="rq-empty">
+            <h2>No invoices match</h2>
+            <p class="rq-sub">Try a different status or age band.</p>
+            <button class="rq-btn rq-quiet" onclick={clearFilters}>
+              Show all invoices
+            </button>
+          </div>
+        </template>
+      </section>
+    </div>
+  </div>
+
+  <template lwc:if={reminding}>
+    <c-revquila-modal
+      heading="Log a reminder on every overdue invoice?"
+      size="medium"
+      onclose={closeRemind}
+      lwc:ref="remindModal"
+    >
+      <p class="rq-dialog-body">{remindBody}</p>
+      <ul class="rq-items rq-flush">
+        <template for:each={overdueRows} for:item="row">
+          <li key={row.id} class="rq-item">
+            <span>
+              {row.account}
+              <small>{row.number} · {row.late} overdue</small>
+            </span>
+            <b>{row.balance}</b>
+          </li>
+        </template>
+      </ul>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelRemind}>Cancel</button>
+        <button
+          class="rq-btn rq-primary"
+          data-autofocus="true"
+          onclick={confirmRemind}
+        >
+          Log reminders
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+</template>

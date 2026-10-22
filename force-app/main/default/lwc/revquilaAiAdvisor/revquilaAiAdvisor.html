@@ -1,0 +1,215 @@
+<template>
+  <div class="rq-advisor-container">
+    <!-- Header -->
+    <div class="rq-advisor-header">
+      <div class="rq-advisor-title-group">
+        <div class="rq-ai-icon-wrap" aria-hidden="true">
+          <svg viewBox="0 0 24 24" class="rq-ai-sparkle">
+            <path
+              d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2z"
+            ></path>
+          </svg>
+        </div>
+        <div>
+          <div class="rq-advisor-title-row">
+            <h2 class="rq-advisor-title">RevX AI Advisor</h2>
+            <span class={providerBadgeClass}>{providerLabel}</span>
+          </div>
+          <p class="rq-advisor-subtitle">
+            Deal optimization, predictive win scoring &amp; revenue intelligence
+          </p>
+        </div>
+      </div>
+      <button
+        class="rq-btn rq-quiet rq-btn-refresh"
+        onclick={handleRefresh}
+        disabled={loading}
+        title="Refresh AI Analysis"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class={refreshIconClass}
+          aria-hidden="true"
+        >
+          <path
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          ></path>
+        </svg>
+        <span>{refreshButtonLabel}</span>
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <template lwc:if={loading}>
+      <div class="rq-loading-state" role="status">
+        <div class="rq-ai-pulse-orb" aria-hidden="true"></div>
+        <p class="rq-loading-text">Analyzing deal structure, margins &amp; cohort metrics…</p>
+      </div>
+    </template>
+
+    <!-- Error State -->
+    <template lwc:if={hasError}>
+      <div class="rq-error-box">
+        <svg viewBox="0 0 24 24" class="rq-err-icon" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{errorMessage}</span>
+      </div>
+    </template>
+
+    <!-- Content State -->
+    <template lwc:if={showContent}>
+      <!-- Top Scoreboard Tiles -->
+      <div class="rq-advisor-tiles">
+        <!-- Win Probability Tile -->
+        <div class="rq-score-card">
+          <div class="rq-score-label">Predicted Win Probability</div>
+          <div class="rq-score-val-row">
+            <span class={winScoreClass}>{winScoreDisplay}</span>
+            <span class={winPillClass}>{winConfidenceLabel}</span>
+          </div>
+          <div class="rq-meter-bar">
+            <div class={meterFillClass} style={meterFillStyle}></div>
+          </div>
+        </div>
+
+        <!-- Discount Cohort Benchmark -->
+        <div class="rq-score-card">
+          <div class="rq-score-label">Cohort Discount Benchmark</div>
+          <div class="rq-score-val-row">
+            <span class="rq-score-val">{actualDiscountDisplay}</span>
+            <span class="rq-benchmark-tag">Target: {benchmarkDiscountDisplay}</span>
+          </div>
+          <p class="rq-score-sub">{discountStatusSub}</p>
+        </div>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="rq-tab-nav" role="tablist">
+        <button
+          class={strategyTabClass}
+          role="tab"
+          data-tab="strategy"
+          onclick={selectTab}
+        >
+          Strategy &amp; Upsell
+        </button>
+        <button
+          class={proposalTabClass}
+          role="tab"
+          data-tab="proposal"
+          onclick={selectTab}
+        >
+          Proposal &amp; Email Pitch
+        </button>
+        <button
+          class={riskTabClass}
+          role="tab"
+          data-tab="risks"
+          onclick={selectTab}
+        >
+          Governance &amp; Risks ({riskCount})
+        </button>
+      </div>
+
+      <!-- Tab 1: Strategy & Upsell -->
+      <template lwc:if={isStrategyTab}>
+        <div class="rq-tab-pane">
+          <!-- Discount Analysis Highlight -->
+          <div class="rq-insight-callout">
+            <div class="rq-callout-icon" aria-hidden="true">💡</div>
+            <div class="rq-callout-content">
+              <h4>Discount Assessment</h4>
+              <p>{discountAnalysisText}</p>
+            </div>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="rq-section-block">
+            <h3 class="rq-block-heading">Strategic Recommendations</h3>
+            <ul class="rq-recs-list">
+              <template for:each={recommendationsList} for:item="rec">
+                <li key={rec.id} class="rq-rec-item">
+                  <span class="rq-bullet-check" aria-hidden="true">✓</span>
+                  <span>{rec.text}</span>
+                </li>
+              </template>
+            </ul>
+          </div>
+
+          <!-- Upsell / Cross-sell Opportunities -->
+          <template lwc:if={hasUpsells}>
+            <div class="rq-section-block">
+              <h3 class="rq-block-heading">Recommended Upsell Add-ons</h3>
+              <div class="rq-upsell-grid">
+                <template for:each={upsellList} for:item="item">
+                  <div key={item.name} class="rq-upsell-card">
+                    <div class="rq-upsell-top">
+                      <strong class="rq-upsell-name">{item.name}</strong>
+                      <span class="rq-upsell-family">{item.family}</span>
+                    </div>
+                    <p class="rq-upsell-reason">{item.reason}</p>
+                    <div class="rq-upsell-footer">
+                      <span class="rq-upsell-est">Est. Uplift: +{item.formattedAmount}</span>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- Tab 2: Proposal & Pitch -->
+      <template lwc:if={isProposalTab}>
+        <div class="rq-tab-pane">
+          <div class="rq-pitch-header">
+            <p class="rq-pitch-desc">
+              AI-generated executive summary and client pitch letter tailored to this deal structure.
+            </p>
+            <button class="rq-btn rq-quiet rq-btn-copy" onclick={handleCopyPitch}>
+              <svg viewBox="0 0 24 24" class="rq-copy-icon" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+              </svg>
+              <span>{copyButtonLabel}</span>
+            </button>
+          </div>
+
+          <!-- Executive Summary -->
+          <div class="rq-section-block">
+            <h3 class="rq-block-heading">Executive Summary</h3>
+            <div class="rq-summary-box">
+              {executiveSummaryText}
+            </div>
+          </div>
+
+          <!-- Client Email Pitch -->
+          <div class="rq-section-block">
+            <h3 class="rq-block-heading">Client Pitch Draft</h3>
+            <pre class="rq-pitch-pre">{clientPitchEmailText}</pre>
+          </div>
+        </div>
+      </template>
+
+      <!-- Tab 3: Governance & Risks -->
+      <template lwc:if={isRiskTab}>
+        <div class="rq-tab-pane">
+          <div class="rq-section-block">
+            <h3 class="rq-block-heading">Deal Governance Checklist</h3>
+            <ul class="rq-risks-list">
+              <template for:each={riskList} for:item="r">
+                <li key={r.id} class={r.itemClass}>
+                  <span class="rq-risk-badge" aria-hidden="true">{r.icon}</span>
+                  <span class="rq-risk-text">{r.text}</span>
+                </li>
+              </template>
+            </ul>
+          </div>
+        </div>
+      </template>
+    </template>
+  </div>
+</template>

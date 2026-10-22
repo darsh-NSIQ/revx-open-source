@@ -1,0 +1,595 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <div class="rq-crumbs">
+          <c-revquila-brand></c-revquila-brand>
+          <button class="rq-back" onclick={goToSubscriptions}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 12H5M11 6l-6 6 6 6"></path>
+            </svg>
+            Subscriptions
+          </button>
+        </div>
+      </div>
+
+      <template lwc:if={loading}>
+        <div class="rq-card rq-loading rq-rise rq-d1" role="status">
+          <span class="rq-spinner" aria-hidden="true"></span>
+          Loading…
+        </div>
+      </template>
+
+      <template lwc:if={subscription}>
+        <header class="rq-card rq-hero rq-rise rq-d1">
+          <div class="rq-hero-top">
+            <div class="rq-tile" aria-hidden="true">S</div>
+            <div class="rq-hero-title">
+              <p class="rq-eyebrow">Subscription {subscription.number}</p>
+              <div class="rq-name-row">
+                <h1>{subscription.account}</h1>
+                <span class={subscription.pillClass}>
+                  {subscription.statusLabel}
+                </span>
+              </div>
+              <p class="rq-sub">{subscription.productSummary}</p>
+            </div>
+            <div class="rq-actions">
+              <button class="rq-btn rq-quiet" onclick={openEdit}>
+                Edit subscription
+              </button>
+              <template lwc:if={canCancel}>
+                <button class="rq-btn rq-quiet rq-to-bad" onclick={openCancel}>
+                  Cancel
+                </button>
+              </template>
+              <template lwc:if={isLive}>
+                <button
+                  class="rq-btn rq-quiet"
+                  data-action="pause"
+                  onclick={openConfirm}
+                >
+                  Pause
+                </button>
+                <button
+                  class="rq-btn rq-primary"
+                  data-action="renew"
+                  onclick={openConfirm}
+                >
+                  Renew now
+                </button>
+              </template>
+              <template lwc:if={isPaused}>
+                <button
+                  class="rq-btn rq-primary"
+                  data-action="resume"
+                  onclick={openConfirm}
+                >
+                  Resume
+                </button>
+              </template>
+              <template lwc:if={isCancelled}>
+                <button
+                  class="rq-btn rq-primary"
+                  data-action="renew"
+                  onclick={openConfirm}
+                >
+                  Win back with a quote
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <dl class="rq-facts">
+            <template for:each={facts} for:item="fact">
+              <div key={fact.label} class="rq-fact">
+                <dt>{fact.label}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            </template>
+          </dl>
+
+          <div class="rq-term">
+            <div class="rq-meter" style={termStyle}><span></span></div>
+            <p class="rq-sub">{termLabel}</p>
+          </div>
+        </header>
+
+        <div class="rq-cols">
+          <div class="rq-col-main">
+            <section class="rq-card rq-rise rq-d2">
+              <h2>Products</h2>
+              <p class="rq-sub">
+                A change counts from today. The prorated difference is shown,
+                not invoiced.
+              </p>
+              <div class="rq-tw">
+                <table class="rq-lines">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th class="rq-right">Qty</th>
+                      <th class="rq-right rq-hide-sm">Yearly price</th>
+                      <th class="rq-right">MRR</th>
+                      <th class="rq-act-col">
+                        <span class="rq-sr">Change</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={productRows} for:item="product">
+                      <tr key={product.key}>
+                        <td>
+                          <span class="rq-strong">{product.name}</span>
+                          <small>{product.unit}</small>
+                        </td>
+                        <td class="rq-right">{product.qty}</td>
+                        <td class="rq-right rq-hide-sm">
+                          {product.priceLabel}
+                        </td>
+                        <td class="rq-right rq-strong">{product.mrrLabel}</td>
+                        <td class="rq-act-col">
+                          <template lwc:if={isLive}>
+                            <button
+                              class="rq-btn rq-quiet rq-sm"
+                              data-key={product.key}
+                              onclick={openQuantity}
+                            >
+                              Change
+                            </button>
+                          </template>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="rq-card rq-rise rq-d3">
+              <h2>MRR over the term</h2>
+              <p class="rq-sub">After each change to the subscription</p>
+              <ol class="rq-bars">
+                <template for:each={history} for:item="point">
+                  <li key={point.key} style={point.barStyle}>
+                    <strong>{point.value}</strong>
+                    <span class="rq-bar"></span>
+                    <small>{point.label}</small>
+                  </li>
+                </template>
+              </ol>
+            </section>
+
+            <section class="rq-card rq-rise rq-d4">
+              <div class="rq-card-head">
+                <div>
+                  <h2>Usage records</h2>
+                  <p class="rq-sub">Metered consumption billed on schedule</p>
+                </div>
+                <template lwc:if={isLive}>
+                  <button class="rq-btn rq-quiet rq-sm" onclick={openUsage}>
+                    Log usage
+                  </button>
+                </template>
+              </div>
+              <template lwc:if={hasUsage}>
+                <div class="rq-tw">
+                  <table class="rq-lines">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Item</th>
+                        <th class="rq-right">Qty</th>
+                        <th>Note</th>
+                        <th class="rq-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template for:each={usageRows} for:item="u">
+                        <tr key={u.id}>
+                          <td>{u.dateLabel}</td>
+                          <td><span class="rq-strong">{u.item}</span></td>
+                          <td class="rq-right">{u.qty}</td>
+                          <td>{u.note}</td>
+                          <td class="rq-right">
+                            <span class={u.pillClass}>{u.statusLabel}</span>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </template>
+              <template lwc:else>
+                <p class="rq-sub rq-nothing">No usage records logged yet.</p>
+              </template>
+            </section>
+          </div>
+
+          <div class="rq-col-mid">
+            <section class="rq-card rq-rise rq-d3">
+              <div class="rq-card-head">
+                <div>
+                  <h2>Timeline</h2>
+                  <p class="rq-sub">Changes, notes and renewals</p>
+                </div>
+                <button class="rq-btn rq-quiet rq-sm" onclick={openNote}>
+                  Log a note
+                </button>
+              </div>
+              <c-revquila-timeline events={timeline}></c-revquila-timeline>
+            </section>
+          </div>
+
+          <aside class="rq-side">
+            <section class="rq-card rq-lift rq-rise rq-d3">
+              <div class="rq-card-head">
+                <h2>Renewal</h2>
+                <span class={risk.pillClass}>{risk.label}</span>
+              </div>
+              <p class={riskClass}>{riskReason}</p>
+              <label class="rq-switch rq-renew">
+                <input
+                  type="checkbox"
+                  checked={subscription.autoRenew}
+                  disabled={isCancelled}
+                  onchange={handleAutoRenew}
+                />
+                <span class="rq-track"></span>
+                Auto-renew
+              </label>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d3">
+              <div class="rq-card-head">
+                <h2>Recurring Mandate</h2>
+                <template lwc:if={hasMandate}>
+                  <span class="rq-pill rq-tone-good">{subscription.mandateStatus}</span>
+                </template>
+                <template lwc:else>
+                  <span class="rq-pill rq-tone-mut">None</span>
+                </template>
+              </div>
+              <template lwc:if={hasMandate}>
+                <p class="rq-sub">
+                  <strong>{subscription.mandateType}</strong> · Max ₹{mandateMaxLabel}
+                </p>
+                <p class="rq-sub">Auth Date: {mandateAuthDateLabel}</p>
+              </template>
+              <template lwc:else>
+                <p class="rq-sub">No UPI AutoPay or e-Mandate registered.</p>
+              </template>
+            </section>
+
+            <template lwc:if={hasCoupon}>
+              <section class="rq-card rq-lift rq-rise rq-d3">
+                <div class="rq-card-head">
+                  <h2>Promo Applied</h2>
+                  <span class="rq-pill rq-tone-accent">{subscription.discountCode}</span>
+                </div>
+                <p class="rq-sub">{discountPromoLabel}</p>
+                <template lwc:if={hasTrial}>
+                  <p class="rq-sub">Free trial until {trialEndLabel}</p>
+                </template>
+              </section>
+            </template>
+
+            <section class="rq-card rq-lift rq-rise rq-d4">
+              <h2>Invoices</h2>
+              <template lwc:if={hasInvoices}>
+                <ul class="rq-items">
+                  <template for:each={subscription.invoices} for:item="invoice">
+                    <li key={invoice.id}>
+                      <button
+                        class="rq-item"
+                        data-id={invoice.id}
+                        onclick={openInvoice}
+                      >
+                        <span>
+                          {invoice.number}
+                          <small>
+                            {invoice.amountLabel} · due {invoice.dueLabel}
+                          </small>
+                        </span>
+                        <span class={invoice.pillClass}>
+                          {invoice.statusLabel}
+                        </span>
+                      </button>
+                    </li>
+                  </template>
+                </ul>
+              </template>
+              <template lwc:else>
+                <p class="rq-sub rq-nothing">No invoices raised yet.</p>
+              </template>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d5">
+              <h2>Details</h2>
+              <dl class="rq-kv">
+                <template for:each={details} for:item="row">
+                  <div key={row.label} class="rq-kv-row">
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                </template>
+              </dl>
+            </section>
+          </aside>
+        </div>
+      </template>
+
+      <template lwc:if={missing}>
+        <div class="rq-card rq-missing rq-rise rq-d1">
+          <h2>We couldn't find that subscription</h2>
+          <p class="rq-sub">
+            The link may be incomplete, or the subscription was removed.
+          </p>
+          <button class="rq-btn rq-primary" onclick={goToSubscriptions}>
+            Back to subscriptions
+          </button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <template lwc:if={modal}>
+    <c-revquila-modal
+      heading={modal.heading}
+      subheading={subscription.account}
+      size={modal.size}
+      onclose={closeModal}
+      lwc:ref="actionModal"
+    >
+      <div class="rq-form">
+        <template lwc:if={isConfirm}>
+          <p class="rq-dialog-body">{modal.body}</p>
+          <div class="rq-brief">
+            <span>
+              <strong>{subscription.account}</strong>
+              <small>{subscription.number}</small>
+            </span>
+            <b>{subscription.arrLabel} ARR</b>
+          </div>
+        </template>
+
+        <template lwc:if={isQuantity}>
+          <div class={qtyFieldClass}>
+            <label for="qty">New quantity</label>
+            <input
+              id="qty"
+              class="rq-input"
+              type="number"
+              min="1"
+              step="1"
+              value={form.qty}
+              data-field="qty"
+              data-autofocus="true"
+              oninput={handleField}
+            />
+            <template lwc:if={errors.qty}>
+              <span class="rq-error" role="alert">{errors.qty}</span>
+            </template>
+          </div>
+          <template lwc:if={proration}>
+            <dl class="rq-kv rq-panel">
+              <template for:each={proration} for:item="row">
+                <div key={row.label} class="rq-kv-row">
+                  <dt>{row.label}</dt>
+                  <dd>{row.value}</dd>
+                </div>
+              </template>
+            </dl>
+          </template>
+        </template>
+
+        <template lwc:if={isCancel}>
+          <div class="rq-field">
+            <span class="rq-label">When should it end?</span>
+            <div class="rq-seg" role="group" aria-label="When should it end?">
+              <template for:each={whenOptions} for:item="option">
+                <button
+                  key={option.key}
+                  class={option.optionClass}
+                  aria-pressed={option.pressed}
+                  data-key={option.key}
+                  onclick={handleWhen}
+                >
+                  {option.label}
+                </button>
+              </template>
+            </div>
+            <span class="rq-hint">{cancelNote}</span>
+          </div>
+          <div class={reasonFieldClass}>
+            <label for="reason">Reason</label>
+            <input
+              id="reason"
+              class="rq-input"
+              type="text"
+              autocomplete="off"
+              placeholder="e.g. Budget cut, moved to a competitor"
+              data-field="reason"
+              data-autofocus="true"
+              oninput={handleField}
+            />
+            <template lwc:if={errors.reason}>
+              <span class="rq-error" role="alert">{errors.reason}</span>
+            </template>
+          </div>
+        </template>
+
+        <template lwc:if={isNote}>
+          <div class={noteFieldClass}>
+            <label for="note">Note</label>
+            <textarea
+              id="note"
+              class="rq-input"
+              placeholder="e.g. Spoke to their CFO: happy to renew if we hold the price."
+              data-field="note"
+              data-autofocus="true"
+              oninput={handleField}
+            ></textarea>
+            <template lwc:if={errors.note}>
+              <span class="rq-error" role="alert">{errors.note}</span>
+            </template>
+          </div>
+        </template>
+
+        <template lwc:if={isUsage}>
+          <div class="rq-field">
+            <label for="usageItem">Product / Item</label>
+            <select
+              id="usageItem"
+              class="rq-input"
+              data-field="itemId"
+              onchange={handleField}
+            >
+              <template for:each={usageItemOptions} for:item="opt">
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              </template>
+            </select>
+          </div>
+          <div class="rq-field">
+            <label for="usageDate">Usage date</label>
+            <input
+              id="usageDate"
+              class="rq-input"
+              type="date"
+              value={form.usageDate}
+              data-field="usageDate"
+              onchange={handleField}
+            />
+          </div>
+          <div class={qtyFieldClass}>
+            <label for="usageQty">Quantity consumed</label>
+            <input
+              id="usageQty"
+              class="rq-input"
+              type="number"
+              min="0.01"
+              step="any"
+              value={form.qty}
+              data-field="qty"
+              data-autofocus="true"
+              oninput={handleField}
+            />
+            <template lwc:if={errors.qty}>
+              <span class="rq-error" role="alert">{errors.qty}</span>
+            </template>
+          </div>
+          <div class="rq-field">
+            <label for="usageNote">Note (optional)</label>
+            <input
+              id="usageNote"
+              class="rq-input"
+              type="text"
+              placeholder="e.g. Meter reading #4092, batch run"
+              value={form.note}
+              data-field="note"
+              oninput={handleField}
+            />
+          </div>
+        </template>
+      </div>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelModal}>Back</button>
+        <button class={confirmClass} disabled={busy} onclick={confirmModal}>
+          {modal.confirmLabel}
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <template lwc:if={isEditing}>
+    <c-revquila-modal
+      heading="Edit Subscription"
+      subheading={subscription.account}
+      onclose={cancelEdit}
+    >
+      <div class="rq-form">
+        <div class="rq-form-grid">
+          <div class="rq-field">
+            <label for="sub-renewal">Renewal date</label>
+            <input
+              id="sub-renewal"
+              class="rq-input"
+              type="date"
+              value={editForm.renewalDate}
+              data-field="renewalDate"
+              onchange={handleEditInput}
+            />
+          </div>
+          <div class="rq-field">
+            <label for="sub-next-bill">Next bill date</label>
+            <input
+              id="sub-next-bill"
+              class="rq-input"
+              type="date"
+              value={editForm.nextBillDate}
+              data-field="nextBillDate"
+              onchange={handleEditInput}
+            />
+          </div>
+          <div class="rq-field">
+            <label for="sub-frequency">Billing frequency</label>
+            <select
+              id="sub-frequency"
+              class="rq-input"
+              data-field="frequency"
+              onchange={handleEditInput}
+            >
+              <template for:each={frequencyOptions} for:item="opt">
+                <option key={opt.value} value={opt.value} selected={opt.selected}>
+                  {opt.label}
+                </option>
+              </template>
+            </select>
+          </div>
+          <div class="rq-field">
+            <label for="sub-term">Term (months)</label>
+            <input
+              id="sub-term"
+              class="rq-input"
+              type="number"
+              min="1"
+              value={editForm.termMonths}
+              data-field="termMonths"
+              placeholder="12"
+              oninput={handleEditInput}
+            />
+          </div>
+          <div class="rq-field rq-span-all">
+            <label class="rq-switch">
+              <input
+                type="checkbox"
+                checked={editForm.autoRenew}
+                data-field="autoRenew"
+                onchange={handleEditInput}
+              />
+              <span class="rq-track" aria-hidden="true"></span>
+              <span>Auto-renew subscription on renewal date</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelEdit} disabled={editBusy}>Cancel</button>
+        <button class="rq-btn rq-primary" onclick={saveEditSubscription} disabled={editBusy}>
+          Save changes
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot record-id={recordId}></c-revquila-ai-chatbot>
+</template>

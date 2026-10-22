@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Action__c</fullName>
+    <description>What the rule does: give a discount, set the unit price, or add a product.</description>
+    <label>Action</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>discount</fullName>
+                <default>false</default>
+                <label>Discount</label>
+            </value>
+            <value>
+                <fullName>set_price</fullName>
+                <default>false</default>
+                <label>Set unit price</label>
+            </value>
+            <value>
+                <fullName>add_product</fullName>
+                <default>false</default>
+                <label>Add a product</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

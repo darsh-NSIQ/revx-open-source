@@ -1,0 +1,238 @@
+<template>
+  <c-revquila-modal
+    heading="RevX Native Digital Signature"
+    subheading={subheading}
+    size="medium"
+    onclose={handleClose}
+    lwc:ref="modal"
+  >
+    <!-- Loading State -->
+    <template lwc:if={loading}>
+      <div class="rq-loading-state" role="status">
+        <span class="rq-spinner" aria-hidden="true"></span>
+        <p>Loading quotation for digital execution…</p>
+      </div>
+    </template>
+
+    <!-- Error State -->
+    <template lwc:if={error}>
+      <div class="rq-error-box" role="alert">
+        <svg viewBox="0 0 24 24" class="rq-alert-icon" aria-hidden="true"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <span>{error}</span>
+      </div>
+    </template>
+
+    <!-- Signed Celebration State -->
+    <template lwc:if={signedSuccess}>
+      <div class="rq-success-pane">
+        <div class="rq-success-orb">
+          <svg viewBox="0 0 24 24" class="rq-check-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h3 class="rq-success-heading">Quote Legally Executed &amp; Signed!</h3>
+        <p class="rq-success-desc">
+          Quote <strong>{quoteNumber}</strong> has been marked as <strong>Signed</strong>. The signature was cryptographically sealed and archived to Salesforce Files, and the order booking workflow completed automatically.
+        </p>
+        
+        <div class="rq-cert-summary">
+          <div class="rq-cert-field">
+            <span class="rq-cert-lbl">Authorized Signatory</span>
+            <strong class="rq-cert-val">{signerName}</strong>
+          </div>
+          <div class="rq-cert-field">
+            <span class="rq-cert-lbl">Signer Email</span>
+            <strong class="rq-cert-val">{signerEmail}</strong>
+          </div>
+          <template lwc:if={signerTitle}>
+            <div class="rq-cert-field">
+              <span class="rq-cert-lbl">Title</span>
+              <strong class="rq-cert-val">{signerTitle}</strong>
+            </div>
+          </template>
+          <div class="rq-cert-field">
+            <span class="rq-cert-lbl">Audit Method</span>
+            <strong class="rq-cert-val">RevX Native ESIGN/UETA Engine</strong>
+          </div>
+        </div>
+
+        <template lwc:if={signatureDigest}>
+          <div class="rq-digest-box">
+            <span class="rq-digest-lbl">SHA-256 Tamper-Proof Audit Digest</span>
+            <code class="rq-digest-code">{signatureDigest}</code>
+          </div>
+        </template>
+
+        <div class="rq-cert-actions">
+          <button type="button" class="rq-btn rq-btn-cert" onclick={openCertificatePdf}>
+            <svg viewBox="0 0 24 24" class="rq-btn-icon-svg" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            View Official Certificate PDF
+          </button>
+          <button type="button" class="rq-btn rq-btn-resend" onclick={handleResendEmail} disabled={resending}>
+            <svg viewBox="0 0 24 24" class="rq-btn-icon-svg" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <template lwc:if={resending}>Sending...</template>
+            <template lwc:else>Email Certificate to Signer</template>
+          </button>
+        </div>
+
+        <template lwc:if={resendMessage}>
+          <div class={resendStatusClass}>
+            <span>{resendMessage}</span>
+          </div>
+        </template>
+
+        <template lwc:if={signatureData}>
+          <div class="rq-signed-preview">
+            <span class="rq-preview-tag">Archived Digital Signature</span>
+            <img src={signatureData} alt="Archived Signature" class="rq-preview-img" />
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- Active Signing Form -->
+    <template lwc:if={canSign}>
+      <!-- Quote Context Summary Card -->
+      <div class="rq-quote-card">
+        <div class="rq-quote-badge">
+          <span class="rq-badge-sub">QUOTE</span>
+          <strong class="rq-badge-num">{quoteNumber}</strong>
+        </div>
+        <div class="rq-quote-col">
+          <span class="rq-label">Customer Account</span>
+          <span class="rq-val">{accountName}</span>
+        </div>
+        <div class="rq-quote-col">
+          <span class="rq-label">Total Amount</span>
+          <span class="rq-amount">{amountFormatted}</span>
+        </div>
+      </div>
+
+      <!-- Signer Details Inputs -->
+      <div class="rq-fields-grid">
+        <div class="rq-field">
+          <label for="signerName">Full Name *</label>
+          <input
+            id="signerName"
+            type="text"
+            class="rq-input"
+            value={signerName}
+            placeholder="e.g. Jane Doe"
+            oninput={handleNameChange}
+            required
+          />
+        </div>
+        <div class="rq-field">
+          <label for="signerEmail">Work Email *</label>
+          <input
+            id="signerEmail"
+            type="email"
+            class="rq-input"
+            value={signerEmail}
+            placeholder="jane@company.com"
+            oninput={handleEmailChange}
+            required
+          />
+        </div>
+        <div class="rq-field rq-span-2">
+          <label for="signerTitle">Title / Role</label>
+          <input
+            id="signerTitle"
+            type="text"
+            class="rq-input"
+            value={signerTitle}
+            placeholder="e.g. VP of Operations / Authorized Signatory"
+            oninput={handleTitleChange}
+          />
+        </div>
+      </div>
+
+      <!-- Signature Pad Mode Selector -->
+      <div class="rq-sig-section">
+        <div class="rq-sig-header">
+          <div class="rq-mode-tabs" role="tablist">
+            <button
+              type="button"
+              class={drawTabClass}
+              role="tab"
+              onclick={selectDrawMode}
+            >
+              <svg viewBox="0 0 24 24" class="rq-tab-icon" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+              Draw Signature
+            </button>
+            <button
+              type="button"
+              class={typeTabClass}
+              role="tab"
+              onclick={selectTypeMode}
+            >
+              <svg viewBox="0 0 24 24" class="rq-tab-icon" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+              Type Signature
+            </button>
+          </div>
+          <button
+            type="button"
+            class="rq-btn-clear"
+            onclick={clearCanvas}
+            title="Clear signature"
+          >
+            Clear
+          </button>
+        </div>
+
+        <div class="rq-canvas-wrap">
+          <canvas
+            lwc:ref="canvas"
+            class="rq-sig-canvas"
+            onpointerdown={startPointer}
+            onpointermove={movePointer}
+            onpointerup={endPointer}
+            onpointerleave={endPointer}
+          ></canvas>
+          <div class="rq-sig-line" aria-hidden="true"></div>
+          <span class="rq-sig-hint" aria-hidden="true">Sign above this line</span>
+        </div>
+      </div>
+
+      <!-- Legal Consent & Audit Info -->
+      <label class="rq-consent-row">
+        <input
+          type="checkbox"
+          checked={consentAccepted}
+          onchange={handleConsentChange}
+          class="rq-checkbox"
+        />
+        <span>
+          I confirm that I am authorized to execute Quote <strong>{quoteNumber}</strong> on behalf of <strong>{accountName}</strong>, and agree that my electronic signature constitutes a legally binding acceptance under the UETA and ESIGN Acts.
+        </span>
+      </label>
+
+      <div class="rq-audit-badge">
+        <svg viewBox="0 0 24 24" class="rq-lock-icon" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
+        <span>RevX Native E-Sign Engine · Zero external dependencies · Saved directly to Salesforce Files</span>
+      </div>
+    </template>
+
+    <!-- Modal Footer Actions -->
+    <div slot="footer" class="rq-actions-end">
+      <template lwc:if={signedSuccess}>
+        <button class="rq-btn rq-primary" onclick={handleDone}>Done</button>
+      </template>
+      <template lwc:else>
+        <button class="rq-btn rq-quiet" onclick={handleCancel} disabled={submitting}>Cancel</button>
+        <button
+          class="rq-btn rq-primary rq-btn-sign"
+          onclick={handleSign}
+          disabled={submitDisabled}
+        >
+          <template lwc:if={submitting}>
+            <span class="rq-spinner-sm" aria-hidden="true"></span>
+            Signing…
+          </template>
+          <template lwc:else>
+            <svg viewBox="0 0 24 24" class="rq-btn-icon" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Legally Sign Quote
+          </template>
+        </button>
+      </template>
+    </div>
+  </c-revquila-modal>
+</template>

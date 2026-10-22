@@ -1,0 +1,390 @@
+<template>
+  <div class="rq-inbox-stage">
+    
+    <!-- Topbar & Branding -->
+    <header class="rq-inbox-head">
+      <div class="rq-head-left">
+        <div class="rq-title-icon-wrap">
+          <svg viewBox="0 0 24 24" class="rq-title-svg" aria-hidden="true">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="rq-inbox-title">Exception Inbox &amp; AI Governance</h1>
+          <p class="rq-inbox-sub">Human-in-the-loop exception triage, autonomous limits, and agent audit telemetry</p>
+        </div>
+      </div>
+
+      <div class="rq-head-actions">
+        <button class="rq-btn-cmd" onclick={handleOpenCommandBar}>
+          <span class="rq-cmd-kbd">Cmd+K</span>
+          <span>Command Bar</span>
+        </button>
+        <button class="rq-btn-refresh" onclick={refreshData} title="Refresh Data">
+          <svg viewBox="0 0 24 24" class="rq-refresh-svg" aria-hidden="true">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Navigation Subtabs -->
+    <nav class="rq-nav-tabs">
+      <button class={inboxTabClass} data-tab="inbox" onclick={handleTabClick}>
+        <span class="rq-tab-icon">📥</span>
+        <span>Exception Inbox</span>
+        <template lwc:if={pendingCount}>
+          <span class="rq-count-badge">{pendingCount}</span>
+        </template>
+      </button>
+
+      <button class={logsTabClass} data-tab="logs" onclick={handleTabClick}>
+        <span class="rq-tab-icon">🤖</span>
+        <span>AI Action Logs</span>
+      </button>
+
+      <button class={settingsTabClass} data-tab="settings" onclick={handleTabClick}>
+        <span class="rq-tab-icon">⚙️</span>
+        <span>Autonomy &amp; Guardrails</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: EXCEPTION INBOX -->
+    <template lwc:if={isInboxTab}>
+      <!-- KPI Metric Summary Bar -->
+      <section class="rq-kpi-bar">
+        <div class="rq-kpi-box">
+          <span class="rq-kpi-lab">Pending Human Triage</span>
+          <strong class="rq-kpi-val rq-tone-warn">{pendingCount}</strong>
+          <span class="rq-kpi-hint">Awaiting review</span>
+        </div>
+        <div class="rq-kpi-box">
+          <span class="rq-kpi-lab">High / Critical Severity</span>
+          <strong class="rq-kpi-val rq-tone-bad">{criticalCount}</strong>
+          <span class="rq-kpi-hint">Outside policy limits</span>
+        </div>
+        <div class="rq-kpi-box">
+          <span class="rq-kpi-lab">At-Risk Deal Value</span>
+          <strong class="rq-kpi-val rq-tone-brand">{atRiskAmountFormatted}</strong>
+          <span class="rq-kpi-hint">Flagged pipeline value</span>
+        </div>
+      </section>
+
+      <!-- Filter Controls -->
+      <div class="rq-filter-toolbar">
+        <div class="rq-filter-group">
+          <label class="rq-filter-label">Category:</label>
+          <select class="rq-select" onchange={handleCategoryChange}>
+            <option value="all">All Categories</option>
+            <option value="Quote Policy">Quote Policy</option>
+            <option value="Payment Mismatch">Payment Mismatch</option>
+            <option value="Failed Payment">Failed Payment</option>
+            <option value="Churn Risk">Churn Risk</option>
+            <option value="Risky Clause">Risky Clause</option>
+          </select>
+        </div>
+
+        <div class="rq-filter-group">
+          <label class="rq-filter-label">Severity:</label>
+          <select class="rq-select" onchange={handleSeverityChange}>
+            <option value="all">All Severities</option>
+            <option value="Critical">Critical</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+
+        <div class="rq-filter-group">
+          <label class="rq-filter-label">Status:</label>
+          <select class="rq-select" onchange={handleStatusChange}>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="all">All Statuses</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Exception Items List -->
+      <section class="rq-items-section">
+        <template lwc:if={loading}>
+          <div class="rq-loading-state">
+            <span class="rq-spinner"></span>
+            <p>Loading exception items...</p>
+          </div>
+        </template>
+
+        <template lwc:elseif={noExceptions}>
+          <div class="rq-empty-state">
+            <div class="rq-empty-icon">✅</div>
+            <h3>All Exceptions Triaged!</h3>
+            <p>No open exceptions found for the selected filters. Autonomous revenue operations running within policy limits.</p>
+          </div>
+        </template>
+
+        <template lwc:else>
+          <div class="rq-cards-grid">
+            <template for:each={exceptions} for:item="item">
+              <article key={item.id} class="rq-card-item">
+                <header class="rq-card-head">
+                  <div class="rq-card-badges">
+                    <span class={item.severityBadgeClass}>{item.severity}</span>
+                    <span class="rq-pill-cat">{item.category}</span>
+                  </div>
+                  <template lwc:if={item.amountFormatted}>
+                    <span class="rq-card-amount">{item.amountFormatted}</span>
+                  </template>
+                </header>
+
+                <div class="rq-card-body">
+                  <h3 class="rq-card-title">{item.title}</h3>
+                  <template lwc:if={item.accountName}>
+                    <p class="rq-card-acc">Customer: <strong>{item.accountName}</strong></p>
+                  </template>
+
+                  <!-- AI Reason Box -->
+                  <div class="rq-ai-box">
+                    <div class="rq-ai-box-title">
+                      <span class="rq-sparkle">✨</span>
+                      <strong>AI Explanation &amp; Policy Rule:</strong>
+                    </div>
+                    <p class="rq-ai-reason-text">{item.aiReason}</p>
+                  </div>
+
+                  <!-- Recommendation -->
+                  <div class="rq-rec-box">
+                    <span class="rq-rec-badge">Recommended:</span>
+                    <span class="rq-rec-text">{item.recommendedAction}</span>
+                  </div>
+                </div>
+
+                <!-- 1-Click Action Footer -->
+                <footer class="rq-card-foot">
+                  <div class="rq-foot-meta">
+                    <small>Created: {item.createdFormatted}</small>
+                  </div>
+
+                  <template lwc:if={item.isPending}>
+                    <div class="rq-card-buttons">
+                      <button class="rq-btn-reject" data-id={item.id} onclick={openRejectModal}>
+                        Reject
+                      </button>
+                      <button class="rq-btn-edit" data-id={item.id} onclick={openEditModal}>
+                        Edit
+                      </button>
+                      <button class="rq-btn-approve" data-id={item.id} onclick={handleApprove}>
+                        Approve
+                      </button>
+                    </div>
+                  </template>
+                  <template lwc:else>
+                    <span class="rq-status-tag">{item.status}</span>
+                  </template>
+                </footer>
+              </article>
+            </template>
+          </div>
+        </template>
+      </section>
+    </template>
+
+    <!-- TAB 2: AI ACTION AUDIT LOGS -->
+    <template lwc:if={isLogsTab}>
+      <section class="rq-logs-section">
+        <div class="rq-table-wrap">
+          <table class="rq-logs-table">
+            <thead>
+              <tr>
+                <th>TIMESTAMP</th>
+                <th>TOOL / ACTION</th>
+                <th>USER</th>
+                <th>PROVIDER</th>
+                <th>TOKENS / COST</th>
+                <th>STATUS</th>
+                <th>FEEDBACK</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={logs} for:item="log">
+                <tr key={log.id}>
+                  <td class="rq-col-time">{log.createdFormatted}</td>
+                  <td>
+                    <strong>{log.action}</strong>
+                    <div class="rq-log-snippet">{log.input}</div>
+                  </td>
+                  <td>{log.userName}</td>
+                  <td><span class="rq-pill-cat">{log.provider}</span></td>
+                  <td>
+                    <span>{log.tokens} tk</span>
+                    <small class="rq-cost">${log.costFormatted}</small>
+                  </td>
+                  <td>
+                    <span class={log.statusBadgeClass}>{log.statusLabel}</span>
+                  </td>
+                  <td class="rq-feedback-cell">
+                    <button class={log.upClass} data-id={log.id} onclick={handleFeedbackUp} title="Helpful 👍">
+                      👍
+                    </button>
+                    <button class={log.downClass} data-id={log.id} onclick={handleFeedbackDown} title="Not Helpful 👎">
+                      👎
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </template>
+
+    <!-- TAB 3: AUTONOMY & SAFETY GUARDRAILS -->
+    <template lwc:if={isSettingsTab}>
+      <section class="rq-settings-section">
+        <div class="rq-settings-card">
+          <div class="rq-card-header">
+            <h2>AI Autonomy Level &amp; Safeguards</h2>
+            <p class="rq-sub">Set operational freedom for RevX Autonomous Copilot across revenue processes</p>
+          </div>
+
+          <div class="rq-form-body">
+            
+            <!-- Autonomy Level Radios -->
+            <div class="rq-form-group">
+              <label class="rq-label">Agent Autonomy Level</label>
+              <div class="rq-autonomy-options">
+                <label class="rq-radio-card">
+                  <input type="radio" name="autonomy" value="suggest" checked={isAutonomySuggest} onchange={handleAutonomyChange} />
+                  <div class="rq-radio-content">
+                    <strong>1. Suggest Only (Human Confirms Everything)</strong>
+                    <p>Agent produces action previews and prompts for human confirmation before any record creation or billing changes.</p>
+                  </div>
+                </label>
+
+                <label class="rq-radio-card">
+                  <input type="radio" name="autonomy" value="limits" checked={isAutonomyLimits} onchange={handleAutonomyChange} />
+                  <div class="rq-radio-content">
+                    <strong>2. Auto Within Limits (Recommended)</strong>
+                    <p>Agent executes routine low-risk actions automatically. Actions exceeding safety limits route to Exception Inbox.</p>
+                  </div>
+                </label>
+
+                <label class="rq-radio-card">
+                  <input type="radio" name="autonomy" value="autopilot" checked={isAutonomyAutopilot} onchange={handleAutonomyChange} />
+                  <div class="rq-radio-content">
+                    <strong>3. Full Autopilot (Enterprise Scale)</strong>
+                    <p>Continuous autonomous execution with comprehensive AI Action Logging and automatic alerts on critical deviations.</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Limit Fields -->
+            <div class="rq-grid-2">
+              <div class="rq-form-group">
+                <label class="rq-label">Maximum Autonomous Discount (%)</label>
+                <input
+                  type="number"
+                  class="rq-input"
+                  value={maxDiscountInput}
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  oninput={handleMaxDiscountChange}
+                />
+                <span class="rq-hint">Discounts above this threshold are automatically routed to the Exception Inbox.</span>
+              </div>
+
+              <div class="rq-form-group">
+                <label class="rq-label">Maximum Autonomous Refund / Invoice Amount (₹ / $)</label>
+                <input
+                  type="number"
+                  class="rq-input"
+                  value={maxRefundInput}
+                  min="0"
+                  step="500"
+                  oninput={handleMaxRefundChange}
+                />
+                <span class="rq-hint">Transactions exceeding this amount require supervisor clearance.</span>
+              </div>
+            </div>
+
+            <!-- Emergency Kill Switch -->
+            <div class="rq-kill-switch-box">
+              <div class="rq-kill-text">
+                <div class="rq-kill-title">
+                  <span class="rq-kill-icon">🛑</span>
+                  <strong>Emergency Global AI Kill Switch</strong>
+                </div>
+                <p>Instantly freezes all autonomous tool executions, AI background triggers, and agentic workflows across the entire Salesforce org.</p>
+              </div>
+              <label class="rq-switch">
+                <input type="checkbox" checked={killSwitchInput} onchange={handleKillSwitchChange} />
+                <span class="rq-slider round"></span>
+              </label>
+            </div>
+
+            <!-- Save Button -->
+            <div class="rq-settings-footer">
+              <button class="rq-btn-primary" onclick={saveAutonomyConfig} disabled={savingSettings}>
+                <template lwc:if={savingSettings}>Saving Settings...</template>
+                <template lwc:else>Save Governance Policies</template>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <!-- Reject Modal -->
+    <template lwc:if={rejectModalOpen}>
+      <div class="rq-modal-backdrop">
+        <div class="rq-modal">
+          <header class="rq-modal-head">
+            <h3>Reject Exception Item</h3>
+            <button class="rq-close-x" onclick={closeRejectModal}>✕</button>
+          </header>
+          <div class="rq-modal-body">
+            <p>Provide a business reason for rejecting this exception item:</p>
+            <textarea class="rq-textarea" oninput={handleRejectionReasonChange} rows="4" placeholder="Enter justification..."></textarea>
+          </div>
+          <footer class="rq-modal-foot">
+            <button class="rq-btn-secondary" onclick={closeRejectModal}>Cancel</button>
+            <button class="rq-btn-reject" onclick={confirmReject}>Confirm Rejection</button>
+          </footer>
+        </div>
+      </div>
+    </template>
+
+    <!-- Edit Modal -->
+    <template lwc:if={editModalOpen}>
+      <div class="rq-modal-backdrop">
+        <div class="rq-modal">
+          <header class="rq-modal-head">
+            <h3>Adjust Exception Parameters</h3>
+            <button class="rq-close-x" onclick={closeEditModal}>✕</button>
+          </header>
+          <div class="rq-modal-body">
+            <div class="rq-form-group">
+              <label class="rq-label">Revised Approved Amount</label>
+              <input type="number" class="rq-input" value={editAmountInput} oninput={handleEditAmountChange} />
+            </div>
+            <div class="rq-form-group">
+              <label class="rq-label">Supervisor Adjustment Note</label>
+              <textarea class="rq-textarea" oninput={handleEditNotesChange} rows="3" placeholder="Counter-offer details or adjustment notes..."></textarea>
+            </div>
+          </div>
+          <footer class="rq-modal-foot">
+            <button class="rq-btn-secondary" onclick={closeEditModal}>Cancel</button>
+            <button class="rq-btn-primary" onclick={confirmEdit}>Save &amp; Resolve</button>
+          </footer>
+        </div>
+      </div>
+    </template>
+
+    <!-- Global Command Bar Launcher -->
+    <c-revquila-command-bar lwc:ref="cmdBar"></c-revquila-command-bar>
+
+  </div>
+</template>

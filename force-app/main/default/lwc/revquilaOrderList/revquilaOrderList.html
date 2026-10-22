@@ -1,0 +1,163 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <c-revquila-brand></c-revquila-brand>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Orders</p>
+          <h1>Every signed deal, <em>booked and billed</em>.</h1>
+        </div>
+      </header>
+
+      <section class="rq-stats">
+        <template for:each={stats} for:item="stat">
+          <div key={stat.label} class={stat.cardClass}>
+            <span class="rq-stat-label">{stat.label}</span>
+            <span class="rq-stat-value">{stat.value}</span>
+            <span class="rq-stat-note">{stat.note}</span>
+          </div>
+        </template>
+      </section>
+
+      <section class="rq-card rq-toolbar rq-rise rq-d6" lwc:ref="toolbar">
+        <div class="rq-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M16.5 16.5L21 21"></path>
+          </svg>
+          <input
+            class="rq-input"
+            type="search"
+            placeholder="Search account, order or quote number"
+            aria-label="Search orders"
+            value={search}
+            oninput={handleSearch}
+          />
+        </div>
+        <div class="rq-chips" role="group" aria-label="Filter by status">
+          <template for:each={chips} for:item="chip">
+            <button
+              key={chip.key}
+              class={chip.chipClass}
+              aria-pressed={chip.pressed}
+              data-key={chip.key}
+              onclick={handleFilter}
+            >
+              {chip.label} <b>{chip.count}</b>
+            </button>
+          </template>
+        </div>
+      </section>
+
+      <section class="rq-card rq-stretch rq-rise rq-d7">
+        <div class="rq-card-head">
+          <h2>{summary}</h2>
+          <p class="rq-sub">Newest first · amounts before tax</p>
+        </div>
+        <template lwc:if={hasOrders}>
+          <div class="rq-tw">
+            <table class="rq-stack">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Account</th>
+                  <th class="rq-hide-md">Quote</th>
+                  <th class="rq-right">Amount</th>
+                  <th>Status</th>
+                  <th class="rq-hide-md">Order date</th>
+                  <th class="rq-chev-col"><span class="rq-sr">Open</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={paging.rows} for:item="order">
+                  <tr
+                    key={order.id}
+                    class="rq-go rq-rise"
+                    style={order.rowStyle}
+                    data-id={order.id}
+                    onclick={openOrder}
+                  >
+                    <td class="rq-cell-meta">
+                      <button class="rq-link">{order.number}</button>
+                      <small>{order.currency}</small>
+                    </td>
+                    <td class="rq-cell-title">
+                      <span class="rq-strong">{order.account}</span>
+                      <small>{order.opportunity}</small>
+                    </td>
+                    <td class="rq-hide-md rq-cell-extra">
+                      {order.quoteNumber}
+                    </td>
+                    <td class="rq-right rq-amount rq-cell-value">
+                      {order.amountLabel}
+                    </td>
+                    <td class="rq-cell-state">
+                      <span class={order.pillClass}>{order.statusLabel}</span>
+                    </td>
+                    <td class="rq-hide-md rq-cell-extra">
+                      {order.orderDateLabel}
+                    </td>
+                    <td class="rq-chev-col rq-cell-extra">
+                      <svg
+                        class="rq-chev"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 6l6 6-6 6"></path>
+                      </svg>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <c-revquila-pager
+            total={paging.total}
+            page={paging.page}
+            page-size={pageSize}
+            noun="order"
+            onpagechange={handlePage}
+            onsizechange={handlePageSize}
+          ></c-revquila-pager>
+        </template>
+        <template lwc:if={loading}>
+          <div class="rq-loading" role="status">
+            <span class="rq-spinner" aria-hidden="true"></span>
+            Loading…
+          </div>
+        </template>
+        <template lwc:if={loadError}>
+          <p class="rq-verdict rq-tone-bad" role="alert">{loadError}</p>
+        </template>
+        <template lwc:if={isEmpty}>
+          <div class="rq-empty">
+            <h2>No orders yet</h2>
+            <p class="rq-sub">
+              An order is booked the moment a quote is marked as signed.
+            </p>
+          </div>
+        </template>
+        <template lwc:if={noMatch}>
+          <div class="rq-empty">
+            <h2>No orders match</h2>
+            <p class="rq-sub">Try a different status, or clear the search.</p>
+            <button class="rq-btn rq-quiet" onclick={clearFilters}>
+              Show all orders
+            </button>
+          </div>
+        </template>
+      </section>
+    </div>
+  </div>
+
+  <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+</template>

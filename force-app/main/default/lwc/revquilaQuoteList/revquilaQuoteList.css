@@ -1,0 +1,10 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+/* the version and last-updated line under the quote number has no room in a stacked row */
+@container rq-page (max-width: 640px) {
+  .rq-stack .rq-cell-meta small {
+    display: none;
+  }
+}

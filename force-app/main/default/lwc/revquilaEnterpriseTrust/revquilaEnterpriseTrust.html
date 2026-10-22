@@ -1,0 +1,665 @@
+<template>
+    <div class="workspace-container">
+        <!-- Header Banner -->
+        <div class="header-card">
+            <div class="slds-grid slds-grid_vertical-align-center slds-wrap">
+                <div class="slds-col slds-size_1-1 slds-medium-size_6-12">
+                    <div class="slds-media slds-media_center">
+                        <div class="slds-media__figure">
+                            <lightning-icon icon-name="standard:shield" size="medium" variant="inverse"></lightning-icon>
+                        </div>
+                        <div class="slds-media__body">
+                            <h1 class="slds-text-heading_medium slds-m-bottom_xx-small">RevX Enterprise Trust &amp; Governance</h1>
+                            <p class="slds-text-body_small" style="opacity: 0.85;">Quote Version Diff Engine, Sales Commissions, Audit Trails &amp; Granular RBAC Permissions</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-col slds-size_1-1 slds-medium-size_6-12 slds-m-top_medium slds-medium-m-top_none">
+                    <div class="slds-grid slds-grid_align-end slds-gutters_small">
+                        <div class="slds-col stat-chip">
+                            <div class="slds-text-title_caps" style="font-size: 0.65rem; opacity: 0.8;">Audit Events</div>
+                            <div class="slds-text-heading_small slds-text-title_bold">{totalAuditEvents}</div>
+                        </div>
+                        <div class="slds-col stat-chip">
+                            <div class="slds-text-title_caps" style="font-size: 0.65rem; opacity: 0.8;">Active Plans</div>
+                            <div class="slds-text-heading_small slds-text-title_bold">{activePlanCount}</div>
+                        </div>
+                        <div class="slds-col stat-chip">
+                            <div class="slds-text-title_caps" style="font-size: 0.65rem; opacity: 0.8;">Commissions Paid</div>
+                            <div class="slds-text-heading_small slds-text-title_bold">${totalCommissionsPaid}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <template lwc:if={errorMessage}>
+            <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
+                <span class="slds-assistive-text">error</span>
+                <h2>{errorMessage}</h2>
+            </div>
+        </template>
+        <template lwc:if={successMessage}>
+            <div class="slds-notify slds-notify_alert slds-alert_success slds-m-bottom_medium" role="alert">
+                <span class="slds-assistive-text">success</span>
+                <h2>{successMessage}</h2>
+            </div>
+        </template>
+
+        <!-- Sub-tabs Navigation -->
+        <div class="nav-tab-bar">
+            <button class={tabAuditClass} data-tab="audit" onclick={handleTabSelect}>
+                📜 Enterprise Audit Trail
+            </button>
+            <button class={tabCommissionsClass} data-tab="commissions" onclick={handleTabSelect}>
+                📊 Sales Commissions &amp; Incentives
+            </button>
+            <button class={tabVersioningClass} data-tab="versioning" onclick={handleTabSelect}>
+                📑 Quote Version Compare Engine
+            </button>
+            <button class={tabRbacClass} data-tab="rbac" onclick={handleTabSelect}>
+                🛡️ Roles &amp; Permissions (RBAC Matrix)
+            </button>
+        </div>
+
+        <!-- TAB 1: AUDIT TRAIL -->
+        <template lwc:if={isAuditTab}>
+            <div class="content-card">
+                <div class="slds-grid slds-grid_vertical-align-center slds-wrap slds-m-bottom_medium">
+                    <div class="slds-col slds-size_1-1 slds-medium-size_3-12 slds-p-right_small">
+                        <lightning-combobox
+                            label="Filter by Event"
+                            value={auditEventTypeFilter}
+                            data-filter="event"
+                            options={eventFilterOptions}
+                            onchange={handleAuditFilterChange}>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-1 slds-medium-size_3-12 slds-p-right_small">
+                        <lightning-combobox
+                            label="Filter by Object"
+                            value={auditObjectFilter}
+                            data-filter="object"
+                            options={objectFilterOptions}
+                            onchange={handleAuditFilterChange}>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-1 slds-medium-size_4-12 slds-p-right_small">
+                        <lightning-input
+                            label="Search Records / Users"
+                            type="search"
+                            data-filter="search"
+                            placeholder="Search action, name, or author..."
+                            onchange={handleAuditFilterChange}>
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-1 slds-medium-size_2-12 slds-m-top_large slds-text-align_right">
+                        <lightning-button
+                            label="Export CSV"
+                            icon-name="utility:download"
+                            variant="neutral"
+                            onclick={exportAuditCsv}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <div class="slds-scrollable_x">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Event Type</th>
+                                <th>Record</th>
+                                <th>Object</th>
+                                <th>Action Performed</th>
+                                <th>User</th>
+                                <th>Reason / Context</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={filteredAuditEntries} for:item="audit">
+                                <tr key={audit.Id}>
+                                    <td>
+                                        <lightning-formatted-date-time
+                                            value={audit.Timestamp__c}
+                                            year="numeric" month="short" day="2-digit"
+                                            hour="2-digit" minute="2-digit">
+                                        </lightning-formatted-date-time>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-purple">{audit.Event_Type__c}</span>
+                                    </td>
+                                    <td><strong>{audit.Record_Name__c}</strong></td>
+                                    <td><code>{audit.Object_Api_Name__c}</code></td>
+                                    <td>{audit.Action__c}</td>
+                                    <td>{audit.User_Name__c}</td>
+                                    <td><span class="slds-truncate" title={audit.Reason__c}>{audit.Reason__c}</span></td>
+                                    <td>
+                                        <lightning-button-icon
+                                            icon-name="utility:preview"
+                                            size="small"
+                                            variant="bare"
+                                            alternative-text="View Details"
+                                            data-id={audit.Id}
+                                            onclick={handleViewAuditDetail}>
+                                        </lightning-button-icon>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <!-- TAB 2: COMMISSIONS & INCENTIVES -->
+        <template lwc:if={isCommissionsTab}>
+            <div class="slds-grid slds-gutters slds-wrap">
+                <!-- Commission Plans -->
+                <div class="slds-col slds-size_1-1 slds-large-size_4-12">
+                    <div class="content-card">
+                        <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_medium">
+                            <h2 class="slds-text-heading_small slds-col">Incentive Plans</h2>
+                            <lightning-button
+                                label="New Plan"
+                                icon-name="utility:add"
+                                variant="brand"
+                                size="small"
+                                onclick={handleOpenNewPlanModal}>
+                            </lightning-button>
+                        </div>
+                        <template for:each={plans} for:item="plan">
+                            <div key={plan.Id} class="slds-box slds-box_x-small slds-m-bottom_small" style="border-radius: 8px; border-left: 4px solid #2563eb;">
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <div class="slds-col slds-has-flexi-truncate">
+                                        <strong class="slds-text-title_bold">{plan.Name}</strong>
+                                        <div class="slds-text-body_small slds-text-color_weak">{plan.Period_Type__c} • Trigger: {plan.Trigger_Event__c}</div>
+                                    </div>
+                                    <div class="slds-col slds-no-flex">
+                                        <span class="badge badge-success">{plan.Base_Rate__c}% Base</span>
+                                    </div>
+                                </div>
+                                <div class="slds-grid slds-gutters_x-small slds-m-top_x-small" style="font-size: 0.75rem;">
+                                    <div class="slds-col">Quota: <strong>${plan.Quota_Target__c}</strong></div>
+                                    <div class="slds-col">T1: <strong>{plan.Tier_1_Rate__c}%</strong></div>
+                                    <div class="slds-col">T2: <strong>{plan.Tier_2_Rate__c}%</strong></div>
+                                    <div class="slds-col">Acc: <strong>{plan.Accelerated_Rate__c}%</strong></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Rep Statements -->
+                <div class="slds-col slds-size_1-1 slds-large-size_8-12">
+                    <div class="content-card">
+                        <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_medium">
+                            <div class="slds-col">
+                                <h2 class="slds-text-heading_small">Rep Commission Statements</h2>
+                                <p class="slds-text-body_small slds-text-color_weak">Monthly &amp; Quarterly quota attainment statements</p>
+                            </div>
+                        </div>
+
+                        <div class="slds-scrollable_x">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rep Name</th>
+                                        <th>Period</th>
+                                        <th>Deals Credited</th>
+                                        <th>Commission</th>
+                                        <th>Quota Attainment</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={statements} for:item="stmt">
+                                        <tr key={stmt.Id}>
+                                            <td><strong>{stmt.Sales_Rep__r.Name}</strong></td>
+                                            <td><span class="badge badge-info">{stmt.Period__c}</span></td>
+                                            <td>${stmt.Total_Sales_Credited__c}</td>
+                                            <td><strong style="color: #059669;">${stmt.Total_Commission_Earned__c}</strong></td>
+                                            <td style="min-width: 130px;">
+                                                <div class="slds-grid slds-grid_vertical-align-center">
+                                                    <span class="slds-m-right_x-small slds-text-body_small">{stmt.Quota_Attainment_Percent__c}%</span>
+                                                    <div class="progress-container slds-col">
+                                                        <div class="progress-bar-fill" style="width: 75%; background-color: #2563eb;"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-success">{stmt.Status__c}</span>
+                                            </td>
+                                            <td>
+                                                <lightning-button-group>
+                                                    <lightning-button-icon
+                                                        icon-name="utility:preview"
+                                                        size="small"
+                                                        alternative-text="View Deals"
+                                                        data-id={stmt.Id}
+                                                        onclick={handleViewStatementDetail}>
+                                                    </lightning-button-icon>
+                                                    <lightning-button-icon
+                                                        icon-name="utility:check"
+                                                        size="small"
+                                                        alternative-text="Approve"
+                                                        data-id={stmt.Id}
+                                                        onclick={handleApproveStatement}>
+                                                    </lightning-button-icon>
+                                                    <lightning-button-icon
+                                                        icon-name="utility:money"
+                                                        size="small"
+                                                        alternative-text="Disburse Payout"
+                                                        data-id={stmt.Id}
+                                                        onclick={handlePayStatement}>
+                                                    </lightning-button-icon>
+                                                </lightning-button-group>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- TAB 3: QUOTE VERSION COMPARE ENGINE -->
+        <template lwc:if={isVersioningTab}>
+            <div class="content-card">
+                <!-- Controls Bar -->
+                <div class="slds-grid slds-grid_vertical-align-center slds-wrap slds-m-bottom_large">
+                    <div class="slds-col slds-size_1-1 slds-medium-size_4-12 slds-p-right_small">
+                        <label class="slds-form-element__label">Select Quote</label>
+                        <select class="slds-select" onchange={handleQuoteSelect}>
+                            <template for:each={quotes} for:item="q">
+                                <option key={q.id} value={q.id}>{q.name} - {q.accountName} (${q.net})</option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="slds-col slds-size_1-1 slds-medium-size_3-12 slds-p-right_small">
+                        <label class="slds-form-element__label">Base Version</label>
+                        <select class="slds-select" onchange={handleVersionASelect}>
+                            <template for:each={versions} for:item="v">
+                                <option key={v.Id} value={v.Id}>v{v.Version_Number__c} (${v.Net_Amount__c})</option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="slds-col slds-size_1-1 slds-medium-size_3-12 slds-p-right_small">
+                        <label class="slds-form-element__label">Compare Version</label>
+                        <select class="slds-select" onchange={handleVersionBSelect}>
+                            <template for:each={versions} for:item="v">
+                                <option key={v.Id} value={v.Id}>v{v.Version_Number__c} (${v.Net_Amount__c})</option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="slds-col slds-size_1-1 slds-medium-size_2-12 slds-m-top_large slds-text-align_right">
+                        <lightning-button
+                            label="Create Snapshot"
+                            icon-name="utility:record_create"
+                            variant="brand"
+                            onclick={handleOpenSnapshotModal}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <!-- Comparison Metrics Banner -->
+                <template lwc:if={hasComparisonResult}>
+                    <div class="slds-box slds-m-bottom_medium" style="background: #f8fafc; border-radius: 8px;">
+                        <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+                            <div class="slds-col">
+                                <span class="slds-text-title_caps slds-text-color_weak">Net Variance</span>
+                                <div class="slds-text-heading_small">
+                                    <strong>${comparisonResult.netDelta}</strong>
+                                    <span class="slds-m-left_x-small badge badge-info">{comparisonResult.percentChange}%</span>
+                                </div>
+                            </div>
+                            <div class="slds-col">
+                                <span class="slds-text-title_caps slds-text-color_weak">Discount Delta</span>
+                                <div class="slds-text-heading_small"><strong>${comparisonResult.discountDelta}</strong></div>
+                            </div>
+                            <div class="slds-col">
+                                <span class="slds-text-title_caps slds-text-color_weak">Margin Delta</span>
+                                <div class="slds-text-heading_small"><strong>{comparisonResult.marginDelta}%</strong></div>
+                            </div>
+                            <div class="slds-col slds-text-align_right">
+                                <span class="slds-text-body_small slds-text-color_weak">{comparisonResult.summary}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Line Diff Table -->
+                    <template lwc:if={hasLineDiffs}>
+                        <h3 class="slds-text-heading_small slds-m-bottom_small">Line-by-Line Revisions</h3>
+                        <div class="slds-scrollable_x slds-m-bottom_large">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>Product / Line Item</th>
+                                        <th>Old Qty</th>
+                                        <th>New Qty</th>
+                                        <th>Old Price</th>
+                                        <th>New Price</th>
+                                        <th>Old Discount</th>
+                                        <th>New Discount</th>
+                                        <th>Change Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={comparisonResult.lineDiffs} for:item="diff">
+                                        <tr key={diff.productName}>
+                                            <td>
+                                                <span class="badge badge-warning">{diff.changeType}</span>
+                                            </td>
+                                            <td><strong>{diff.productName}</strong></td>
+                                            <td>{diff.oldQuantity}</td>
+                                            <td><strong>{diff.newQuantity}</strong></td>
+                                            <td>${diff.oldUnitPrice}</td>
+                                            <td><strong>${diff.newUnitPrice}</strong></td>
+                                            <td>{diff.oldDiscount}%</td>
+                                            <td><strong>{diff.newDiscount}%</strong></td>
+                                            <td>{diff.details}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- Versions Timeline List -->
+                <h3 class="slds-text-heading_small slds-m-bottom_small">All Snapshots for Selected Quote</h3>
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Version</th>
+                            <th>Author</th>
+                            <th>Created On</th>
+                            <th>Net Total</th>
+                            <th>Terms</th>
+                            <th>Reason / Revision Summary</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={versions} for:item="ver">
+                            <tr key={ver.Id}>
+                                <td><span class="badge badge-info">v{ver.Version_Number__c}</span></td>
+                                <td>{ver.Created_By_Name__c}</td>
+                                <td>
+                                    <lightning-formatted-date-time
+                                        value={ver.CreatedDate}
+                                        year="numeric" month="short" day="2-digit">
+                                    </lightning-formatted-date-time>
+                                </td>
+                                <td><strong>${ver.Net_Amount__c}</strong></td>
+                                <td>{ver.Payment_Terms__c}</td>
+                                <td>{ver.Changes_Summary__c}</td>
+                                <td>
+                                    <lightning-button
+                                        label="Restore This"
+                                        size="x-small"
+                                        variant="neutral"
+                                        data-id={ver.Id}
+                                        onclick={handleRestoreVersion}>
+                                    </lightning-button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <!-- TAB 4: RBAC & PERMISSIONS MATRIX -->
+        <template lwc:if={isRbacTab}>
+            <div class="content-card">
+                <div class="slds-grid slds-gutters slds-wrap">
+                    <!-- Current User Status -->
+                    <div class="slds-col slds-size_1-1 slds-m-bottom_large">
+                        <div class="slds-box slds-box_x-small" style="background: #eff6ff; border-color: #bfdbfe; border-radius: 8px;">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <div class="slds-col">
+                                    <h2 class="slds-text-heading_small" style="color: #1e3a8a;">Current User Security Profile: <strong>{permissions.currentUserName}</strong> ({permissions.currentUserEmail})</h2>
+                                    <p class="slds-text-body_small" style="color: #3b82f6;">Granular Field-Level Security and Custom Permissions currently active in this session</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Role Definitions -->
+                    <div class="slds-col slds-size_1-1 slds-medium-size_4-12">
+                        <div class="slds-box slds-m-bottom_medium" style="border-radius: 8px; border-top: 4px solid #7c3aed;">
+                            <h3 class="slds-text-heading_small slds-m-bottom_x-small">👑 Revquila_Admin</h3>
+                            <p class="slds-text-body_small slds-m-bottom_small slds-text-color_weak">Full CPQ Suite Administrator</p>
+                            <ul class="slds-list_dotted slds-text-body_small">
+                                <li>Configure Catalog, Prices &amp; Rules</li>
+                                <li>Override Discounts beyond policy</li>
+                                <li>Full Margin &amp; Cost Visibility</li>
+                                <li>Manage Secret Keys &amp; AI Autopilot</li>
+                                <li>Close / Lock Accounting Periods</li>
+                                <li>Approve Commissions &amp; Quotas</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="slds-col slds-size_1-1 slds-medium-size_4-12">
+                        <div class="slds-box slds-m-bottom_medium" style="border-radius: 8px; border-top: 4px solid #2563eb;">
+                            <h3 class="slds-text-heading_small slds-m-bottom_x-small">💼 Revquila_Finance</h3>
+                            <p class="slds-text-body_small slds-m-bottom_small slds-text-color_weak">Billing, Revenue &amp; Audit Officer</p>
+                            <ul class="slds-list_dotted slds-text-body_small">
+                                <li>Invoicing Runs &amp; Smart Dunning</li>
+                                <li>ASC 606 Revenue Recognition</li>
+                                <li>Bank CSV Auto-Reconciliation</li>
+                                <li>Issue Customer Refunds &amp; Credits</li>
+                                <li>Audit Trail Review &amp; Reporting</li>
+                                <li>Disburse Commission Payouts</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="slds-col slds-size_1-1 slds-medium-size_4-12">
+                        <div class="slds-box slds-m-bottom_medium" style="border-radius: 8px; border-top: 4px solid #059669;">
+                            <h3 class="slds-text-heading_small slds-m-bottom_x-small">🤝 Revquila_User (Sales Rep)</h3>
+                            <p class="slds-text-body_small slds-m-bottom_small slds-text-color_weak">Account Executive &amp; Sales Representative</p>
+                            <ul class="slds-list_dotted slds-text-body_small">
+                                <li>Browse Product Catalog &amp; Bundles</li>
+                                <li>Generate Quotes &amp; Version Snapshots</li>
+                                <li>Request Discount Approvals</li>
+                                <li>View Personal Commission Statements</li>
+                                <li>Confidential Margins Masked</li>
+                                <li>Refunds &amp; Period Locks Disabled</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- MODAL: AUDIT DETAIL -->
+        <template lwc:if={selectedAuditEntry}>
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="slds-text-heading_small">Audit Event: {selectedAuditEntry.Action__c}</h2>
+                        <lightning-button-icon icon-name="utility:close" variant="bare" onclick={handleCloseAuditModal}></lightning-button-icon>
+                    </div>
+                    <div class="modal-body">
+                        <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                            <div class="slds-col slds-size_1-2">
+                                <div class="slds-text-title_caps slds-text-color_weak">Target Record</div>
+                                <div><strong>{selectedAuditEntry.Record_Name__c}</strong> (<code>{selectedAuditEntry.Object_Api_Name__c}</code>)</div>
+                            </div>
+                            <div class="slds-col slds-size_1-2">
+                                <div class="slds-text-title_caps slds-text-color_weak">Modified By</div>
+                                <div><strong>{selectedAuditEntry.User_Name__c}</strong> ({selectedAuditEntry.User_Email__c})</div>
+                            </div>
+                        </div>
+                        <div class="slds-m-bottom_medium">
+                            <div class="slds-text-title_caps slds-text-color_weak">Justification / Reason</div>
+                            <div class="slds-box slds-box_xx-small" style="background: #f8fafc;">{selectedAuditEntry.Reason__c}</div>
+                        </div>
+                        <div class="slds-grid slds-gutters">
+                            <div class="slds-col slds-size_1-2">
+                                <div class="slds-text-title_caps slds-text-color_weak">Old Value / State</div>
+                                <div class="slds-box slds-box_xx-small diff-removed">{selectedAuditEntry.Old_Value__c}</div>
+                            </div>
+                            <div class="slds-col slds-size_1-2">
+                                <div class="slds-text-title_caps slds-text-color_weak">New Value / State</div>
+                                <div class="slds-box slds-box_xx-small diff-added">{selectedAuditEntry.New_Value__c}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <lightning-button label="Close" onclick={handleCloseAuditModal}></lightning-button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- MODAL: STATEMENT DEAL BREAKDOWN -->
+        <template lwc:if={selectedStatementDetail}>
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="slds-text-heading_small">Commission Statement: {selectedStatementDetail.statement.Name} ({selectedStatementDetail.statement.Period__c})</h2>
+                        <lightning-button-icon icon-name="utility:close" variant="bare" onclick={handleCloseStatementModal}></lightning-button-icon>
+                    </div>
+                    <div class="modal-body">
+                        <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                            <div class="slds-col">
+                                <span class="slds-text-color_weak">Rep:</span> <strong>{selectedStatementDetail.statement.Sales_Rep__r.Name}</strong>
+                            </div>
+                            <div class="slds-col">
+                                <span class="slds-text-color_weak">Total Sales:</span> <strong>${selectedStatementDetail.statement.Total_Sales_Credited__c}</strong>
+                            </div>
+                            <div class="slds-col">
+                                <span class="slds-text-color_weak">Total Earned:</span> <strong style="color: #059669;">${selectedStatementDetail.statement.Total_Commission_Earned__c}</strong>
+                            </div>
+                        </div>
+                        <h3 class="slds-text-heading_small slds-m-bottom_small">Credited Deals &amp; Invoices</h3>
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Deal Reference</th>
+                                    <th>Event Type</th>
+                                    <th>Date</th>
+                                    <th>Deal Amount</th>
+                                    <th>Applied Rate</th>
+                                    <th>Commission Payout</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={selectedStatementDetail.lines} for:item="line">
+                                    <tr key={line.Id}>
+                                        <td><strong>{line.Deal_Reference__c}</strong></td>
+                                        <td><span class="badge badge-info">{line.Event_Type__c}</span></td>
+                                        <td>{line.Event_Date__c}</td>
+                                        <td>${line.Deal_Amount__c}</td>
+                                        <td>{line.Commission_Rate__c}%</td>
+                                        <td><strong style="color: #059669;">${line.Commission_Amount__c}</strong></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <lightning-button label="Close" onclick={handleCloseStatementModal}></lightning-button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- MODAL: NEW COMMISSION PLAN -->
+        <template lwc:if={showNewPlanModal}>
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="slds-text-heading_small">Create New Incentive Compensation Plan</h2>
+                        <lightning-button-icon icon-name="utility:close" variant="bare" onclick={handleCloseNewPlanModal}></lightning-button-icon>
+                    </div>
+                    <div class="modal-body">
+                        <div class="slds-grid slds-gutters slds-wrap">
+                            <div class="slds-col slds-size_1-1 slds-m-bottom_small">
+                                <lightning-input label="Plan Name" value={newPlan.Name} data-field="Name" onchange={handlePlanFieldChange} required></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-2 slds-m-bottom_small">
+                                <lightning-combobox
+                                    label="Period Frequency"
+                                    value={newPlan.Period_Type__c}
+                                    data-field="Period_Type__c"
+                                    options={periodTypeOptions}
+                                    onchange={handlePlanFieldChange}>
+                                </lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-2 slds-m-bottom_small">
+                                <lightning-combobox
+                                    label="Trigger Event"
+                                    value={newPlan.Trigger_Event__c}
+                                    data-field="Trigger_Event__c"
+                                    options={triggerEventOptions}
+                                    onchange={handlePlanFieldChange}>
+                                </lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-2 slds-m-bottom_small">
+                                <lightning-input label="Base Commission Rate (%)" type="number" step="0.1" value={newPlan.Base_Rate__c} data-field="Base_Rate__c" onchange={handlePlanFieldChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-2 slds-m-bottom_small">
+                                <lightning-input label="Quota Target ($)" type="number" value={newPlan.Quota_Target__c} data-field="Quota_Target__c" onchange={handlePlanFieldChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-2 slds-m-bottom_small">
+                                <lightning-input label="Tier 1 Threshold ($)" type="number" value={newPlan.Tier_1_Threshold__c} data-field="Tier_1_Threshold__c" onchange={handlePlanFieldChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-2 slds-m-bottom_small">
+                                <lightning-input label="Tier 1 Rate (%)" type="number" step="0.1" value={newPlan.Tier_1_Rate__c} data-field="Tier_1_Rate__c" onchange={handlePlanFieldChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-2 slds-m-bottom_small">
+                                <lightning-input label="Tier 2 Threshold ($)" type="number" value={newPlan.Tier_2_Threshold__c} data-field="Tier_2_Threshold__c" onchange={handlePlanFieldChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-2 slds-m-bottom_small">
+                                <lightning-input label="Tier 2 Rate (%)" type="number" step="0.1" value={newPlan.Tier_2_Rate__c} data-field="Tier_2_Rate__c" onchange={handlePlanFieldChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-1 slds-m-bottom_small">
+                                <lightning-input label="Accelerator Rate Over 150% Quota (%)" type="number" step="0.1" value={newPlan.Accelerated_Rate__c} data-field="Accelerated_Rate__c" onchange={handlePlanFieldChange}></lightning-input>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <lightning-button label="Cancel" onclick={handleCloseNewPlanModal}></lightning-button>
+                        <lightning-button label="Save Plan" variant="brand" onclick={handleSavePlan}></lightning-button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- MODAL: CREATE SNAPSHOT -->
+        <template lwc:if={showSnapshotModal}>
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="slds-text-heading_small">Create Quote Version Snapshot</h2>
+                        <lightning-button-icon icon-name="utility:close" variant="bare" onclick={handleCloseSnapshotModal}></lightning-button-icon>
+                    </div>
+                    <div class="modal-body">
+                        <p class="slds-m-bottom_small">This will capture a point-in-time immutable snapshot of all quote lines, discounts, and terms for audit and comparison.</p>
+                        <lightning-input label="Version Revision Reason" placeholder="e.g. Added 10 extra seats per customer request" onchange={handleSnapshotReasonChange}></lightning-input>
+                    </div>
+                    <div class="modal-footer">
+                        <lightning-button label="Cancel" onclick={handleCloseSnapshotModal}></lightning-button>
+                        <lightning-button label="Create Snapshot" variant="brand" onclick={handleCreateSnapshot}></lightning-button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Loading spinner -->
+        <template lwc:if={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+    </div>
+</template>

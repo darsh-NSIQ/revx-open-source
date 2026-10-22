@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Mandate_Type__c</fullName>
+    <description>Mandate instrument type: UPI_AutoPay, e_Mandate_NetBanking, Debit_Card.</description>
+    <externalId>false</externalId>
+    <label>Mandate Type</label>
+    <length>40</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

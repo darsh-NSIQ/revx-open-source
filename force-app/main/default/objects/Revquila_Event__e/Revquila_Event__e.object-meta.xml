@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Published at every Revquila moment (quote created, sent, signed, order activated, invoice raised, paid, subscription changed) so Flows and outside systems can react.</description>
+    <eventType>HighVolume</eventType>
+    <label>RevX Event</label>
+    <pluralLabel>RevX Events</pluralLabel>
+    <publishBehavior>PublishAfterCommit</publishBehavior>
+</CustomObject>

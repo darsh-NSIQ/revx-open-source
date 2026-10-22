@@ -1,0 +1,395 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <c-revquila-brand></c-revquila-brand>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Catalog</p>
+          <h1>What you sell, <em>and what it costs</em>.</h1>
+        </div>
+        <template lwc:if={canManage}>
+          <button class="rq-btn rq-primary" onclick={openNew}>
+            + New product
+          </button>
+        </template>
+      </header>
+
+      <section class="rq-stats">
+        <template for:each={stats} for:item="stat">
+          <div key={stat.label} class={stat.cardClass}>
+            <span class="rq-stat-label">{stat.label}</span>
+            <span class="rq-stat-value">{stat.value}</span>
+            <span class="rq-stat-note">{stat.note}</span>
+          </div>
+        </template>
+      </section>
+
+      <section class="rq-card rq-toolbar rq-rise rq-d6">
+        <div class="rq-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M16.5 16.5L21 21"></path>
+          </svg>
+          <input
+            class="rq-input"
+            type="search"
+            placeholder="Search products"
+            aria-label="Search products"
+            value={search}
+            oninput={handleSearch}
+          />
+        </div>
+        <div class="rq-chips" role="group" aria-label="Filter by family">
+          <template for:each={chips} for:item="chip">
+            <button
+              key={chip.key}
+              class={chip.chipClass}
+              aria-pressed={chip.pressed}
+              data-key={chip.key}
+              onclick={handleFamily}
+            >
+              {chip.label} <b>{chip.count}</b>
+            </button>
+          </template>
+        </div>
+      </section>
+
+      <template lwc:if={hasProducts}>
+        <p class="rq-count rq-rise rq-d6">{summary}</p>
+        <section class="rq-grid">
+          <template for:each={paging.rows} for:item="product">
+            <article
+              key={product.key}
+              class={product.cardClass}
+              style={product.rowStyle}
+            >
+              <div class="rq-product-top">
+                <div>
+                  <small class="rq-kind">{product.family}</small>
+                  <strong>{product.name}</strong>
+                  <small>{product.code}</small>
+                </div>
+                <span class={product.kindClass}>{product.kindLabel}</span>
+              </div>
+              <div class="rq-product-price">
+                <b>{product.priceLabel}</b>
+                <span>{product.unit}</span>
+              </div>
+              <template lwc:if={canManage}>
+                <div class="rq-product-acts">
+                  <button
+                    class="rq-btn rq-quiet rq-sm"
+                    data-key={product.key}
+                    onclick={openEdit}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    class="rq-btn rq-quiet rq-sm rq-to-bad"
+                    data-key={product.key}
+                    onclick={handleRetire}
+                  >
+                    Retire
+                  </button>
+                </div>
+              </template>
+            </article>
+          </template>
+        </section>
+        <c-revquila-pager
+          total={paging.total}
+          page={paging.page}
+          page-size={pageSize}
+          noun="product"
+          onpagechange={handlePage}
+        ></c-revquila-pager>
+      </template>
+
+      <template lwc:if={loading}>
+        <div class="rq-card rq-loading rq-rise rq-d2" role="status">
+          <span class="rq-spinner" aria-hidden="true"></span>
+          Loading…
+        </div>
+      </template>
+      <template lwc:if={loadError}>
+        <p class="rq-verdict rq-tone-bad rq-load-error" role="alert">
+          {loadError}
+        </p>
+      </template>
+      <template lwc:if={isEmpty}>
+        <section class="rq-card rq-empty rq-rise rq-d7">
+          <h2>No products yet</h2>
+          <p class="rq-sub">
+            Add the first product, or load the demo records in Setup.
+          </p>
+        </section>
+      </template>
+      <template lwc:if={noMatch}>
+        <section class="rq-card rq-empty rq-rise rq-d7">
+          <h2>No products match</h2>
+          <p class="rq-sub">Try a different family, or clear the search.</p>
+          <button class="rq-btn rq-quiet" onclick={clearFilters}>
+            Show all products
+          </button>
+        </section>
+      </template>
+
+      <template lwc:if={hasBundles}>
+        <section class="rq-card rq-rise rq-d8">
+          <div class="rq-card-head">
+            <div>
+              <h2>Bundles</h2>
+              <p class="rq-sub">
+                One tap on a quote adds every product in the bundle
+              </p>
+            </div>
+          </div>
+          <div class="rq-bundles">
+            <template for:each={bundleCards} for:item="bundle">
+              <article key={bundle.key} class="rq-bundle-card">
+                <div class="rq-product-top">
+                  <div>
+                    <strong>{bundle.name}</strong>
+                    <small>{bundle.countLabel} · {bundle.valueLabel}</small>
+                  </div>
+                  <template lwc:if={canManage}>
+                    <button
+                      class="rq-btn rq-quiet rq-sm"
+                      data-key={bundle.key}
+                      onclick={openOptions}
+                    >
+                      Edit products
+                    </button>
+                  </template>
+                </div>
+                <template lwc:if={bundle.hasOptions}>
+                  <ul class="rq-items">
+                    <template for:each={bundle.options} for:item="option">
+                      <li key={option.key} class="rq-item">
+                        <span>
+                          {option.label}
+                          <small>{option.note}</small>
+                        </span>
+                      </li>
+                    </template>
+                  </ul>
+                </template>
+                <template lwc:else>
+                  <p class="rq-sub rq-nothing">Nothing in this bundle yet.</p>
+                </template>
+              </article>
+            </template>
+          </div>
+        </section>
+      </template>
+    </div>
+  </div>
+
+  <template lwc:if={modal}>
+    <c-revquila-modal
+      heading={modalHeading}
+      size="medium"
+      onclose={closeModal}
+      lwc:ref="modal"
+    >
+      <div class="rq-form">
+        <template lwc:if={isProductForm}>
+          <div class="rq-form-grid">
+            <div class={nameFieldClass}>
+              <label for="name">Name</label>
+              <input
+                id="name"
+                class="rq-input"
+                type="text"
+                autocomplete="off"
+                value={form.name}
+                data-field="name"
+                data-autofocus="true"
+                oninput={handleField}
+              />
+              <template lwc:if={errors.name}>
+                <span class="rq-error" role="alert">{errors.name}</span>
+              </template>
+            </div>
+            <div class="rq-field">
+              <label for="code">Product code</label>
+              <input
+                id="code"
+                class="rq-input"
+                type="text"
+                autocomplete="off"
+                value={form.code}
+                data-field="code"
+                oninput={handleField}
+              />
+            </div>
+            <div class="rq-field">
+              <label for="family">Family</label>
+              <input
+                id="family"
+                class="rq-input"
+                type="text"
+                autocomplete="off"
+                placeholder="e.g. Licences, Services"
+                value={form.family}
+                data-field="family"
+                oninput={handleField}
+              />
+            </div>
+            <div class="rq-field">
+              <label for="unit">Sold as</label>
+              <select
+                id="unit"
+                class="rq-input"
+                data-field="unit"
+                onchange={handleField}
+              >
+                <template for:each={unitOptions} for:item="option">
+                  <option
+                    key={option.unit}
+                    value={option.unit}
+                    selected={option.selected}
+                  >
+                    {option.unit}
+                  </option>
+                </template>
+              </select>
+            </div>
+            <div class={priceFieldClass}>
+              <label for="price">List price, home currency</label>
+              <input
+                id="price"
+                class="rq-input"
+                type="number"
+                min="0"
+                step="any"
+                value={form.price}
+                data-field="price"
+                oninput={handleField}
+              />
+              <template lwc:if={errors.price}>
+                <span class="rq-error" role="alert">{errors.price}</span>
+              </template>
+            </div>
+            <div class="rq-field rq-toggles">
+              <label class="rq-switch">
+                <input
+                  type="checkbox"
+                  checked={form.recurring}
+                  data-field="recurring"
+                  onchange={handleField}
+                />
+                <span class="rq-track"></span>
+                Recurring: starts a subscription when signed
+              </label>
+              <label class="rq-switch">
+                <input
+                  type="checkbox"
+                  checked={form.bundle}
+                  data-field="bundle"
+                  onchange={handleField}
+                />
+                <span class="rq-track"></span>
+                Bundle: a set of other products
+              </label>
+            </div>
+          </div>
+          <p class="rq-hint">
+            The price is in the home currency. Quotes in another country convert
+            it at the exchange rate in Setup › Tax &amp; currency.
+          </p>
+        </template>
+
+        <template lwc:if={isOptionsForm}>
+          <div class="rq-options">
+            <template for:each={optionRows} for:item="option">
+              <div key={option.id} class="rq-option">
+                <select
+                  class="rq-input"
+                  aria-label="Product"
+                  data-id={option.id}
+                  data-field="productKey"
+                  onchange={handleOptionField}
+                >
+                  <template for:each={option.choices} for:item="choice">
+                    <option
+                      key={choice.key}
+                      value={choice.key}
+                      selected={choice.selected}
+                    >
+                      {choice.label}
+                    </option>
+                  </template>
+                </select>
+                <input
+                  class="rq-input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  aria-label="Quantity"
+                  value={option.qty}
+                  data-id={option.id}
+                  data-field="qty"
+                  oninput={handleOptionField}
+                />
+                <label class="rq-switch">
+                  <input
+                    type="checkbox"
+                    checked={option.required}
+                    data-id={option.id}
+                    data-field="required"
+                    onchange={handleOptionField}
+                  />
+                  <span class="rq-track"></span>
+                  Required
+                </label>
+                <button
+                  class="rq-x"
+                  aria-label={option.removeLabel}
+                  data-id={option.id}
+                  onclick={removeOption}
+                >
+                  ×
+                </button>
+              </div>
+            </template>
+          </div>
+          <template lwc:if={canAddOption}>
+            <div>
+              <button class="rq-btn rq-quiet rq-sm" onclick={addOption}>
+                + Add a product
+              </button>
+            </div>
+          </template>
+          <p class="rq-hint">
+            A required product cannot be removed from the bundle on a quote; the
+            rep can still change its quantity.
+          </p>
+        </template>
+
+        <template lwc:if={saveError}>
+          <span class="rq-error" role="alert">{saveError}</span>
+        </template>
+      </div>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelModal}>Cancel</button>
+        <button class="rq-btn rq-primary" disabled={busy} onclick={handleSave}>
+          {saveLabel}
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+</template>

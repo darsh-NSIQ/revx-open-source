@@ -1,0 +1,343 @@
+<template>
+  <div class="rq-360-container">
+    <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+
+    <!-- Loading State -->
+    <template lwc:if={loading}>
+      <div class="rq-card rq-loading-card" role="status">
+        <span class="rq-spinner" aria-hidden="true"></span>
+        <span>Loading RevX Revenue 360…</span>
+      </div>
+    </template>
+
+    <!-- Error / No Account State -->
+    <template lwc:if={noData}>
+      <div class="rq-card rq-empty-card">
+        <svg viewBox="0 0 24 24" class="rq-empty-icon" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <p class="rq-empty-title">No Account Associated</p>
+        <p class="rq-empty-desc">Link this record to a Salesforce Account to view subscriptions, quotes, and billing context.</p>
+      </div>
+    </template>
+
+    <!-- Main Content -->
+    <template lwc:if={data}>
+      <div class="rq-card rq-panel">
+        <!-- Header -->
+        <div class="rq-header">
+          <div class="rq-header-left">
+            <div class="rq-avatar" aria-hidden="true">360</div>
+            <div>
+              <div class="rq-title-row">
+                <h2 class="rq-account-name rq-account-link" onclick={handleAccountClick} title="Open Account in Salesforce">
+                  {data.accountName}
+                </h2>
+                <template lwc:if={data.segment}>
+                  <span class="rq-badge rq-badge-segment">{data.segment}</span>
+                </template>
+                <span class={churnBadgeClass}>{churnLabel}</span>
+              </div>
+              <p class="rq-meta-text">
+                <template lwc:if={data.industry}>{data.industry} · </template>
+                <template lwc:if={data.location}>{data.location} · </template>
+                <span>Terms: {displayTerms}</span>
+              </p>
+            </div>
+          </div>
+          <div class="rq-sla-badge" title="Service SLA Milestone">
+            <svg viewBox="0 0 24 24" class="rq-sla-icon" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span>{data.entitlementTier}</span>
+          </div>
+        </div>
+
+        <!-- Metrics KPI Grid -->
+        <div class="rq-kpi-grid">
+          <div class="rq-kpi-card">
+            <span class="rq-kpi-label">Lifetime Value (LTV)</span>
+            <strong class="rq-kpi-val">{formattedLtv}</strong>
+          </div>
+          <div class="rq-kpi-card">
+            <span class="rq-kpi-label">Active ARR (MRR)</span>
+            <strong class="rq-kpi-val">{formattedArr}</strong>
+            <span class="rq-kpi-sub">{formattedMrr}/mo</span>
+          </div>
+          <div class="rq-kpi-card">
+            <span class="rq-kpi-label">Outstanding Balance</span>
+            <strong class="rq-kpi-val">{formattedOutstanding}</strong>
+          </div>
+          <div class={overdueKpiClass}>
+            <span class="rq-kpi-label">Overdue Balance</span>
+            <strong class="rq-kpi-val">{formattedOverdue}</strong>
+          </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="rq-tabs" role="tablist">
+          <button
+            class={subscriptionsTabClass}
+            role="tab"
+            aria-selected={isTabSubscriptions}
+            onclick={selectSubscriptions}
+          >
+            Subscriptions ({subscriptionsCount})
+          </button>
+          <button
+            class={invoicesTabClass}
+            role="tab"
+            aria-selected={isTabInvoices}
+            onclick={selectInvoices}
+          >
+            Invoices &amp; Billing ({invoicesCount})
+          </button>
+          <button
+            class={quotesTabClass}
+            role="tab"
+            aria-selected={isTabQuotes}
+            onclick={selectQuotes}
+          >
+            Quotes ({quotesCount})
+          </button>
+        </div>
+
+        <!-- Tab Body: Subscriptions -->
+        <template lwc:if={isTabSubscriptions}>
+          <div class="rq-tab-body">
+            <template lwc:if={hasSubscriptions}>
+              <div class="rq-table-wrap">
+                <table class="rq-table">
+                  <thead>
+                    <tr>
+                      <th>Subscription</th>
+                      <th>Status</th>
+                      <th>MRR</th>
+                      <th>Start Date</th>
+                      <th>Renewal Date</th>
+                      <th>Auto Renew</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={data.subscriptions} for:item="sub">
+                      <tr key={sub.id} class="rq-row-clickable" data-id={sub.id} onclick={handleSubscriptionClick}>
+                        <td class="rq-td-strong">
+                          <button class="rq-record-link" data-id={sub.id} onclick={handleSubscriptionClick} title="Open Subscription 360">
+                            {sub.numberText}
+                            <svg viewBox="0 0 24 24" class="rq-link-icon" aria-hidden="true" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              <polyline points="15 3 21 3 21 9"></polyline>
+                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                          </button>
+                        </td>
+                        <td>
+                          <span class="rq-badge rq-badge-active">{sub.status}</span>
+                        </td>
+                        <td>${sub.mrr}/mo</td>
+                        <td>{sub.startDate}</td>
+                        <td>{sub.renewalDate}</td>
+                        <td>
+                          <template lwc:if={sub.autoRenew}>
+                            <span class="rq-badge rq-badge-auto">Auto</span>
+                          </template>
+                          <template lwc:else>
+                            <span class="rq-text-muted">Manual</span>
+                          </template>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </template>
+            <template lwc:else>
+              <div class="rq-sub-empty">No active subscriptions for this account.</div>
+            </template>
+          </div>
+        </template>
+
+        <!-- Tab Body: Invoices -->
+        <template lwc:if={isTabInvoices}>
+          <div class="rq-tab-body">
+            <template lwc:if={hasInvoices}>
+              <div class="rq-table-wrap">
+                <table class="rq-table">
+                  <thead>
+                    <tr>
+                      <th>Invoice #</th>
+                      <th>Total</th>
+                      <th>Balance</th>
+                      <th>Due Date</th>
+                      <th>Status</th>
+                      <th class="rq-th-actions">Agent Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={data.invoices} for:item="inv">
+                      <tr key={inv.id} class="rq-row-clickable" data-id={inv.id} onclick={handleInvoiceClick}>
+                        <td class="rq-td-strong">
+                          <button class="rq-record-link" data-id={inv.id} onclick={handleInvoiceClick} title="Open Invoice 360">
+                            {inv.numberText}
+                            <svg viewBox="0 0 24 24" class="rq-link-icon" aria-hidden="true" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              <polyline points="15 3 21 3 21 9"></polyline>
+                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                          </button>
+                        </td>
+                        <td>${inv.total}</td>
+                        <td class={inv.balanceClass}>${inv.balance}</td>
+                        <td>{inv.dueOn}</td>
+                        <td>
+                          <span class={inv.statusPillClass}>{inv.status}</span>
+                        </td>
+                        <td class="rq-td-actions" onclick={handleActionClick}>
+                          <template lwc:if={inv.hasBalance}>
+                            <button
+                              class="rq-action-btn"
+                              title="Generate or copy instant Stripe/Razorpay payment link"
+                              data-id={inv.id}
+                              onclick={handleGeneratePaymentLink}
+                            >
+                              Pay Link
+                            </button>
+                            <button
+                              class="rq-action-btn"
+                              title="Issue credit note to reduce balance"
+                              data-id={inv.id}
+                              data-num={inv.numberText}
+                              data-bal={inv.balance}
+                              onclick={openCreditNoteModal}
+                            >
+                              Credit Note
+                            </button>
+                          </template>
+                          <button
+                            class="rq-action-btn"
+                            title="Resend invoice email with payment link"
+                            data-id={inv.id}
+                            onclick={handleResendInvoice}
+                          >
+                            Resend
+                          </button>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </template>
+            <template lwc:else>
+              <div class="rq-sub-empty">No invoices found for this account.</div>
+            </template>
+          </div>
+        </template>
+
+        <!-- Tab Body: Quotes -->
+        <template lwc:if={isTabQuotes}>
+          <div class="rq-tab-body">
+            <template lwc:if={hasQuotes}>
+              <div class="rq-table-wrap">
+                <table class="rq-table">
+                  <thead>
+                    <tr>
+                      <th>Quote #</th>
+                      <th>Version</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Quote Date</th>
+                      <th>Primary</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={data.quotes} for:item="q">
+                      <tr key={q.id} class="rq-row-clickable" data-id={q.id} onclick={handleQuoteClick}>
+                        <td class="rq-td-strong">
+                          <button class="rq-record-link" data-id={q.id} onclick={handleQuoteClick} title="Open Quote 360">
+                            {q.numberText}
+                            <svg viewBox="0 0 24 24" class="rq-link-icon" aria-hidden="true" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              <polyline points="15 3 21 3 21 9"></polyline>
+                              <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                          </button>
+                        </td>
+                        <td>v{q.version}</td>
+                        <td>${q.total}</td>
+                        <td>
+                          <span class="rq-badge rq-badge-quote">{q.status}</span>
+                        </td>
+                        <td>{q.quoteDate}</td>
+                        <td>
+                          <template lwc:if={q.isPrimary}>
+                            <span class="rq-badge rq-badge-primary">Primary</span>
+                          </template>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </template>
+            <template lwc:else>
+              <div class="rq-sub-empty">No quotes recorded for this account.</div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- Credit Note Modal -->
+    <template lwc:if={showCreditModal}>
+      <c-revquila-modal
+        heading="Issue Credit Note"
+        subheading={creditModalSubheading}
+        size="small"
+        onclose={closeCreditModal}
+        lwc:ref="creditModal"
+      >
+        <div class="rq-modal-form">
+          <div class="rq-form-group">
+            <label class="rq-form-label">Credit Amount ($)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              max={selectedInvoiceBalance}
+              class="rq-form-input"
+              value={creditAmount}
+              oninput={handleCreditAmountChange}
+              placeholder="0.00"
+            />
+            <span class="rq-form-hint">Max credit allowed: ${selectedInvoiceBalance}</span>
+          </div>
+
+          <div class="rq-form-group">
+            <label class="rq-form-label">Reason for Credit</label>
+            <textarea
+              class="rq-form-textarea"
+              rows="3"
+              oninput={handleCreditReasonChange}
+              placeholder="e.g. Service billing SLA concession, overcharge adjustment, or customer credit..."
+            >{creditReason}</textarea>
+          </div>
+        </div>
+
+        <div slot="footer" class="rq-modal-footer">
+          <button class="rq-btn rq-quiet" onclick={closeCreditModal}>Cancel</button>
+          <button
+            class="rq-btn rq-primary"
+            onclick={submitCreditNote}
+            disabled={isCreditSubmitDisabled}
+          >
+            Issue Credit Note
+          </button>
+        </div>
+      </c-revquila-modal>
+    </template>
+    <c-revquila-ai-chatbot record-id={recordId}></c-revquila-ai-chatbot>
+  </div>
+</template>

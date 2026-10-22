@@ -1,0 +1,370 @@
+.accounting-sync-container {
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.header-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  padding: 1.25rem 1.5rem;
+}
+
+.header-icon {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border-radius: 8px;
+  padding: 6px;
+  display: inline-flex;
+}
+
+.title-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.subtitle-text {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* System Switcher Group */
+.system-switcher-group {
+  display: flex;
+  background-color: #f1f5f9;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+}
+
+.system-switch-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #475569;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease-in-out;
+}
+
+.system-switch-btn:hover {
+  color: #0f172a;
+}
+
+.system-switch-btn.active-system {
+  background: #ffffff;
+  color: #0284c7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.system-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-tally {
+  background-color: #f97316;
+}
+
+.dot-qbo {
+  background-color: #22c55e;
+}
+
+.dot-zoho {
+  background-color: #ef4444;
+}
+
+/* KPI Cards */
+.metrics-grid {
+  margin-top: 1rem;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+}
+
+.kpi-subtext {
+  font-size: 0.775rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
+/* Main Tabset Card */
+.main-tabset-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.section-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 0.2rem;
+}
+
+.table-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.custom-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.custom-table td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+.account-type-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0369a1;
+  background-color: #e0f2fe;
+  border-radius: 4px;
+}
+
+/* Status & Entity Badges */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 12px;
+}
+
+.status-success {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.status-failed {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.entity-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+.entity-invoice {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.entity-payment {
+  background-color: #f0fdf4;
+  color: #166534;
+}
+
+.entity-journal {
+  background-color: #faf5ff;
+  color: #6b21a8;
+}
+
+.external-id-code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+
+.error-cell {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.timestamp-cell {
+  font-size: 0.8rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.filter-label {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.search-input {
+  width: 280px;
+}
+
+.empty-state-box {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.empty-icon {
+  --sds-c-icon-color-foreground-default: #94a3b8;
+}
+
+/* Action Cards */
+.action-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.action-card-header {
+  display: flex;
+  align-items: center;
+}
+
+.action-card-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.action-card-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.4rem;
+}
+
+/* Export Cards */
+.export-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.export-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.tally-theme {
+  background-color: #ffedd5;
+  --sds-c-icon-color-foreground-default: #ea580c;
+}
+
+.qbo-theme {
+  background-color: #dcfce7;
+  --sds-c-icon-color-foreground-default: #16a34a;
+}
+
+.zoho-theme {
+  background-color: #fee2e2;
+  --sds-c-icon-color-foreground-default: #dc2626;
+}
+
+.export-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.export-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.4rem;
+  flex-grow: 1;
+}
+
+/* Modal Code Inspector */
+.modal-code-body {
+  max-height: 480px;
+  overflow-y: auto;
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-radius: 6px;
+}
+
+.payload-header {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #38bdf8;
+  text-transform: uppercase;
+}
+
+.code-block {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-top: 0.35rem;
+  border: 1px solid #334155;
+}

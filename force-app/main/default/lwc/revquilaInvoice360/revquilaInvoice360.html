@@ -1,0 +1,650 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <div class="rq-crumbs">
+          <c-revquila-brand></c-revquila-brand>
+          <button class="rq-back" onclick={goToInvoices}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 12H5M11 6l-6 6 6 6"></path>
+            </svg>
+            Invoices
+          </button>
+        </div>
+      </div>
+
+      <template lwc:if={loading}>
+        <div class="rq-card rq-loading rq-rise rq-d1" role="status">
+          <span class="rq-spinner" aria-hidden="true"></span>
+          Loading…
+        </div>
+      </template>
+
+      <template lwc:if={invoice}>
+        <header class="rq-card rq-hero rq-rise rq-d1">
+          <div class="rq-hero-top">
+            <div class="rq-tile" aria-hidden="true">I</div>
+            <div class="rq-hero-title">
+              <p class="rq-eyebrow">Invoice {invoice.number}</p>
+              <div class="rq-name-row">
+                <h1>{invoice.account}</h1>
+                <span class={invoice.pillClass}>{invoice.statusLabel}</span>
+              </div>
+              <p class="rq-sub">{origin} · issued {invoice.issuedLabel}</p>
+            </div>
+            <div class="rq-actions">
+              <button class="rq-btn rq-quiet" onclick={openEdit}>
+                Edit invoice
+              </button>
+              <button class="rq-btn rq-quiet" onclick={openPreview}>
+                Preview PDF
+              </button>
+              <button
+                class="rq-btn rq-quiet"
+                data-kind="email"
+                onclick={openModal}
+                title="Send invoice PDF and payment link via email"
+              >
+                Email invoice
+              </button>
+              <template lwc:if={isOpen}>
+                <button
+                  class="rq-btn rq-quiet rq-btn-paylink"
+                  onclick={handlePaymentLinkAction}
+                  disabled={generatingLink}
+                  title="Generate or copy online payment checkout link"
+                >
+                  <svg viewBox="0 0 24 24" class="rq-paylink-icon" aria-hidden="true">
+                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"></path>
+                  </svg>
+                  {payLinkBtnLabel}
+                </button>
+                <button
+                  class="rq-btn rq-quiet"
+                  data-kind="promise"
+                  onclick={openModal}
+                >
+                  Promise to pay
+                </button>
+                <button
+                  class="rq-btn rq-quiet"
+                  data-kind="credit"
+                  onclick={openModal}
+                >
+                  Credit note
+                </button>
+                <template lwc:if={canRefund}>
+                  <button
+                    class="rq-btn rq-quiet"
+                    data-kind="refund"
+                    onclick={openModal}
+                  >
+                    Refund
+                  </button>
+                </template>
+                <template lwc:if={canWriteOff}>
+                  <button
+                    class="rq-btn rq-quiet rq-to-bad"
+                    data-kind="writeOff"
+                    onclick={openModal}
+                  >
+                    Write off
+                  </button>
+                </template>
+                <button
+                  class="rq-btn rq-quiet"
+                  data-kind="reminder"
+                  onclick={openModal}
+                >
+                  Log reminder
+                </button>
+                <button
+                  class="rq-btn rq-primary"
+                  data-kind="payment"
+                  onclick={openModal}
+                >
+                  Record payment
+                </button>
+              </template>
+              <template lwc:if={isDraft}>
+                <button
+                  class="rq-btn rq-primary"
+                  data-kind="send"
+                  onclick={openModal}
+                >
+                  Mark as sent
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <dl class="rq-facts">
+            <template for:each={facts} for:item="fact">
+              <div key={fact.label} class={fact.factClass}>
+                <dt>{fact.label}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            </template>
+          </dl>
+
+          <div class="rq-settled">
+            <div class="rq-meter rq-tone-good" style={settledStyle}>
+              <span></span>
+            </div>
+            <p class="rq-sub">{settledLabel}</p>
+          </div>
+        </header>
+
+        <div class="rq-cols">
+          <div class="rq-col-main">
+            <section class="rq-card rq-rise rq-d2">
+              <h2>Line items</h2>
+              <div class="rq-tw">
+                <table class="rq-lines">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th class="rq-right">Qty</th>
+                      <th class="rq-right rq-hide-sm">Price</th>
+                      <th class="rq-right rq-hide-sm">Discount</th>
+                      <th class="rq-right">Net</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={lineRows} for:item="line">
+                      <tr key={line.key}>
+                        <td>
+                          <span class="rq-strong">{line.name}</span>
+                          <small>{line.unit}</small>
+                        </td>
+                        <td class="rq-right">{line.qty}</td>
+                        <td class="rq-right rq-hide-sm">{line.price}</td>
+                        <td class="rq-right rq-hide-sm">{line.discount}</td>
+                        <td class="rq-right rq-strong">{line.net}</td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+              <dl class="rq-totals">
+                <template for:each={totals} for:item="total">
+                  <div key={total.label} class={total.rowClass}>
+                    <dt>{total.label}</dt>
+                    <dd>{total.value}</dd>
+                  </div>
+                </template>
+              </dl>
+            </section>
+
+            <section class="rq-card rq-rise rq-d3">
+              <h2>Payments and credit notes</h2>
+              <template lwc:if={hasReceipts}>
+                <ul class="rq-items">
+                  <template for:each={receipts} for:item="receipt">
+                    <li key={receipt.id} class="rq-item">
+                      <span>
+                        {receipt.title}
+                        <small>{receipt.detail}</small>
+                      </span>
+                      <span class={receipt.pillClass}>{receipt.pill}</span>
+                    </li>
+                  </template>
+                </ul>
+              </template>
+              <template lwc:else>
+                <p class="rq-sub rq-nothing">Nothing received yet.</p>
+              </template>
+            </section>
+
+            <template lwc:if={hasPaymentPlan}>
+              <section class="rq-card rq-rise rq-d3">
+                <h2>Payment Plan &amp; Installments</h2>
+                <p class="rq-sub">Active milestone installment plan configured.</p>
+                <div class="rq-mt">
+                  <span>Status: </span>
+                  <span class="rq-pill rq-tone-info">{paymentStatusLabel}</span>
+                </div>
+              </section>
+            </template>
+          </div>
+
+          <div class="rq-col-mid">
+            <section class="rq-card rq-rise rq-d3">
+              <h2>Timeline</h2>
+              <p class="rq-sub">Everything that has happened to this invoice</p>
+              <c-revquila-timeline events={timeline}></c-revquila-timeline>
+            </section>
+          </div>
+
+          <aside class="rq-side">
+            <section class="rq-card rq-lift rq-rise rq-d3">
+              <h2>Collection plan</h2>
+              <p class="rq-sub">Reminders planned in Setup &gt; Billing</p>
+              <ul class="rq-items">
+                <template for:each={plan} for:item="step">
+                  <li key={step.key} class="rq-item">
+                    <span>
+                      {step.name}
+                      <small>{step.when}</small>
+                    </span>
+                    <span class={step.pillClass}>{step.text}</span>
+                  </li>
+                </template>
+              </ul>
+              <template lwc:if={lastPromise}>
+                <p class="rq-verdict rq-tone-teal">{lastPromise}</p>
+              </template>
+              <template lwc:if={lateFee}>
+                <p class="rq-verdict rq-tone-bad">{lateFee}</p>
+              </template>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d4">
+              <div class="rq-card-head">
+                <h2>Online payment</h2>
+                <span class={payStatusClass}>{payStatusLabel}</span>
+              </div>
+              <template lwc:if={invoice.paymentLink}>
+                <div class="rq-paylink-card">
+                  <span class="rq-paylink-url" title={invoice.paymentLink}>{invoice.paymentLink}</span>
+                  <div class="rq-paylink-actions">
+                    <button class="rq-btn rq-quiet rq-sm" onclick={copyPaymentLink}>
+                      Copy link
+                    </button>
+                    <a class="rq-btn rq-primary rq-sm" href={invoice.paymentLink} target="_blank" rel="noopener">
+                      Open checkout
+                    </a>
+                  </div>
+                </div>
+                <p class="rq-fine">Share this direct checkout URL with the customer.</p>
+              </template>
+              <template lwc:else>
+                <template lwc:if={isOpen}>
+                  <p class="rq-sub">No active checkout link generated yet.</p>
+                  <button
+                    class="rq-btn rq-quiet rq-sm rq-btn-gen"
+                    onclick={generatePaymentLink}
+                    disabled={generatingLink}
+                  >
+                    <template lwc:if={generatingLink}>Generating link…</template>
+                    <template lwc:else>Generate Payment Link</template>
+                  </button>
+                  <button
+                    class="rq-btn rq-primary rq-sm"
+                    style="margin-top:8px; width:100%;"
+                    onclick={handleOpenUpiModal}
+                  >
+                    Instant Pay with UPI QR
+                  </button>
+                </template>
+                <template lwc:else>
+                  <p class="rq-sub">This invoice is fully settled.</p>
+                </template>
+              </template>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d5">
+              <div class="rq-card-header-row">
+                <h2>India GST &amp; e-Invoice</h2>
+                <template lwc:if={hasEInvoice}>
+                  <span class="rq-pill rq-tone-good">IRN Active</span>
+                </template>
+                <template lwc:else>
+                  <span class="rq-pill rq-tone-mut">Pending IRN</span>
+                </template>
+              </div>
+              <template lwc:if={hasEInvoice}>
+                <div class="rq-irn-card">
+                  <span class="rq-irn-lbl">Invoice Reference Number (IRN)</span>
+                  <code class="rq-irn-text" title={invoice.eInvoiceIrn}>{invoice.eInvoiceIrn}</code>
+                  <div class="rq-irn-meta-row">
+                    <span>Ack No: <strong>{invoice.eInvoiceAck}</strong></span>
+                    <span>Schema: <strong>GST 1.1</strong></span>
+                  </div>
+                </div>
+              </template>
+              <template lwc:else>
+                <p class="rq-sub">Generate 64-character cryptographic SHA-256 IRN and Ack number for India GST IRP portal compliance.</p>
+                <button
+                  class="rq-btn rq-quiet rq-sm rq-btn-gen"
+                  onclick={generateEInvoice}
+                  disabled={generatingEInvoice}
+                >
+                  <template lwc:if={generatingEInvoice}>Generating IRN…</template>
+                  <template lwc:else>Generate GST e-Invoice IRN</template>
+                </button>
+              </template>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d5">
+              <h2>Customer</h2>
+              <dl class="rq-kv">
+                <template for:each={customer} for:item="row">
+                  <div key={row.label} class="rq-kv-row">
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                </template>
+              </dl>
+            </section>
+
+            <section class="rq-card rq-lift rq-rise rq-d5">
+              <h2>Related records</h2>
+              <ul class="rq-items">
+                <template for:each={related} for:item="record">
+                  <li key={record.type} class={record.itemClass}>
+                    <span>
+                      <small class="rq-kind">{record.type}</small>
+                      {record.name}
+                    </span>
+                    <template lwc:if={record.exists}>
+                      <button
+                        class="rq-btn rq-quiet rq-sm"
+                        data-quote={record.quoteId}
+                        data-subscription={record.subscriptionId}
+                        data-order={record.orderId}
+                        onclick={openRelated}
+                      >
+                        Open
+                      </button>
+                    </template>
+                  </li>
+                </template>
+              </ul>
+            </section>
+          </aside>
+        </div>
+      </template>
+
+      <template lwc:if={missing}>
+        <div class="rq-card rq-missing rq-rise rq-d1">
+          <h2>We couldn't find that invoice</h2>
+          <p class="rq-sub">
+            The link may be incomplete, or the invoice was removed.
+          </p>
+          <button class="rq-btn rq-primary" onclick={goToInvoices}>
+            Back to invoices
+          </button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <template lwc:if={modal}>
+    <c-revquila-modal
+      heading={modal.heading}
+      subheading={invoice.number}
+      size="small"
+      onclose={closeModal}
+      lwc:ref="actionModal"
+    >
+      <div class="rq-form">
+        <p class="rq-dialog-body">{modalBody}</p>
+
+        <template lwc:if={shown.amount}>
+          <div class={fieldClasses.amount}>
+            <label for="amount">Amount</label>
+            <input
+              id="amount"
+              class="rq-input"
+              type="number"
+              min="0"
+              step="any"
+              value={form.amount}
+              data-field="amount"
+              data-autofocus="true"
+              oninput={handleField}
+            />
+            <div class="rq-quick">
+              <button class="rq-chip" onclick={fillBalance}>
+                Full balance
+              </button>
+              <button class="rq-chip" onclick={fillHalf}>Half</button>
+            </div>
+            <template lwc:if={errors.amount}>
+              <span class="rq-error" role="alert">{errors.amount}</span>
+            </template>
+          </div>
+        </template>
+
+        <template lwc:if={shown.method}>
+          <div class="rq-field">
+            <label for="method">Paid by</label>
+            <select
+              id="method"
+              class="rq-input"
+              data-field="method"
+              onchange={handleField}
+            >
+              <template for:each={methodOptions} for:item="option">
+                <option
+                  key={option.name}
+                  value={option.name}
+                  selected={option.selected}
+                >
+                  {option.name}
+                </option>
+              </template>
+            </select>
+          </div>
+        </template>
+
+        <template lwc:if={shown.reference}>
+          <div class="rq-field">
+            <label for="reference">Reference</label>
+            <input
+              id="reference"
+              class="rq-input"
+              type="text"
+              autocomplete="off"
+              placeholder="UTR, cheque or transaction number"
+              data-field="reference"
+              oninput={handleField}
+            />
+          </div>
+        </template>
+
+        <template lwc:if={shown.date}>
+          <div class={fieldClasses.date}>
+            <label for="date">Date</label>
+            <input
+              id="date"
+              class="rq-input"
+              type="date"
+              max={maxDate}
+              value={form.date}
+              data-field="date"
+              oninput={handleField}
+            />
+            <template lwc:if={errors.date}>
+              <span class="rq-error" role="alert">{errors.date}</span>
+            </template>
+          </div>
+        </template>
+
+        <template lwc:if={shown.reason}>
+          <div class={fieldClasses.reason}>
+            <label for="reason">Reason</label>
+            <input
+              id="reason"
+              class="rq-input"
+              type="text"
+              autocomplete="off"
+              placeholder="e.g. Two seats removed mid-term"
+              data-field="reason"
+              oninput={handleField}
+            />
+            <template lwc:if={errors.reason}>
+              <span class="rq-error" role="alert">{errors.reason}</span>
+            </template>
+          </div>
+        </template>
+
+        <template lwc:if={shown.note}>
+          <div class="rq-field">
+            <label for="note">Note</label>
+            <input
+              id="note"
+              class="rq-input"
+              type="text"
+              autocomplete="off"
+              placeholder="e.g. Waiting on their finance approval"
+              data-field="note"
+              oninput={handleField}
+            />
+          </div>
+        </template>
+
+        <template lwc:if={shown.toAddress}>
+          <div class={fieldClasses.toAddress}>
+            <label for="toAddress">Recipient email</label>
+            <input
+              id="toAddress"
+              class="rq-input"
+              type="email"
+              autocomplete="email"
+              placeholder="e.g. finance@customer.com"
+              value={form.toAddress}
+              data-field="toAddress"
+              oninput={handleField}
+            />
+            <template lwc:if={errors.toAddress}>
+              <span class="rq-error" role="alert">{errors.toAddress}</span>
+            </template>
+            <p class="rq-hint" style="font-size:12px;color:var(--rq-text-muted,#717d96);margin-top:4px;">
+              RevX will send the invoice summary, secure payment link, and attached PDF.
+            </p>
+          </div>
+        </template>
+      </div>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelModal}>Cancel</button>
+        <button
+          class="rq-btn rq-primary"
+          disabled={busy}
+          onclick={confirmModal}
+        >
+          {modal.confirmLabel}
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <template lwc:if={isEditing}>
+    <c-revquila-modal
+      heading="Edit Invoice"
+      subheading={invoice.account}
+      onclose={cancelEdit}
+    >
+      <div class="rq-form">
+        <div class="rq-form-grid">
+          <div class="rq-field">
+            <label for="inv-due">Due date</label>
+            <input
+              id="inv-due"
+              class="rq-input"
+              type="date"
+              value={editForm.dueOn}
+              data-field="dueOn"
+              onchange={handleEditInput}
+            />
+          </div>
+          <div class="rq-field">
+            <label for="inv-terms">Payment terms</label>
+            <input
+              id="inv-terms"
+              class="rq-input"
+              type="text"
+              value={editForm.terms}
+              data-field="terms"
+              placeholder="e.g. Net 30"
+              oninput={handleEditInput}
+            />
+          </div>
+          <div class="rq-field rq-span-all">
+            <label for="inv-ref">Reference / PO #</label>
+            <input
+              id="inv-ref"
+              class="rq-input"
+              type="text"
+              value={editForm.reference}
+              data-field="reference"
+              placeholder="e.g. PO-74921"
+              oninput={handleEditInput}
+            />
+          </div>
+          <div class="rq-field rq-span-all">
+            <label for="inv-notes">Notes</label>
+            <textarea
+              id="inv-notes"
+              class="rq-input"
+              rows="3"
+              data-field="notes"
+              placeholder="Payment instructions, bank wire remarks or terms notes…"
+              oninput={handleEditInput}
+            >{editForm.notes}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelEdit} disabled={editBusy}>Cancel</button>
+        <button class="rq-btn rq-primary" onclick={saveEditInvoice} disabled={editBusy}>
+          Save changes
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <template lwc:if={previewing}>
+    <c-revquila-document-modal
+      document={document}
+      onclose={closePreview}
+    ></c-revquila-document-modal>
+  </template>
+
+  <!-- Dynamic UPI QR Payment Modal -->
+  <template lwc:if={showUpiModal}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small rq-upi-modal">
+      <div class="slds-modal__container" style="max-width: 440px;">
+        <header class="slds-modal__header" style="background:#0f172a; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff;">
+          <h2 class="slds-text-heading_medium" style="font-weight:700;">BHIM / UPI Instant Pay</h2>
+          <p style="font-size:12px; color:#94a3b8; margin-top:2px;">Scan with Google Pay, PhonePe, Paytm, or BHIM</p>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium" style="background:#1e293b; color:#fff; text-align:center;">
+          <div style="background:#fff; padding:12px; border-radius:12px; display:inline-block; margin-bottom:12px;">
+            <img src={upiQrUrl} alt="UPI Payment QR Code" style="width:200px; height:200px; display:block;" />
+          </div>
+          <div style="font-size:14px; margin-bottom:8px;">
+            <strong>Pay Amount:</strong> <span style="color:#10b981; font-weight:800; font-size:18px;">${upiAmount}</span>
+          </div>
+          <div style="font-size:12px; color:#94a3b8; word-break:break-all; background:rgba(0,0,0,0.2); padding:6px; border-radius:6px; margin-bottom:12px;">
+            VPA: <strong>revx.finance@icici</strong> &bull; Ref: {invoice.number}
+          </div>
+          <button class="rq-btn rq-quiet rq-sm" onclick={handleCopyUpiUri} style="margin-bottom:10px;">
+            Copy UPI Deep-Link
+          </button>
+        </div>
+        <footer class="slds-modal__footer" style="background:#0f172a; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between;">
+          <button class="rq-btn rq-quiet rq-sm" onclick={handleCloseUpiModal}>Close</button>
+          <button class="rq-btn rq-primary rq-sm" onclick={handleSimulateUpiPayment} disabled={settlingUpi}>
+            <template lwc:if={settlingUpi}>Simulating Settlement...</template>
+            <template lwc:else>Simulate Bank UTR Settlement &rarr;</template>
+          </button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot record-id={recordId}></c-revquila-ai-chatbot>
+</template>

@@ -1,0 +1,283 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <div class="rq-crumbs">
+          <c-revquila-brand></c-revquila-brand>
+          <button class="rq-back" onclick={goToContracts}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 12H5M11 6l-6 6 6 6"></path>
+            </svg>
+            Contracts
+          </button>
+        </div>
+      </div>
+
+      <template lwc:if={loading}>
+        <div class="rq-card rq-loading rq-rise rq-d1" role="status">
+          <span class="rq-spinner" aria-hidden="true"></span>
+          Loading…
+        </div>
+      </template>
+
+      <template lwc:if={contract}>
+        <header class="rq-card rq-hero rq-rise rq-d1">
+          <div class="rq-hero-top">
+            <div class="rq-tile" aria-hidden="true">C</div>
+            <div class="rq-hero-title">
+              <p class="rq-eyebrow">{eyebrow}</p>
+              <div class="rq-name-row">
+                <h1>{contract.account}</h1>
+                <span class={contract.pillClass}>{contract.statusLabel}</span>
+              </div>
+              <p class="rq-sub">{contract.reference}</p>
+            </div>
+            <div class="rq-actions">
+              <button class="rq-btn rq-quiet" onclick={openEdit}>
+                Edit contract
+              </button>
+              <template lwc:if={canCancel}>
+                <button class="rq-btn rq-quiet rq-to-bad" onclick={openCancel}>
+                  Cancel contract
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <dl class="rq-facts">
+            <template for:each={facts} for:item="fact">
+              <div key={fact.label} class="rq-fact">
+                <dt>{fact.label}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            </template>
+          </dl>
+
+          <div class="rq-term">
+            <div class="rq-meter" style={termStyle}><span></span></div>
+            <p class="rq-sub">{termLabel}</p>
+          </div>
+        </header>
+
+        <div class="rq-cols">
+          <div class="rq-col-main">
+            <section class="rq-card rq-rise rq-d2">
+              <h2>Timeline</h2>
+              <p class="rq-sub">
+                Everything that has happened to this contract
+              </p>
+              <c-revquila-timeline events={timeline}></c-revquila-timeline>
+            </section>
+          </div>
+
+          <div class="rq-col-mid">
+            <section class="rq-card rq-rise rq-d3">
+              <h2>Details</h2>
+              <dl class="rq-kv">
+                <template for:each={details} for:item="row">
+                  <div key={row.label} class="rq-kv-row">
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                </template>
+              </dl>
+              <template lwc:if={contract.notes}>
+                <h3 class="rq-notes-head">Notes</h3>
+                <p class="rq-notes">{contract.notes}</p>
+              </template>
+            </section>
+          </div>
+
+          <aside class="rq-side">
+            <section class="rq-card rq-lift rq-rise rq-d4">
+              <h2>Related records</h2>
+              <ul class="rq-items">
+                <template for:each={related} for:item="record">
+                  <li key={record.type} class={record.itemClass}>
+                    <span>
+                      <small class="rq-kind">{record.type}</small>
+                      {record.name}
+                    </span>
+                    <template lwc:if={record.exists}>
+                      <span class="rq-item-acts">
+                        <template lwc:if={record.state}>
+                          <span class="rq-pill rq-tone-acc"
+                            >{record.state}</span
+                          >
+                        </template>
+                        <button
+                          class="rq-btn rq-quiet rq-sm"
+                          data-quote={record.quoteId}
+                          data-order={record.orderId}
+                          data-subscription={record.subscriptionId}
+                          onclick={openRelated}
+                        >
+                          Open
+                        </button>
+                      </span>
+                    </template>
+                  </li>
+                </template>
+              </ul>
+            </section>
+          </aside>
+        </div>
+      </template>
+
+      <template lwc:if={missing}>
+        <div class="rq-card rq-missing rq-rise rq-d1">
+          <h2>We couldn't find that contract</h2>
+          <p class="rq-sub">
+            The link may be incomplete, or the contract was removed.
+          </p>
+          <button class="rq-btn rq-primary" onclick={goToContracts}>
+            Back to contracts
+          </button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <template lwc:if={cancelling}>
+    <c-revquila-modal
+      heading="Cancel this contract?"
+      subheading={contract.account}
+      size="small"
+      onclose={closeCancel}
+      lwc:ref="cancelModal"
+    >
+      <div class="rq-form">
+        <p class="rq-dialog-body">
+          Ends the contract today and cancels the subscription that bills it.
+          Its MRR leaves your totals now.
+        </p>
+        <div class={reasonFieldClass}>
+          <label for="reason">Reason</label>
+          <input
+            id="reason"
+            class="rq-input"
+            type="text"
+            autocomplete="off"
+            placeholder="e.g. Customer closed the business unit"
+            data-autofocus="true"
+            oninput={handleReason}
+          />
+          <template lwc:if={reasonError}>
+            <span class="rq-error" role="alert">{reasonError}</span>
+          </template>
+        </div>
+      </div>
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={backFromCancel}>Back</button>
+        <button
+          class="rq-btn rq-danger"
+          disabled={busy}
+          onclick={confirmCancel}
+        >
+          Cancel contract
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <template lwc:if={isEditing}>
+    <c-revquila-modal
+      heading="Edit Contract"
+      subheading={eyebrow}
+      onclose={cancelEdit}
+    >
+      <div class="rq-form">
+        <div class="rq-form-grid">
+          <div class="rq-field">
+            <label for="contract-end">End date</label>
+            <input
+              id="contract-end"
+              class="rq-input"
+              type="date"
+              value={editForm.endDate}
+              data-field="endDate"
+              onchange={handleEditInput}
+            />
+          </div>
+          <div class="rq-field">
+            <label for="contract-term">Term (months)</label>
+            <input
+              id="contract-term"
+              class="rq-input"
+              type="number"
+              min="1"
+              value={editForm.termMonths}
+              data-field="termMonths"
+              placeholder="12"
+              oninput={handleEditInput}
+            />
+          </div>
+          <div class="rq-field">
+            <label for="contract-uplift">Renewal uplift (%)</label>
+            <input
+              id="contract-uplift"
+              class="rq-input"
+              type="number"
+              step="0.1"
+              value={editForm.upliftPercent}
+              data-field="upliftPercent"
+              placeholder="e.g. 5"
+              oninput={handleEditInput}
+            />
+          </div>
+          <div class="rq-field">
+            <label for="contract-ref">Reference</label>
+            <input
+              id="contract-ref"
+              class="rq-input"
+              type="text"
+              value={editForm.reference}
+              data-field="reference"
+              placeholder="e.g. MSA-2026-HQ"
+              oninput={handleEditInput}
+            />
+          </div>
+          <div class="rq-field rq-span-all">
+            <label class="rq-switch">
+              <input
+                type="checkbox"
+                checked={editForm.autoRenew}
+                data-field="autoRenew"
+                onchange={handleEditInput}
+              />
+              <span class="rq-track" aria-hidden="true"></span>
+              <span>Auto-renew contract at term end</span>
+            </label>
+          </div>
+          <div class="rq-field rq-span-all">
+            <label for="contract-notes">Internal notes</label>
+            <textarea
+              id="contract-notes"
+              class="rq-input"
+              rows="3"
+              data-field="notes"
+              placeholder="Contract stipulations, service level agreements or covenants…"
+              oninput={handleEditInput}
+            >{editForm.notes}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <div slot="footer" class="rq-actions-end">
+        <button class="rq-btn rq-quiet" onclick={cancelEdit} disabled={editBusy}>Cancel</button>
+        <button class="rq-btn rq-primary" onclick={saveEditContract} disabled={editBusy}>
+          Save changes
+        </button>
+      </div>
+    </c-revquila-modal>
+  </template>
+
+  <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+  <c-revquila-ai-chatbot record-id={recordId}></c-revquila-ai-chatbot>
+</template>

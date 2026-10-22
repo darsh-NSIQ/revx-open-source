@@ -1,0 +1,284 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <div class="rq-crumbs">
+          <c-revquila-brand></c-revquila-brand>
+          <span class="rq-step-pill">Guided Selling & Rep Co-pilot</span>
+        </div>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Interactive CPQ Assistant</p>
+          <h1>Sell with confidence, <em>on-target pricing</em>.</h1>
+          <p class="rq-sub">Step-by-step package recommendations, margin coaching, and 1-click quote drafting.</p>
+        </div>
+      </header>
+
+      <!-- Stepper Header -->
+      <div class="rq-card rq-stepper-card rq-rise rq-d2">
+        <div class="rq-stepper">
+          <button class={step1Class} onclick={goToStep1} type="button">
+            <span class="rq-step-num">1</span>
+            <span>Customer Profile</span>
+          </button>
+          <div class="rq-step-line"></div>
+          <button class={step2Class} onclick={goToStep2} type="button">
+            <span class="rq-step-num">2</span>
+            <span>Needs & Model</span>
+          </button>
+          <div class="rq-step-line"></div>
+          <button class={step3Class} onclick={goToStep3} type="button">
+            <span class="rq-step-num">3</span>
+            <span>AI Solution Proposal</span>
+          </button>
+        </div>
+      </div>
+
+      <template lwc:if={loading}>
+        <div class="rq-card rq-loading rq-rise rq-d3" role="status">
+          <span class="rq-spinner" aria-hidden="true"></span>
+          Evaluating optimal catalog fit…
+        </div>
+      </template>
+
+      <!-- STEP 1: Customer Profile -->
+      <template lwc:if={isStep1}>
+        <div class="rq-two rq-rise rq-d3">
+          <div class="rq-card">
+            <h2 class="rq-section-title">Select Target Account</h2>
+            <p class="rq-sub">Choose which prospect or customer you are preparing this proposal for:</p>
+            <div class="rq-field-group">
+              <label class="rq-label" for="accountSelect">Account</label>
+              <select id="accountSelect" class="rq-select" onchange={handleAccountChange}>
+                <option value="">-- Choose an Account --</option>
+                <template for:each={accounts} for:item="acc">
+                  <option key={acc.id} value={acc.id}>{acc.name} ({acc.industry} · {acc.segment})</option>
+                </template>
+              </select>
+            </div>
+
+            <h2 class="rq-section-title rq-mt-lg">Select Industry Domain</h2>
+            <div class="rq-option-grid">
+              <template for:each={industries} for:item="ind">
+                <button
+                  key={ind.id}
+                  class={ind.cardClass}
+                  data-id={ind.id}
+                  onclick={handleSelectIndustry}
+                  type="button"
+                >
+                  <div class="rq-card-top">
+                    <strong>{ind.label}</strong>
+                    <span class="rq-tag">{ind.badge}</span>
+                  </div>
+                  <p class="rq-opt-desc">{ind.description}</p>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <div class="rq-card rq-coach-panel">
+            <div class="rq-coach-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+              </svg>
+              <span>Ramp-up Coaching Hint</span>
+            </div>
+            <h3>Why Industry Profiling Matters</h3>
+            <p>FinTech & HealthTech accounts have <strong>40% higher average contract value</strong> but require compliance & audit bundles upfront. Selecting the right industry ensures auto-included SLA agreements so legal doesn't redline your quote later.</p>
+            <div class="rq-actions-end rq-mt-lg">
+              <button class="rq-btn rq-primary" onclick={goToStep2} disabled={cannotAdvanceStep1}>
+                Next: Needs & Model →
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- STEP 2: Needs & Business Model -->
+      <template lwc:if={isStep2}>
+        <div class="rq-two rq-rise rq-d3">
+          <div class="rq-card">
+            <h2 class="rq-section-title">Deployment Scale</h2>
+            <div class="rq-option-grid">
+              <template for:each={companySizes} for:item="cs">
+                <button
+                  key={cs.id}
+                  class={cs.cardClass}
+                  data-id={cs.id}
+                  onclick={handleSelectSize}
+                  type="button"
+                >
+                  <div class="rq-card-top">
+                    <strong>{cs.label}</strong>
+                    <span class="rq-tag">{cs.badge}</span>
+                  </div>
+                  <p class="rq-opt-desc">{cs.description}</p>
+                </button>
+              </template>
+            </div>
+
+            <h2 class="rq-section-title rq-mt-lg">Business & Revenue Model</h2>
+            <div class="rq-option-grid">
+              <template for:each={businessModels} for:item="bm">
+                <button
+                  key={bm.id}
+                  class={bm.cardClass}
+                  data-id={bm.id}
+                  onclick={handleSelectModel}
+                  type="button"
+                >
+                  <div class="rq-card-top">
+                    <strong>{bm.label}</strong>
+                    <span class="rq-tag">{bm.badge}</span>
+                  </div>
+                  <p class="rq-opt-desc">{bm.description}</p>
+                </button>
+              </template>
+            </div>
+
+            <h2 class="rq-section-title rq-mt-lg">Required Capabilities & Add-ons</h2>
+            <div class="rq-feature-list">
+              <template for:each={featureOptions} for:item="feat">
+                <label key={feat.id} class="rq-feature-item">
+                  <input
+                    type="checkbox"
+                    checked={feat.selected}
+                    data-id={feat.id}
+                    onchange={handleToggleFeature}
+                  />
+                  <div class="rq-feat-info">
+                    <strong>{feat.label}</strong>
+                    <small>{feat.description}</small>
+                  </div>
+                  <span class="rq-badge rq-badge-info">{feat.badge}</span>
+                </label>
+              </template>
+            </div>
+          </div>
+
+          <div class="rq-card rq-coach-panel">
+            <div class="rq-coach-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path>
+              </svg>
+              <span>Hybrid Billing Strategy</span>
+            </div>
+            <h3>Maximizing Net Retention Rate</h3>
+            <p>Accounts starting on <strong>Hybrid (Base Platform + Usage)</strong> expand by <strong>128% NRR</strong> in year 1. For Mid-market and Enterprise, always include the Real-time Metering Engine to prevent billing leakage.</p>
+            <div class="rq-actions-between rq-mt-lg">
+              <button class="rq-btn rq-quiet" onclick={goToStep1}>← Back</button>
+              <button class="rq-btn rq-primary" onclick={evaluateProposalsAction}>
+                Generate AI Proposals ⚡
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- STEP 3: Proposals & 1-Click Quote -->
+      <template lwc:if={isStep3}>
+        <div class="rq-stack rq-rise rq-d3">
+          <div class="rq-proposals-grid">
+            <template for:each={proposals} for:item="prop">
+              <div key={prop.packageCode} class={prop.wrapperClass}>
+                <div class="rq-prop-header">
+                  <div>
+                    <span class={prop.tagClass}>{prop.tag}</span>
+                    <h2>{prop.title}</h2>
+                    <p class="rq-sub">{prop.summary}</p>
+                  </div>
+                  <div class="rq-win-score">
+                    <span class="rq-score-val">{prop.winProbability}%</span>
+                    <small>Win Probability</small>
+                  </div>
+                </div>
+
+                <div class="rq-prop-pricing">
+                  <div class="rq-price-stat">
+                    <span>Est. Annual Total</span>
+                    <strong>${prop.estimatedNetPrice}</strong>
+                  </div>
+                  <div class="rq-price-stat">
+                    <span>Est. MRR</span>
+                    <strong>${prop.estimatedMRR}/mo</strong>
+                  </div>
+                  <div class="rq-price-stat">
+                    <span>Suggested Discount</span>
+                    <strong class="rq-discount-pill">-{prop.suggestedDiscount}%</strong>
+                  </div>
+                </div>
+
+                <div class="rq-coaching-box">
+                  <strong>💡 Deal Desk Guidance:</strong>
+                  <p>{prop.coachingNote}</p>
+                </div>
+
+                <h3 class="rq-subhead">Included Package Products</h3>
+                <div class="rq-table-wrap">
+                  <table class="rq-table">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Role</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Discount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template for:each={prop.products} for:item="p">
+                        <tr key={p.productCode}>
+                          <td>
+                            <strong>{p.name}</strong>
+                            <div class="rq-why-sub">{p.whyRecommended}</div>
+                          </td>
+                          <td><span class="rq-badge rq-badge-mut">{p.role}</span></td>
+                          <td>{p.suggestedQty}</td>
+                          <td>${p.unitPrice}</td>
+                          <td>{p.discountPct}%</td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="rq-card-footer">
+                  <button
+                    class="rq-btn rq-primary rq-btn-lg"
+                    data-code={prop.packageCode}
+                    onclick={handleCreateQuote}
+                    disabled={creatingQuote}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="12" y1="18" x2="12" y2="12"></line>
+                      <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                    Create Draft Quote ({prop.title})
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <div class="rq-actions-between rq-mt-md">
+            <button class="rq-btn rq-quiet" onclick={goToStep2}>← Change Inputs</button>
+          </div>
+        </div>
+      </template>
+
+    </div>
+    <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+    <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+  </div>
+</template>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Recurring__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Billed every year. Recurring products start a subscription when a quote is signed.</description>
+    <label>Recurring</label>
+    <trackHistory>false</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

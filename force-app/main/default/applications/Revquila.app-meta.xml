@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <brand>
+        <headerColor>#0176D3</headerColor>
+        <logo>Revquila_Logo</logo>
+        <logoVersion>1</logoVersion>
+        <shouldOverrideOrgTheme>true</shouldOverrideOrgTheme>
+    </brand>
+    <description
+  >RevX Quote-to-Cash in lifecycle order: Home, CRM Pipeline, CPQ Deal Closing, Orders &amp; Contracts, Billing &amp; Metering, Renewals, Revenue &amp; Setup.</description>
+    <formFactors>Small</formFactors>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>true</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>true</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>true</isNavTabPersistenceDisabled>
+    <label>RevX</label>
+    <navType>Standard</navType>
+    <!-- Stage 0: Overview Cockpit -->
+    <tabs>Revquila_Home</tabs>
+    <tabs>Revquila_Command_Center</tabs>
+
+    <!-- Stage 1: CRM & Deal Pipeline -->
+    <tabs>standard-Lead</tabs>
+    <tabs>standard-Account</tabs>
+    <tabs>standard-Contact</tabs>
+    <tabs>standard-Opportunity</tabs>
+
+    <!-- Stage 2: CPQ & Deal Closing -->
+    <tabs>Revquila_Catalog</tabs>
+    <tabs>Revquila_Pricing</tabs>
+    <tabs>Revquila_Guided_Selling</tabs>
+    <tabs>Revquila_Quotes</tabs>
+    <tabs>Revquila_Templates</tabs>
+    <tabs>Revquila_Approvals</tabs>
+
+    <!-- Stage 3: Orders, Fulfillment & Subscriptions -->
+    <tabs>Revquila_Orders</tabs>
+    <tabs>Revquila_Contracts</tabs>
+    <tabs>Revquila_Subscriptions</tabs>
+    <tabs>Revquila_Renewals</tabs>
+
+    <!-- Stage 4: Billing, Metering & Collections -->
+    <tabs>Revquila_Usage</tabs>
+    <tabs>Revquila_Invoices</tabs>
+    <tabs>Revquila_India_Payments</tabs>
+    <tabs>Revquila_Dunning</tabs>
+
+    <!-- Stage 5: Revenue, Finance & Setup -->
+    <tabs>Revquila_Revenue</tabs>
+    <tabs>Revquila_Accounting_Sync</tabs>
+    <tabs>Revquila_War_Room</tabs>
+    <tabs>Revquila_Exception_Inbox</tabs>
+    <tabs>Revquila_Enterprise_Trust</tabs>
+    <tabs>Revquila_Setup</tabs>
+    <uiType>Lightning</uiType>
+</CustomApplication>

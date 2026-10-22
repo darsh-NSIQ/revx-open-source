@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Parallel__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>On: this step is decided alongside the others of its rule, not after them.</description>
+    <label>Parallel</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

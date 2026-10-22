@@ -1,0 +1,423 @@
+<apex:page controller="RevquilaPortalController" showHeader="false" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0" title="RevX Digital Quotation">
+  <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>{!companyName} · {!docNumber}</title>
+      <style type="text/css">
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #0f172a; background: #f1f5f9; }
+        .rq-top { padding: 24px 28px; color: #ffffff; background: linear-gradient(135deg, #091326, {!accent}); box-shadow: 0 4px 20px rgba(9, 19, 38, 0.15); }
+        .rq-top h1 { margin: 6px 0 0; font-size: 28px; letter-spacing: -0.02em; font-weight: 800; }
+        .rq-top small { opacity: 0.85; letter-spacing: 0.12em; text-transform: uppercase; font-size: 11.5px; font-weight: 700; }
+        .rq-top-account { margin-top: 4px; opacity: 0.92; font-size: 16px; font-weight: 500; }
+        .rq-wrap { padding: 24px 28px 48px; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+        .rq-card { padding: 22px; border-radius: 16px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 10px 25px -5px rgba(15, 23, 42, 0.06); border: 1px solid #e2e8f0; }
+        .rq-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        .rq-fact { padding: 12px 14px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; }
+        .rq-fact span { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
+        .rq-fact b { font-size: 16px; color: #0f172a; }
+        table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        th { padding: 10px 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b; text-align: left; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 12px 8px; border-top: 1px solid #f1f5f9; vertical-align: top; }
+        .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        td small { display: block; color: #64748b; font-size: 12px; margin-top: 2px; }
+        .rq-totals { margin-left: auto; width: min(100%, 380px); margin-top: 14px; padding-top: 12px; border-top: 1px dashed #cbd5e1; }
+        .rq-totals div { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14.5px; }
+        .rq-totals .grand { margin-top: 8px; padding-top: 12px; border-top: 2px solid #0f172a; font-size: 20px; font-weight: 800; color: #0f172a; }
+        .rq-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 22px; border: 0; border-radius: 12px; font-size: 15px; font-weight: 700; color: #ffffff; background: {!accent}; text-decoration: none; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 4px 12px rgba(1, 118, 211, 0.25); }
+        .rq-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .rq-btn-secondary { background: #f1f5f9; color: #475569; box-shadow: none; border: 1px solid #cbd5e1; font-size: 13px; padding: 6px 12px; }
+        .rq-btn-secondary:hover { background: #e2e8f0; }
+        .rq-form { display: flex; flex-direction: column; gap: 14px; max-width: 600px; }
+        .rq-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 580px) { .rq-form-grid { grid-template-columns: 1fr; } }
+        .rq-form label { font-size: 12.5px; font-weight: 600; color: #475569; display: flex; flex-direction: column; gap: 4px; }
+        .rq-form input[type=text], .rq-form input[type=email] { width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font: inherit; background: #ffffff; transition: border-color 0.15s ease; }
+        .rq-form input[type=text]:focus, .rq-form input[type=email]:focus { outline: none; border-color: {!accent}; box-shadow: 0 0 0 3px rgba(1, 118, 211, 0.15); }
+        
+        /* Signature Canvas styling */
+        .rq-sig-tabs { display: flex; gap: 8px; margin-bottom: 8px; }
+        .rq-sig-tab { padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #cbd5e1; background: #f8fafc; color: #64748b; }
+        .rq-sig-tab.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
+        .rq-sig-box { position: relative; border: 2px dashed #94a3b8; border-radius: 12px; background: #ffffff; padding: 2px; }
+        .rq-sig-box canvas { display: block; width: 100%; height: 160px; border-radius: 10px; touch-action: none; cursor: crosshair; }
+        .rq-sig-guide { position: absolute; bottom: 34px; left: 24px; right: 24px; border-bottom: 1px dashed #cbd5e1; pointer-events: none; }
+        .rq-sig-guide::after { content: "Sign Above This Line"; position: absolute; right: 0; bottom: 4px; font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .rq-sig-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+        .rq-sig-watermark { font-size: 11px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        
+        .rq-legal-box { padding: 12px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; font-size: 13px; color: #475569; display: flex; gap: 10px; align-items: flex-start; }
+        .rq-legal-box input { margin-top: 3px; cursor: pointer; }
+        
+        .rq-note { padding: 14px 16px; border-radius: 12px; font-weight: 600; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+        .rq-warn { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+        
+        /* Signed Certificate Box */
+        .rq-cert-card { background: linear-gradient(to bottom right, #f8fafc, #ffffff); border: 2px solid #10b981; border-radius: 16px; padding: 24px; position: relative; overflow: hidden; }
+        .rq-cert-badge { display: inline-flex; align-items: center; gap: 6px; background: #10b981; color: #ffffff; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; margin-bottom: 14px; }
+        .rq-cert-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 14px; }
+        .rq-cert-item { font-size: 13px; color: #64748b; }
+        .rq-cert-item strong { display: block; font-size: 15px; color: #0f172a; margin-top: 2px; }
+        .rq-cert-sig-img { max-height: 70px; max-width: 260px; object-fit: contain; margin-top: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08)); }
+        
+        pre { white-space: pre-wrap; font-family: inherit; margin: 0; color: #334155; font-size: 14px; }
+        @media (max-width: 560px) { .rq-hide { display: none; } }
+      </style>
+    </head>
+    <body>
+      <apex:variable var="v" value="" rendered="{!NOT(found)}">
+        <div class="rq-top"><small>{!companyName}</small><h1>This link has expired</h1></div>
+        <div class="rq-wrap"><div class="rq-card">The link is incomplete or no longer active. Contact {!companyName} for an updated proposal.</div></div>
+      </apex:variable>
+      <apex:variable var="v" value="" rendered="{!found}">
+        <div class="rq-top">
+          <small>{!companyName} · {!title}</small>
+          <h1>{!docNumber}</h1>
+          <div class="rq-top-account">{!accountName}</div>
+        </div>
+
+        <div class="rq-wrap">
+          <!-- Facts Header -->
+          <div class="rq-card rq-facts">
+            <apex:repeat value="{!facts}" var="f">
+              <div class="rq-fact">
+                <span>{!f.label}</span>
+                <b>{!f.value}</b>
+              </div>
+            </apex:repeat>
+          </div>
+
+          <!-- Line Items Table -->
+          <div class="rq-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product &amp; Description</th>
+                  <th class="num">Qty</th>
+                  <th class="num rq-hide">Unit Price</th>
+                  <th class="num rq-hide">Discount</th>
+                  <th class="num">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <apex:repeat value="{!lines}" var="l">
+                  <tr>
+                    <td>
+                      <strong>{!l.name}</strong>
+                      <small>{!l.unit}</small>
+                    </td>
+                    <td class="num">{!l.qty}</td>
+                    <td class="num rq-hide">{!l.price}</td>
+                    <td class="num rq-hide">{!l.discount}</td>
+                    <td class="num"><strong>{!l.net}</strong></td>
+                  </tr>
+                </apex:repeat>
+              </tbody>
+            </table>
+
+            <div class="rq-totals">
+              <apex:repeat value="{!totals}" var="t">
+                <div class="{!t.tone}">
+                  <span>{!t.label}</span>
+                  <span>{!t.value}</span>
+                </div>
+              </apex:repeat>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <apex:variable var="v" value="" rendered="{!NOT(ISBLANK(notes))}">
+            <div class="rq-card">
+              <h3 style="margin-top:0; font-size: 15px; color:#475569;">Terms &amp; Notes</h3>
+              <pre>{!notes}</pre>
+            </div>
+          </apex:variable>
+
+          <!-- Status / Signing Section -->
+          <div class="rq-card">
+            <apex:variable var="v" value="" rendered="{!NOT(ISBLANK(message))}">
+              <p class="rq-note {!IF(accepted, '', 'rq-warn')}">{!message}</p>
+            </apex:variable>
+
+            <!-- Already Signed State -->
+            <apex:variable var="v" value="" rendered="{!accepted}">
+              <div class="rq-cert-card">
+                <div class="rq-cert-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Legally E-Signed &amp; Approved
+                </div>
+                <h2 style="margin: 0; font-size: 20px; color: #0f172a;">Digital Execution Certificate</h2>
+                <p style="margin: 4px 0 0; color: #64748b; font-size: 13.5px;">This agreement was executed using RevX Native Digital Signature in accordance with the ESIGN and UETA legal framework.</p>
+
+                <div class="rq-cert-grid">
+                  <div class="rq-cert-item">
+                    <span>Authorized Signatory</span>
+                    <strong>{!IF(ISBLANK(signedByName), acceptName, signedByName)}</strong>
+                  </div>
+                  <apex:variable var="v" value="" rendered="{!NOT(ISBLANK(signedByTitle))}">
+                    <div class="rq-cert-item">
+                      <span>Title / Designation</span>
+                      <strong>{!signedByTitle}</strong>
+                    </div>
+                  </apex:variable>
+                  <div class="rq-cert-item">
+                    <span>Account Executed</span>
+                    <strong>{!accountName}</strong>
+                  </div>
+                  <div class="rq-cert-item">
+                    <span>Execution Date</span>
+                    <strong>
+                      <apex:outputText value="{0,date,MMMM d, yyyy}">
+                        <apex:param value="{!signedOn}" />
+                      </apex:outputText>
+                    </strong>
+                  </div>
+                </div>
+
+                <apex:variable var="v" value="" rendered="{!NOT(ISBLANK(savedSignature))}">
+                  <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
+                    <div style="font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b;">Signature on File</div>
+                    <img class="rq-cert-sig-img" src="{!savedSignature}" alt="Digital Signature" />
+                  </div>
+                </apex:variable>
+
+                <div style="margin-top: 18px; text-align: center;">
+                  <a href="{!'/apex/Revquila__RevquilaEsignCertificate?t=' + token}" target="_blank" class="rq-btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-weight: 700; text-decoration: none; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #064e3b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Download Certificate of Completion (PDF)
+                  </a>
+                </div>
+              </div>
+            </apex:variable>
+
+            <!-- Active Signing Form -->
+            <apex:variable var="v" value="" rendered="{!canAccept}">
+              <h2 style="margin-top:0; font-size: 22px; font-weight: 800; color: #0f172a;">Review &amp; E-Sign Quotation</h2>
+              <p style="color: #64748b; margin: -4px 0 16px; font-size: 14px;">Sign online instantly. No external accounts or separate software required.</p>
+
+              <apex:form styleClass="rq-form" id="signForm" onsubmit="return validateAndCaptureSignature();">
+                <div class="rq-form-grid">
+                  <label>
+                    Full Name *
+                    <apex:inputText value="{!acceptName}" id="signerName" html-placeholder="e.g. John Doe" />
+                  </label>
+                  <label>
+                    Work Email *
+                    <apex:inputText value="{!acceptEmail}" id="signerEmail" html-placeholder="john@example.com" />
+                  </label>
+                </div>
+                <label>
+                  Title / Job Designation
+                  <apex:inputText value="{!acceptTitle}" id="signerTitle" html-placeholder="e.g. VP of Operations" />
+                </label>
+
+                <!-- Interactive Signature Mode Selection -->
+                <div>
+                  <div class="rq-sig-tabs">
+                    <button type="button" class="rq-sig-tab active" id="tabDraw" onclick="switchSigMode('draw')">Draw Signature</button>
+                    <button type="button" class="rq-sig-tab" id="tabType" onclick="switchSigMode('type')">Type Signature</button>
+                  </div>
+
+                  <div class="rq-sig-box">
+                    <canvas id="sigCanvas" width="580" height="160"></canvas>
+                    <div class="rq-sig-guide"></div>
+                  </div>
+
+                  <div class="rq-sig-actions">
+                    <div class="rq-sig-watermark">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                      RevX Native E-Sign Engine · 256-bit Audit Hash
+                    </div>
+                    <button type="button" class="rq-btn-secondary" onclick="clearSignatureCanvas()">Clear Signature</button>
+                  </div>
+                </div>
+
+                <!-- Hidden inputs passed to Apex controller -->
+                <apex:inputHidden value="{!signatureData}" id="hiddenSigData" />
+                <apex:inputHidden value="{!auditJson}" id="hiddenAuditJson" />
+
+                <!-- Legal Terms & Acknowledgement -->
+                <div class="rq-legal-box">
+                  <apex:inputCheckbox value="{!acceptTerms}" id="chkTerms" />
+                  <div>
+                    I agree to electronically sign Quote <strong>{!docNumber}</strong> on behalf of <strong>{!accountName}</strong>. I understand that my digital signature holds the same legal standing as a handwritten signature under the ESIGN and UETA Acts.
+                  </div>
+                </div>
+
+                <div style="margin-top: 6px;">
+                  <apex:commandButton value="Legally Sign & Accept Quote" action="{!accept}" styleClass="rq-btn" style="width: 100%;" />
+                </div>
+              </apex:form>
+
+              <script type="text/javascript">
+                var canvas = document.getElementById('sigCanvas');
+                var ctx = canvas ? canvas.getContext('2d') : null;
+                var drawing = false;
+                var hasDrawn = false;
+                var currentMode = 'draw';
+
+                function setupCanvas() {
+                  if (!canvas || !ctx) return;
+                  // Handle high-dpi displays
+                  var dpr = window.devicePixelRatio || 1;
+                  var rect = canvas.getBoundingClientRect();
+                  canvas.width = rect.width * dpr;
+                  canvas.height = rect.height * dpr;
+                  ctx.scale(dpr, dpr);
+                  ctx.lineWidth = 2.5;
+                  ctx.lineCap = 'round';
+                  ctx.lineJoin = 'round';
+                  ctx.strokeStyle = '#0f172a';
+
+                  function getPos(e) {
+                    var r = canvas.getBoundingClientRect();
+                    var clientX = e.clientX;
+                    var clientY = e.clientY;
+                    if (e.touches && e.touches.length > 0) {
+                      clientX = e.touches[0].clientX;
+                      clientY = e.touches[0].clientY;
+                    }
+                    return {
+                      x: clientX - r.left,
+                      y: clientY - r.top
+                    };
+                  }
+
+                  function startDraw(e) {
+                    if (currentMode !== 'draw') return;
+                    e.preventDefault();
+                    drawing = true;
+                    var pos = getPos(e);
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y);
+                  }
+
+                  function moveDraw(e) {
+                    if (!drawing || currentMode !== 'draw') return;
+                    e.preventDefault();
+                    var pos = getPos(e);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                    hasDrawn = true;
+                  }
+
+                  function endDraw(e) {
+                    if (!drawing) return;
+                    e.preventDefault();
+                    drawing = false;
+                  }
+
+                  canvas.addEventListener('mousedown', startDraw);
+                  canvas.addEventListener('mousemove', moveDraw);
+                  window.addEventListener('mouseup', endDraw);
+
+                  canvas.addEventListener('touchstart', startDraw, { passive: false });
+                  canvas.addEventListener('touchmove', moveDraw, { passive: false });
+                  window.addEventListener('touchend', endDraw);
+                }
+
+                function clearSignatureCanvas() {
+                  if (!canvas || !ctx) return;
+                  var dpr = window.devicePixelRatio || 1;
+                  ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+                  hasDrawn = false;
+                  if (currentMode === 'type') {
+                    renderTypedSignature();
+                  }
+                }
+
+                function switchSigMode(mode) {
+                  currentMode = mode;
+                  document.getElementById('tabDraw').classList.toggle('active', mode === 'draw');
+                  document.getElementById('tabType').classList.toggle('active', mode === 'type');
+                  clearSignatureCanvas();
+                  if (mode === 'type') {
+                    renderTypedSignature();
+                  }
+                }
+
+                function renderTypedSignature() {
+                  if (!canvas || !ctx) return;
+                  var nameInput = document.querySelector('[id$="signerName"]');
+                  var text = nameInput ? nameInput.value.trim() : '';
+                  if (!text) text = '{!accountName} Signatory';
+                  var dpr = window.devicePixelRatio || 1;
+                  var w = canvas.width / dpr;
+                  var h = canvas.height / dpr;
+                  ctx.clearRect(0, 0, w, h);
+                  ctx.fillStyle = '#0f172a';
+                  ctx.font = 'italic 34px "Brush Script MT", "Caveat", "Segoe Script", cursive';
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.fillText(text, w / 2, h / 2 - 8);
+                  hasDrawn = true;
+                }
+
+                // Live-update typed signature when name is typed
+                var nameInputElem = document.querySelector('[id$="signerName"]');
+                if (nameInputElem) {
+                  nameInputElem.addEventListener('input', function() {
+                    if (currentMode === 'type') {
+                      renderTypedSignature();
+                    }
+                  });
+                }
+
+                function validateAndCaptureSignature() {
+                  var nameInput = document.querySelector('[id$="signerName"]');
+                  var emailInput = document.querySelector('[id$="signerEmail"]');
+                  var chkTerms = document.querySelector('[id$="chkTerms"]');
+                  var hiddenSig = document.querySelector('[id$="hiddenSigData"]');
+                  var hiddenAudit = document.querySelector('[id$="hiddenAuditJson"]');
+
+                  if (!nameInput || !nameInput.value.trim()) {
+                    alert('Please enter your full name.');
+                    nameInput.focus();
+                    return false;
+                  }
+                  if (!emailInput || !emailInput.value.trim() || emailInput.value.indexOf('@') < 0) {
+                    alert('Please enter a valid work email.');
+                    emailInput.focus();
+                    return false;
+                  }
+                  if (!hasDrawn) {
+                    alert('Please draw or create your digital signature before submitting.');
+                    return false;
+                  }
+                  if (!chkTerms || !chkTerms.checked) {
+                    alert('Please check the confirmation box to agree to the digital signature terms.');
+                    chkTerms.focus();
+                    return false;
+                  }
+
+                  // Capture Canvas PNG data URL
+                  var dataUrl = canvas.toDataURL('image/png');
+                  if (hiddenSig) {
+                    hiddenSig.value = dataUrl;
+                  }
+
+                  // Build audit json
+                  var auditObj = {
+                    clientTimestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent,
+                    screen: window.screen.width + 'x' + window.screen.height,
+                    mode: currentMode,
+                    origin: window.location.href
+                  };
+                  if (hiddenAudit) {
+                    hiddenAudit.value = JSON.stringify(auditObj);
+                  }
+
+                  return true;
+                }
+
+                window.addEventListener('DOMContentLoaded', setupCanvas);
+                window.addEventListener('resize', setupCanvas);
+              </script>
+            </apex:variable>
+          </div>
+        </div>
+      </apex:variable>
+    </body>
+  </html>
+</apex:page>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Order__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>The RevX Order generated when this schedule is released.</description>
+    <label>Released Order</label>
+    <referenceTo>Order__c</referenceTo>
+    <relationshipLabel>Manufacturing Agreement Schedules</relationshipLabel>
+    <relationshipName>Manufacturing_Agreement_Schedules</relationshipName>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

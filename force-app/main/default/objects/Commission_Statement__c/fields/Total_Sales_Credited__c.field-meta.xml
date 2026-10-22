@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Total_Sales_Credited__c</fullName>
+    <description>Total volume of deals/invoices credited to the rep during this period.</description>
+    <externalId>false</externalId>
+    <label>Total Sales Credited</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+</CustomField>

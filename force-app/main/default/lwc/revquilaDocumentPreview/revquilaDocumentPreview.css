@@ -1,0 +1,375 @@
+@import "c/revquilaTheme";
+
+/*
+ * Paper preview. Everything inside the sheet is sized in em from one font size that
+ * follows the width of the paper (cqw), so the page scales as a whole, like a zoomed PDF.
+ * The colours are those of the printed page (dark ink on white), not the app theme.
+ */
+:host {
+  --rq-doc-acc: #0176d3;
+  --rq-doc-soft: #e1eefa;
+  --rq-doc-ink: #1b1f27;
+  --rq-doc-mut: #5d6675;
+  --rq-doc-rule: #d5d9e0;
+}
+
+.rq-paper {
+  container-type: inline-size;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--rq-doc-ink);
+  box-shadow:
+    0 0 0 1px var(--rq-line),
+    0 18px 44px color-mix(in srgb, var(--rq-ink) 18%, transparent);
+}
+
+.rq-sheet {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2.2em;
+  /* the height of one page at this width */
+  min-height: calc(100cqw * 297 / 210);
+  padding: 4.4em 4.6em 3.4em;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(5px, 1.52cqw, 14px);
+  line-height: 1.45;
+}
+
+.rq-paper.rq-size-letter .rq-sheet {
+  min-height: calc(100cqw * 279 / 216);
+}
+
+.rq-paper.rq-font-serif .rq-sheet {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.rq-sheet h3,
+.rq-sheet h4,
+.rq-sheet p,
+.rq-sheet dl,
+.rq-sheet dd {
+  margin: 0;
+}
+
+.rq-sheet span,
+.rq-sheet small {
+  display: block;
+}
+
+.rq-sheet h4 {
+  margin-bottom: 0.35em;
+  font-size: 0.82em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rq-doc-mut);
+}
+
+.rq-watermark {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  font-size: 11em;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: rgba(27, 31, 39, 0.06);
+  transform: translate(-50%, -50%) rotate(-24deg);
+  pointer-events: none;
+}
+
+/* ---------- header ---------- */
+.rq-doc-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 2em;
+  padding-bottom: 1.6em;
+  border-bottom: 0.2em solid var(--rq-doc-acc);
+}
+
+.rq-doc-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9em;
+  min-width: 0;
+  color: var(--rq-doc-mut);
+}
+
+.rq-doc-brand img {
+  display: block;
+  width: auto;
+  max-width: 15em;
+  height: 4.2em;
+  object-fit: contain;
+  object-position: left;
+}
+
+.rq-doc-company {
+  display: block;
+  font-size: 1.15em;
+  color: var(--rq-doc-ink);
+}
+
+.rq-doc-title {
+  flex: none;
+  text-align: right;
+}
+
+.rq-doc-title h3 {
+  font-size: 2.3em;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--rq-doc-acc);
+}
+
+.rq-doc-title span {
+  margin-top: 0.3em;
+  font-size: 1.1em;
+  font-weight: 700;
+}
+
+.rq-paper.rq-logo-right .rq-doc-head {
+  flex-direction: row-reverse;
+}
+
+.rq-paper.rq-logo-right .rq-doc-title {
+  text-align: left;
+}
+
+.rq-paper.rq-logo-right .rq-doc-brand {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.rq-paper.rq-logo-right .rq-doc-brand img {
+  object-position: right;
+}
+
+/* ---------- parties ---------- */
+.rq-doc-parties {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 2em;
+}
+
+.rq-doc-to {
+  color: var(--rq-doc-mut);
+}
+
+.rq-doc-to strong {
+  display: block;
+  font-size: 1.15em;
+  color: var(--rq-doc-ink);
+}
+
+.rq-doc-meta div,
+.rq-doc-totals div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5em;
+  padding: 0.22em 0;
+}
+
+.rq-doc-meta dt,
+.rq-doc-totals dt {
+  color: var(--rq-doc-mut);
+}
+
+.rq-doc-meta dd {
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ---------- lines ---------- */
+.rq-doc-lines {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rq-doc-lines th,
+.rq-doc-lines td {
+  padding: 0.7em 0.8em;
+  border: 0;
+  font-size: 1em;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+  vertical-align: top;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the fill is on the row: filled cells side by side leave hairline seams at some zoom levels */
+.rq-doc-lines thead tr {
+  background: var(--rq-doc-acc);
+}
+
+.rq-doc-lines th {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.rq-doc-lines td {
+  border-bottom: 1px solid var(--rq-doc-rule);
+}
+
+.rq-doc-lines small {
+  font-size: 0.88em;
+  color: var(--rq-doc-mut);
+}
+
+.rq-doc-lines .rq-doc-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.rq-doc-lines td.rq-doc-no {
+  width: 2.4em;
+  color: var(--rq-doc-mut);
+}
+
+/* ---------- totals ---------- */
+.rq-doc-sums {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2em;
+}
+
+.rq-doc-totals {
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-doc-totals dd {
+  font-weight: 700;
+}
+
+.rq-doc-totals .rq-doc-grand {
+  margin-top: 0.4em;
+  padding: 0.7em 0.8em;
+  font-size: 1.15em;
+  background: var(--rq-doc-soft);
+}
+
+.rq-doc-totals .rq-doc-grand dt {
+  font-weight: 700;
+  color: var(--rq-doc-ink);
+}
+
+.rq-doc-totals .rq-doc-settled {
+  padding-inline: 0.92em;
+}
+
+/* ---------- terms, bank, signature ---------- */
+.rq-doc-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 2em;
+  margin-top: auto;
+  padding-top: 1.4em;
+  border-top: 1px solid var(--rq-doc-rule);
+  font-size: 0.92em;
+  color: var(--rq-doc-mut);
+}
+
+.rq-sheet h4.rq-doc-gap {
+  margin-top: 1.2em;
+}
+
+.rq-doc-sign {
+  align-self: end;
+  text-align: right;
+}
+
+.rq-doc-sign i {
+  display: block;
+  height: 4em;
+  margin-bottom: 0.4em;
+  border-bottom: 1px solid var(--rq-doc-ink);
+}
+
+.rq-doc-sign strong {
+  color: var(--rq-doc-ink);
+}
+
+.rq-doc-footer {
+  font-size: 0.92em;
+  text-align: center;
+  color: var(--rq-doc-mut);
+}
+
+/* ---------- modern: a band of the accent colour across the top ---------- */
+.rq-paper.rq-is-modern .rq-doc-head {
+  align-items: center;
+  margin: -4.4em -4.6em 0;
+  padding: 3em 4.6em;
+  border: 0;
+  color: #ffffff;
+  background: var(--rq-doc-acc);
+}
+
+.rq-paper.rq-is-modern .rq-doc-brand,
+.rq-paper.rq-is-modern .rq-doc-company,
+.rq-paper.rq-is-modern .rq-doc-title h3 {
+  color: #ffffff;
+}
+
+.rq-paper.rq-is-modern .rq-doc-brand img {
+  height: 5em;
+  padding: 0.4em 0.7em;
+  border-radius: 0.5em;
+  background: #ffffff;
+}
+
+.rq-paper.rq-is-modern .rq-doc-lines thead tr {
+  background: var(--rq-doc-soft);
+}
+
+.rq-paper.rq-is-modern .rq-doc-lines th {
+  color: var(--rq-doc-acc);
+}
+
+.rq-paper.rq-is-modern .rq-doc-grand {
+  color: #ffffff;
+  background: var(--rq-doc-acc);
+}
+
+.rq-paper.rq-is-modern .rq-doc-grand dt {
+  color: #ffffff;
+}
+
+/* ---------- minimal: rules only, no fills ---------- */
+.rq-paper.rq-is-minimal .rq-doc-head {
+  border-bottom: 1px solid var(--rq-doc-ink);
+}
+
+.rq-paper.rq-is-minimal .rq-doc-title h3 {
+  font-size: 1.5em;
+  letter-spacing: 0.22em;
+  color: var(--rq-doc-ink);
+}
+
+.rq-paper.rq-is-minimal .rq-doc-lines thead tr {
+  background: none;
+}
+
+.rq-paper.rq-is-minimal .rq-doc-lines th {
+  color: var(--rq-doc-ink);
+  border-bottom: 1px solid var(--rq-doc-ink);
+}
+
+.rq-paper.rq-is-minimal .rq-doc-grand {
+  padding-inline: 0;
+  background: none;
+  border-top: 1px solid var(--rq-doc-ink);
+  border-bottom: 1px solid var(--rq-doc-ink);
+}
+
+.rq-paper.rq-is-minimal .rq-doc-settled {
+  padding-inline: 0;
+}

@@ -1,0 +1,142 @@
+@import "c/revquilaTheme";
+@import "c/revquilaPage";
+@import "c/revquilaKit";
+
+/* how much of the invoice is settled */
+.rq-settled {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rq-settled .rq-sub {
+  margin: 0;
+}
+
+.rq-lines {
+  margin-top: 8px;
+}
+
+.rq-nothing {
+  margin-top: 10px;
+}
+
+/* ---------- action modal ---------- */
+.rq-dialog-body {
+  margin: 0;
+}
+
+.rq-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rq-fine {
+  margin: 0;
+}
+
+/* ---------- payment link ---------- */
+.rq-btn-paylink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #0284c7;
+  border-color: rgba(2, 132, 199, 0.35);
+  background: rgba(2, 132, 199, 0.08);
+}
+
+.rq-btn-paylink:hover {
+  background: rgba(2, 132, 199, 0.18);
+  border-color: #0284c7;
+  color: #0369a1;
+}
+
+.rq-paylink-icon {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+}
+
+.rq-paylink-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  margin: 8px 0;
+}
+
+.rq-paylink-url {
+  font-size: 12px;
+  color: #0284c7;
+  word-break: break-all;
+  font-family: monospace;
+  background: #ffffff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.rq-paylink-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.rq-btn-gen {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.rq-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.rq-card-header-row h2 {
+  margin: 0;
+}
+
+.rq-irn-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  margin-top: 0.5rem;
+}
+
+.rq-irn-lbl {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--rq-muted, #64748b);
+}
+
+.rq-irn-text {
+  font-size: 0.75rem;
+  font-family: monospace;
+  word-break: break-all;
+  background: #ffffff;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+.rq-irn-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--rq-muted, #64748b);
+  margin-top: 0.25rem;
+}

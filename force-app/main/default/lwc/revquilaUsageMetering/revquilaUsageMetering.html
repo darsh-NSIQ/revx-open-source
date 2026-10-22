@@ -1,0 +1,203 @@
+<template>
+  <div
+    class="rq-stage"
+    onpointermove={handlePointerMove}
+    onpointerleave={handlePointerLeave}
+  >
+    <div class="rq-fx" aria-hidden="true"></div>
+
+    <div class="rq-main">
+      <div class="rq-topbar rq-rise">
+        <div class="rq-crumbs">
+          <c-revquila-brand></c-revquila-brand>
+          <span class="rq-step-pill">Real-Time Usage Metering</span>
+        </div>
+        <div class="rq-top-actions">
+          <button class="rq-btn rq-quiet" onclick={refreshData}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <header class="rq-head rq-rise rq-d1">
+        <div>
+          <p class="rq-eyebrow">Consumption & Rating Engine</p>
+          <h1>Streaming consumption, <em>zero revenue leakage</em>.</h1>
+          <p class="rq-sub">High-throughput event ingestion, tiered overage calculation, and real-time billing cycle accruals.</p>
+        </div>
+      </header>
+
+      <!-- KPI Summary Cards -->
+      <div class="rq-stats rq-rise rq-d2">
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Accrued Unbilled Overage</span>
+          <b class="rq-stat-val rq-tone-good">${formattedAccrued}</b>
+          <small>Current active cycle</small>
+        </div>
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Total Events Ingested</span>
+          <b class="rq-stat-val">{formattedEvents}</b>
+          <small>Aggregated across active meters</small>
+        </div>
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Active Metered Plans</span>
+          <b class="rq-stat-val">{activeMeters} Plans</b>
+          <small>Pay-as-you-go & Hybrid</small>
+        </div>
+        <div class="rq-card rq-stat">
+          <span class="rq-stat-label">Rating Engine Latency</span>
+          <b class="rq-stat-val rq-tone-info">&lt; 14 ms</b>
+          <small>Sub-second rating throughput</small>
+        </div>
+      </div>
+
+      <!-- Live Event Ingestion Simulator -->
+      <div class="rq-card rq-sim-card rq-rise rq-d3">
+        <div class="rq-card-header-row">
+          <div>
+            <span class="rq-sim-badge">⚡ Real-Time Ingestion Sandbox</span>
+            <h2 class="rq-section-title">Stream Usage Event</h2>
+            <p class="rq-sub">Simulate live REST API / Webhook usage consumption events into the rating engine:</p>
+          </div>
+        </div>
+
+        <div class="rq-sim-form">
+          <div class="rq-field-group">
+            <label class="rq-label" for="simSub">Target Subscription</label>
+            <select id="simSub" class="rq-select" onchange={handleSimSubChange}>
+              <template for:each={subscriptions} for:item="sub">
+                <option key={sub.subscriptionNumber} value={sub.subscriptionId}>
+                  {sub.accountName} ({sub.subscriptionNumber})
+                </option>
+              </template>
+            </select>
+          </div>
+
+          <div class="rq-field-group">
+            <label class="rq-label" for="simMetric">Metric Name</label>
+            <select id="simMetric" class="rq-select" onchange={handleSimMetricChange}>
+              <option value="API Ingestion Transactions">API Ingestion Transactions</option>
+              <option value="AI Agent Reasoning Tokens">AI Agent Reasoning Tokens</option>
+              <option value="Compute Hours (vCPU)">Compute Hours (vCPU)</option>
+              <option value="Storage Bandwidth (GB)">Storage Bandwidth (GB)</option>
+            </select>
+          </div>
+
+          <div class="rq-field-group">
+            <label class="rq-label" for="simQty">Event Units / Quantity</label>
+            <input
+              id="simQty"
+              class="rq-input"
+              type="number"
+              min="1"
+              value={simQuantity}
+              oninput={handleSimQtyChange}
+            />
+          </div>
+
+          <div class="rq-sim-action">
+            <button
+              class="rq-btn rq-primary rq-btn-ingest"
+              onclick={handleIngestEvent}
+              disabled={ingesting}
+              type="button"
+            >
+              Stream Event 🚀
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metered Subscriptions Table -->
+      <div class="rq-card rq-rise rq-d4">
+        <div class="rq-card-header-row">
+          <div>
+            <h2 class="rq-section-title">Active Consumption Plans & Accruals</h2>
+            <p class="rq-sub">Live tracking against included allowances and tiered overage fees</p>
+          </div>
+        </div>
+
+        <template lwc:if={loading}>
+          <div class="rq-loading" role="status">
+            <span class="rq-spinner" aria-hidden="true"></span>
+            Loading consumption telemetry…
+          </div>
+        </template>
+
+        <template lwc:if={hasSubscriptions}>
+          <div class="rq-table-wrap">
+            <table class="rq-table">
+              <thead>
+                <tr>
+                  <th>Subscription & Account</th>
+                  <th>Metered Metric</th>
+                  <th style="min-width: 180px;">Allowance & Progress</th>
+                  <th>Consumed</th>
+                  <th>Overage</th>
+                  <th>Accrued Bill</th>
+                  <th class="rq-text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={subscriptions} for:item="s">
+                  <tr key={s.subscriptionNumber}>
+                    <td>
+                      <strong>{s.accountName}</strong>
+                      <div class="rq-sub-id">{s.subscriptionNumber}</div>
+                    </td>
+                    <td>
+                      <span class="rq-badge rq-badge-info">{s.metricName}</span>
+                    </td>
+                    <td>
+                      <div class="rq-meter-bar-wrap">
+                        <div class="rq-meter-bar-track">
+                          <div class="rq-meter-bar-fill" style={s.progressBarStyle}></div>
+                        </div>
+                        <div class="rq-meter-bar-labels">
+                          <small>{s.consumedFormatted} / {s.includedFormatted} {s.unit}</small>
+                          <small>{s.usagePercent}%</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{s.consumedFormatted}</td>
+                    <td>
+                      <template lwc:if={s.hasOverage}>
+                        <span class="rq-tone-bad">+{s.overageFormatted}</span>
+                        <div class="rq-text-mut">@ ${s.overageRate}/{s.unit}</div>
+                      </template>
+                      <template lwc:else>
+                        <span class="rq-badge rq-badge-good">Within Tier</span>
+                      </template>
+                    </td>
+                    <td>
+                      <strong class="rq-accrued-text">${s.accruedAmount}</strong>
+                      <div class="rq-text-mut">{s.daysRemaining} days left in cycle</div>
+                    </td>
+                    <td class="rq-text-right">
+                      <button
+                        class="rq-btn rq-quiet"
+                        data-id={s.subscriptionId}
+                        onclick={handleCloseBilling}
+                        type="button"
+                        title="Close active cycle unbilled events and push to invoice draft"
+                      >
+                        Push to Draft
+                      </button>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </template>
+      </div>
+
+    </div>
+
+    <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+    <c-revquila-ai-chatbot></c-revquila-ai-chatbot>
+  </div>
+</template>

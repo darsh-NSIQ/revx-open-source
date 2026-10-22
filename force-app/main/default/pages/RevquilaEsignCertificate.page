@@ -1,0 +1,285 @@
+<apex:page controller="RevquilaCertificateController"
+  renderAs="pdf"
+  applyHtmlTag="false"
+  applyBodyTag="false"
+  showHeader="false"
+  sidebar="false"
+  standardStylesheets="false"
+  docType="html-5.0"
+>
+  <html>
+    <head>
+      <title>Certificate of Completion · {!quoteNumber}</title>
+      <style type="text/css">
+        @page {
+          size: A4 portrait;
+          margin: 15mm 15mm 20mm 15mm;
+          @bottom-right {
+            content: "Page " counter(page) " of " counter(pages);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 8pt;
+            color: #64748b;
+          }
+          @bottom-left {
+            content: "RevX Native Digital E-Signature · Tamper-Evident Audit Record";
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 8pt;
+            color: #64748b;
+          }
+        }
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          font-size: 8.5pt;
+          line-height: 1.45;
+          color: #0f172a;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        td, th {
+          vertical-align: top;
+          text-align: left;
+        }
+        .header-table {
+          border-bottom: 2pt solid #059669;
+          padding-bottom: 10pt;
+          margin-bottom: 12pt;
+        }
+        .cert-title {
+          font-size: 18pt;
+          font-weight: 800;
+          color: #064e3b;
+          text-transform: uppercase;
+          letter-spacing: -0.5pt;
+        }
+        .cert-badge {
+          display: inline-block;
+          background: #ecfdf5;
+          color: #047857;
+          border: 1pt solid #a7f3d0;
+          padding: 3pt 8pt;
+          font-size: 8pt;
+          font-weight: bold;
+          text-transform: uppercase;
+          border-radius: 4pt;
+        }
+        .meta-box {
+          background: #f8fafc;
+          border: 1pt solid #e2e8f0;
+          border-radius: 6pt;
+          padding: 8pt 10pt;
+          margin-bottom: 12pt;
+        }
+        .meta-label {
+          font-size: 7.5pt;
+          font-weight: bold;
+          text-transform: uppercase;
+          color: #64748b;
+          letter-spacing: 0.5pt;
+        }
+        .meta-value {
+          font-size: 9.5pt;
+          font-weight: bold;
+          color: #0f172a;
+          margin-top: 2pt;
+        }
+        .section-heading {
+          font-size: 10pt;
+          font-weight: bold;
+          text-transform: uppercase;
+          color: #064e3b;
+          letter-spacing: 0.5pt;
+          border-bottom: 1pt solid #cbd5e1;
+          padding-bottom: 3pt;
+          margin-top: 14pt;
+          margin-bottom: 6pt;
+        }
+        .audit-table th {
+          background: #f1f5f9;
+          padding: 5pt 6pt;
+          font-size: 7.5pt;
+          font-weight: bold;
+          text-transform: uppercase;
+          color: #475569;
+          border-bottom: 1pt solid #cbd5e1;
+        }
+        .audit-table td {
+          padding: 6pt 6pt;
+          border-bottom: 1pt solid #f1f5f9;
+          font-size: 8pt;
+        }
+        .sig-card {
+          border: 1.5pt solid #10b981;
+          background: #ffffff;
+          border-radius: 6pt;
+          padding: 10pt;
+          margin-top: 10pt;
+        }
+        .sig-img {
+          max-height: 48pt;
+          max-width: 190pt;
+          display: block;
+          margin-bottom: 4pt;
+        }
+        .sig-script {
+          font-family: "Brush Script MT", "Caveat", "Segoe Script", cursive, "Times New Roman", serif;
+          font-size: 24pt;
+          font-style: italic;
+          color: #064e3b;
+          line-height: 1.1;
+          margin: 4pt 0 6pt;
+        }
+        .digest-box {
+          font-family: "Courier New", Courier, monospace;
+          font-size: 7.5pt;
+          background: #f8fafc;
+          border: 1pt solid #cbd5e1;
+          padding: 4pt 6pt;
+          border-radius: 3pt;
+          line-height: 1.35;
+          margin-top: 3pt;
+          color: #0f172a;
+        }
+        .legal-notice {
+          font-size: 7pt;
+          color: #64748b;
+          line-height: 1.4;
+          margin-top: 14pt;
+          padding-top: 8pt;
+          border-top: 1pt dashed #cbd5e1;
+        }
+      </style>
+    </head>
+    <body>
+      <!-- Header -->
+      <table class="header-table">
+        <tr>
+          <td style="width: 65%;">
+            <div class="cert-title">Certificate of Completion</div>
+            <div style="font-size: 9pt; color: #475569; margin-top: 2pt;">
+              RevX 100% Salesforce-Native E-Signature Engine
+            </div>
+          </td>
+          <td style="width: 35%; text-align: right;">
+            <div class="cert-badge">✓ Legally Completed</div>
+            <div style="font-size: 8pt; color: #64748b; margin-top: 4pt;">
+              Execution Date: <b>{!executionDate}</b>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Document & Envelope Meta Box -->
+      <div class="meta-box">
+        <table>
+          <tr>
+            <td style="width: 50%;">
+              <div class="meta-label">Envelope ID</div>
+              <div class="meta-value" style="font-family: Courier, monospace; font-size: 9pt;">{!envelopeId}</div>
+              <div class="meta-label" style="margin-top: 6pt;">Document Subject</div>
+              <div class="meta-value">Quotation {!quoteNumber}</div>
+            </td>
+            <td style="width: 50%;">
+              <div class="meta-label">Customer / Signer Account</div>
+              <div class="meta-value">{!accountName}</div>
+              <div class="meta-label" style="margin-top: 6pt;">Total Contract Value</div>
+              <div class="meta-value" style="color: #047857;">{!totalAmount}</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Signer & Signee Organization Profiles -->
+      <div class="section-heading">Parties &amp; Signer Identification</div>
+      <table>
+        <tr>
+          <td style="width: 48%; background: #f8fafc; border: 1pt solid #e2e8f0; border-radius: 4pt; padding: 6pt 8pt;">
+            <div class="meta-label">Originating Organization</div>
+            <div style="font-weight: bold; font-size: 9pt; margin-top: 2pt;">{!companyName}</div>
+            <div style="color: #475569; font-size: 7.5pt;">{!companyAddress}</div>
+            <div style="color: #64748b; font-size: 7.5pt; margin-top: 2pt;">Tax ID / GSTIN: {!companyGst}</div>
+          </td>
+          <td style="width: 4%;"></td>
+          <td style="width: 48%; background: #f8fafc; border: 1pt solid #e2e8f0; border-radius: 4pt; padding: 6pt 8pt;">
+            <div class="meta-label">Authorized Signatory</div>
+            <div style="font-weight: bold; font-size: 9pt; margin-top: 2pt;">{!signerName}</div>
+            <div style="color: #475569; font-size: 7.5pt;">Title: {!signerTitle}</div>
+            <div style="color: #64748b; font-size: 7.5pt; margin-top: 2pt;">Email: {!signerEmail}</div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Audit Events Table -->
+      <div class="section-heading">Detailed Signing Audit Trail</div>
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th style="width: 14%;">Stage</th>
+            <th style="width: 26%;">Action Performed</th>
+            <th style="width: 24%;">Actor</th>
+            <th style="width: 22%;">Timestamp (UTC)</th>
+            <th style="width: 14%;">IP / Channel</th>
+          </tr>
+        </thead>
+        <tbody>
+          <apex:repeat value="{!events}" var="ev">
+            <tr>
+              <td><b>{!ev.stage}</b></td>
+              <td>{!ev.action}</td>
+              <td>{!ev.actor}</td>
+              <td style="font-family: Courier, monospace; font-size: 7.5pt;">{!ev.timestamp}</td>
+              <td style="color: #64748b; font-size: 7.5pt;">{!ev.ipAddress}</td>
+            </tr>
+          </apex:repeat>
+        </tbody>
+      </table>
+
+      <!-- Signature Snapshot & Cryptographic Verification Box -->
+      <div class="section-heading">Cryptographic Execution &amp; Electronic Signature</div>
+      <div class="sig-card">
+        <table style="table-layout: fixed; width: 100%;">
+          <tr>
+            <td style="width: 48%; vertical-align: top; padding-right: 12pt;">
+              <div style="font-size: 7.5pt; font-weight: bold; text-transform: uppercase; color: #64748b; margin-bottom: 4pt;">
+                Electronic Signature Verified
+              </div>
+              <apex:variable var="v" value="" rendered="{!hasSignatureImage}">
+                <img src="{!signatureImageUrl}" width="165" height="46" style="width: 165pt; height: 46pt; display: block; margin-bottom: 4pt;" alt="Digital Signature" />
+              </apex:variable>
+              <apex:variable var="v" value="" rendered="{!NOT(hasSignatureImage)}">
+                <div class="sig-script">{!signerName}</div>
+              </apex:variable>
+              <div style="font-weight: bold; font-size: 9pt; color: #0f172a; margin-top: 4pt;">{!signerName}</div>
+              <div style="font-size: 7.5pt; color: #64748b;">{!signerTitle} · {!signerEmail}</div>
+            </td>
+            <td style="width: 52%; vertical-align: top; padding-left: 10pt; border-left: 1pt solid #e2e8f0;">
+              <div class="meta-label">Authentication Method</div>
+              <div style="font-size: 8pt; color: #0f172a; margin-top: 1pt;">{!verificationMethod}</div>
+
+              <div class="meta-label" style="margin-top: 6pt;">Cryptographic SHA-256 Digest (Tamper-Proof)</div>
+              <div class="digest-box">{!formattedDigest}</div>
+
+              <div style="margin-top: 6pt; font-size: 7.5pt; color: #047857; font-weight: bold;">
+                ✓ Document Integrity Verified &amp; Certified
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Legal Compliance Disclaimer -->
+      <div class="legal-notice">
+        <b>LEGAL STATEMENT &amp; COMPLIANCE DISCLOSURE:</b><br />
+        This Certificate of Completion confirms that Quotation <b>{!quoteNumber}</b> was executed using RevX Native Electronic Signature.
+        All parties agreed to conduct this transaction electronically pursuant to:
+        (1) The United States Electronic Signatures in Global and National Commerce Act (ESIGN, 15 U.S.C. § 7001 et seq.);
+        (2) The Uniform Electronic Transactions Act (UETA); and
+        (3) Section 10A of the Indian Information Technology Act (IT Act 2000).
+        This record is permanently sealed and archived in Salesforce Files (ContentVersion).
+      </div>
+    </body>
+  </html>
+</apex:page>

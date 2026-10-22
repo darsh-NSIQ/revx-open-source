@@ -1,0 +1,473 @@
+/*
+ * Revquila theme: "Lightning Plus".
+ * Shared tokens and primitives for every Revquila component.
+ * Use from a component stylesheet with: @import "c/revquilaTheme";
+ *
+ * Lightning Experience styles leak into components, so every class, keyframe
+ * and custom property here starts with rq- to stay clear of Salesforce's own.
+ */
+:host {
+  /*
+   * The accent comes from the admin's branding (Setup > Branding) when one is set:
+   * the page host carries --rq-brand-* and every component inherits them. The page
+   * tint, lines, glows and shadows are all mixed from the accent, so they follow it.
+   */
+  --rq-acc: var(--rq-brand-acc, #0176d3);
+  --rq-acc2: var(--rq-brand-acc2, #1ab9ff);
+  --rq-acc-deep: var(--rq-brand-acc-deep, #014486);
+  --rq-accfg: #ffffff;
+  --rq-bg: color-mix(in srgb, var(--rq-acc) 7%, #ffffff);
+  --rq-fg: #181c25;
+  --rq-mut: #5c6678;
+  --rq-card: #ffffff;
+  --rq-line: color-mix(in srgb, var(--rq-acc) 9%, #dde1e9);
+  --rq-teal: #0b827c;
+  --rq-good: #2e844a;
+  --rq-warn: #a96404;
+  --rq-bad: #ba0517;
+  /* dark surface (toast, modal backdrop) and the soft tones that read on it */
+  --rq-ink: #10233f;
+  --rq-good-soft: #5be3a0;
+  --rq-bad-soft: #ff8a96;
+  --rq-spot: color-mix(in srgb, var(--rq-acc) 8%, transparent);
+  --rq-glow: color-mix(in srgb, var(--rq-acc) 28%, transparent);
+  --rq-shadow:
+    0 1px 2px rgba(24, 28, 37, 0.06),
+    0 8px 24px color-mix(in srgb, var(--rq-acc-deep) 9%, transparent);
+  --rq-shadow-lift: 0 16px 36px
+    color-mix(in srgb, var(--rq-acc-deep) 18%, transparent);
+  --rq-r: 16px;
+  display: block;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  background: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--rq-acc);
+  outline-offset: 2px;
+}
+
+/* ---------- type ---------- */
+.rq-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rq-mut);
+  font-weight: 600;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(23px, 3.2vw, 32px);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+h1 em {
+  font-style: normal;
+  background: linear-gradient(
+    90deg,
+    var(--rq-acc),
+    var(--rq-acc2),
+    var(--rq-acc)
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: rq-sheen 6s linear infinite;
+}
+
+h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.rq-sub {
+  color: var(--rq-mut);
+  font-size: 12.5px;
+  margin: 2px 0 0;
+}
+
+.rq-fine {
+  color: var(--rq-mut);
+  font-size: 12px;
+  margin: 12px 0 0;
+}
+
+/* ---------- buttons ---------- */
+.rq-btn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition:
+    transform 0.25s,
+    box-shadow 0.25s,
+    background 0.25s,
+    color 0.25s;
+}
+
+.rq-btn:active {
+  transform: scale(0.98);
+}
+
+.rq-btn.rq-primary {
+  background: linear-gradient(135deg, var(--rq-acc-deep), var(--rq-acc));
+  color: var(--rq-accfg);
+  box-shadow: 0 8px 22px var(--rq-glow);
+}
+
+.rq-btn.rq-primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 40%;
+  transform: skewX(-20deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  transition: left 0.6s;
+}
+
+.rq-btn.rq-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px
+    color-mix(in srgb, var(--rq-acc-deep) 34%, transparent);
+}
+
+.rq-btn.rq-primary:hover::after {
+  left: 120%;
+}
+
+.rq-btn.rq-quiet {
+  background: var(--rq-card);
+  color: var(--rq-fg);
+  box-shadow: inset 0 0 0 1px var(--rq-line);
+}
+
+.rq-btn.rq-quiet:hover {
+  color: var(--rq-acc);
+  box-shadow: inset 0 0 0 1.5px var(--rq-acc);
+  transform: translateY(-1px);
+}
+
+.rq-btn.rq-danger {
+  background: var(--rq-bad);
+  color: var(--rq-accfg);
+}
+
+.rq-btn.rq-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(186, 5, 23, 0.3);
+}
+
+.rq-btn.rq-sm {
+  padding: 8px 13px;
+  border-radius: 10px;
+  font-size: 12.5px;
+}
+
+.rq-actions-end {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ---------- cards: the surface carries the cursor spotlight ---------- */
+.rq-card {
+  position: relative;
+  min-width: 0;
+  padding: 18px;
+  border-radius: var(--rq-r);
+  box-shadow:
+    0 0 0 1px var(--rq-line),
+    var(--rq-shadow);
+  background:
+    radial-gradient(
+      340px circle at var(--rq-mx, 50%) var(--rq-my, -40%),
+      var(--rq-spot),
+      transparent 65%
+    ),
+    var(--rq-card);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.35s;
+}
+
+.rq-card.rq-lift:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 2px var(--rq-acc),
+    var(--rq-shadow-lift);
+}
+
+/* ---------- status pills and tones ---------- */
+/* Every pill is one size wherever it is used, so a column or a row of them lines up.
+   The width holds the longest status there is ("Pending approval"): keep a new label
+   within it, and put anything longer (a date, a reason) in the text beside the pill. */
+.rq-pill {
+  --rq-c: var(--rq-mut);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  gap: 6px;
+  min-width: 132px;
+  min-height: 24px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  color: var(--rq-c);
+  background: color-mix(in srgb, var(--rq-c) 13%, transparent);
+}
+
+.rq-pill::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.rq-pill.rq-live::before {
+  animation: rq-blink 1.4s ease-in-out infinite;
+}
+
+.rq-tone-mut {
+  --rq-c: var(--rq-mut);
+}
+.rq-tone-acc {
+  --rq-c: var(--rq-acc);
+}
+.rq-tone-teal {
+  --rq-c: var(--rq-teal);
+}
+.rq-tone-good {
+  --rq-c: var(--rq-good);
+}
+.rq-tone-warn {
+  --rq-c: var(--rq-warn);
+}
+.rq-tone-bad {
+  --rq-c: var(--rq-bad);
+}
+
+/* ---------- tables ---------- */
+.rq-tw {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--rq-mut);
+}
+
+td {
+  padding: 11px 10px;
+  border-top: 1px solid var(--rq-line);
+  font-variant-numeric: tabular-nums;
+  transition: background 0.2s;
+}
+
+th.rq-right,
+td.rq-right {
+  text-align: right;
+}
+
+tr.rq-go {
+  cursor: pointer;
+}
+
+tr.rq-go:hover td {
+  background: var(--rq-spot);
+}
+
+tr.rq-go td:first-child {
+  font-weight: 600;
+  transition:
+    padding-left 0.25s,
+    color 0.25s,
+    background 0.2s;
+}
+
+tr.rq-go:hover td:first-child {
+  padding-left: 16px;
+  color: var(--rq-acc);
+}
+
+/* ---------- form controls ---------- */
+.rq-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rq-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rq-mut);
+}
+
+.rq-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--rq-line);
+  border-radius: 10px;
+  background: var(--rq-card);
+  color: var(--rq-fg);
+  font: inherit;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.rq-input:hover {
+  border-color: color-mix(in srgb, var(--rq-acc) 45%, var(--rq-line));
+}
+
+.rq-input:focus {
+  outline: none;
+  border-color: var(--rq-acc);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--rq-acc) 20%, transparent);
+}
+
+/* the arrow is an inline SVG, so its stroke repeats the --rq-mut value */
+select.rq-input {
+  appearance: none;
+  padding-right: 38px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c6678' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+textarea.rq-input {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.rq-field.rq-invalid .rq-input {
+  border-color: var(--rq-bad);
+}
+
+.rq-error {
+  color: var(--rq-bad);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------- motion ---------- */
+.rq-rise {
+  animation: rq-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--rq-i, 0) * 70ms);
+}
+
+.rq-d1 {
+  --rq-i: 1;
+}
+.rq-d2 {
+  --rq-i: 2;
+}
+.rq-d3 {
+  --rq-i: 3;
+}
+.rq-d4 {
+  --rq-i: 4;
+}
+.rq-d5 {
+  --rq-i: 5;
+}
+.rq-d6 {
+  --rq-i: 6;
+}
+.rq-d7 {
+  --rq-i: 7;
+}
+.rq-d8 {
+  --rq-i: 8;
+}
+.rq-d9 {
+  --rq-i: 9;
+}
+
+@keyframes rq-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes rq-sheen {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes rq-blink {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,208 @@
+<template>
+  <div class="rq-case-panel">
+    <c-revquila-toast lwc:ref="toast"></c-revquila-toast>
+
+    <!-- Header Card -->
+    <div class="rq-card rq-head-card">
+      <div class="rq-header-row">
+        <div class="rq-avatar" aria-hidden="true">⚡</div>
+        <div class="rq-head-info">
+          <div class="rq-title-wrap">
+            <h2 class="rq-title">{accountName}</h2>
+            <template lwc:if={entitlementTier}>
+              <span class="rq-badge rq-badge-sla">{entitlementTier}</span>
+            </template>
+          </div>
+          <p class="rq-sub">Service Cloud Billing &amp; Subscriptions Panel</p>
+        </div>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="rq-metrics-row">
+        <div class="rq-stat">
+          <span class="rq-label">Outstanding</span>
+          <strong class={outstandingClass}>{formattedOutstanding}</strong>
+        </div>
+        <div class="rq-stat">
+          <span class="rq-label">Overdue</span>
+          <strong class={overdueClass}>{formattedOverdue}</strong>
+        </div>
+        <div class="rq-stat">
+          <span class="rq-label">MRR</span>
+          <strong class="rq-val">{formattedMrr}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <template lwc:if={loading}>
+      <div class="rq-card rq-loading-card">
+        <span class="rq-spinner" aria-hidden="true"></span>
+        <span>Loading customer billing context…</span>
+      </div>
+    </template>
+
+    <!-- Empty State -->
+    <template lwc:if={noData}>
+      <div class="rq-card rq-empty-card">
+        <p class="rq-empty-text">No Account linked to this Case.</p>
+      </div>
+    </template>
+
+    <!-- Content Sections -->
+    <template lwc:if={hasData}>
+      <!-- Active Subscriptions Section -->
+      <div class="rq-card rq-section">
+        <div class="rq-section-head">
+          <h3>Active Subscriptions ({subscriptionsCount})</h3>
+        </div>
+        <template lwc:if={hasSubscriptions}>
+          <div class="rq-list">
+            <template for:each={subscriptions} for:item="sub">
+              <div key={sub.id} class="rq-list-item">
+                <div class="rq-item-main">
+                  <strong>{sub.numberText}</strong>
+                  <span class="rq-pill rq-tone-good">{sub.status}</span>
+                </div>
+                <div class="rq-item-sub">
+                  <span>${sub.mrr}/mo</span>
+                  <span>Renews: {sub.renewalDate}</span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template lwc:else>
+          <p class="rq-muted">No active subscriptions found.</p>
+        </template>
+      </div>
+
+      <!-- Invoices Section with Fast Actions -->
+      <div class="rq-card rq-section">
+        <div class="rq-section-head">
+          <h3>Recent Invoices ({invoicesCount})</h3>
+        </div>
+        <template lwc:if={hasInvoices}>
+          <div class="rq-list">
+            <template for:each={invoices} for:item="inv">
+              <div key={inv.id} class="rq-list-item rq-invoice-item">
+                <div class="rq-inv-row">
+                  <div>
+                    <strong>{inv.numberText}</strong>
+                    <span class={inv.statusPillClass}>{inv.status}</span>
+                  </div>
+                  <div class="rq-inv-due">
+                    <span class={inv.balanceClass}>${inv.balance} due</span>
+                  </div>
+                </div>
+                <div class="rq-actions-row">
+                  <button
+                    class="rq-btn-action"
+                    title="Copy / Send Payment Link"
+                    data-id={inv.id}
+                    onclick={handlePaymentLink}
+                  >
+                    🔗 Pay Link
+                  </button>
+                  <button
+                    class="rq-btn-action"
+                    title="Resend Invoice to Customer"
+                    data-id={inv.id}
+                    onclick={handleResendInvoice}
+                  >
+                    ✉️ Resend
+                  </button>
+                  <button
+                    class="rq-btn-action"
+                    title="Raise Credit Note"
+                    data-id={inv.id}
+                    data-num={inv.numberText}
+                    data-balance={inv.balance}
+                    onclick={openCreditModal}
+                  >
+                    📝 Credit
+                  </button>
+                  <button
+                    class="rq-btn-action"
+                    title="Request Refund"
+                    data-id={inv.id}
+                    data-num={inv.numberText}
+                    data-paid={inv.paid}
+                    onclick={openRefundModal}
+                  >
+                    ↩️ Refund
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template lwc:else>
+          <p class="rq-muted">No recent invoices found.</p>
+        </template>
+      </div>
+    </template>
+
+    <!-- Credit Note Modal -->
+    <template lwc:if={showCreditModal}>
+      <div class="rq-modal-backdrop" onclick={closeCreditModal}></div>
+      <div class="rq-modal">
+        <div class="rq-modal-head">
+          <h3>Issue Credit Note for {selectedInvoiceNum}</h3>
+          <button class="rq-close-btn" onclick={closeCreditModal}>✕</button>
+        </div>
+        <div class="rq-modal-body">
+          <label>Credit Amount ($)</label>
+          <input
+            type="number"
+            class="rq-input"
+            value={creditAmount}
+            onchange={handleCreditAmountChange}
+            placeholder="Amount"
+          />
+          <label>Reason</label>
+          <textarea
+            class="rq-input rq-textarea"
+            onchange={handleCreditReasonChange}
+            placeholder="e.g. SLA breach credit or service adjustment"
+          ></textarea>
+        </div>
+        <div class="rq-modal-footer">
+          <button class="rq-btn-secondary" onclick={closeCreditModal}>Cancel</button>
+          <button class="rq-btn-primary" onclick={submitCreditNote}>Confirm Credit Note</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Refund Modal -->
+    <template lwc:if={showRefundModal}>
+      <div class="rq-modal-backdrop" onclick={closeRefundModal}></div>
+      <div class="rq-modal">
+        <div class="rq-modal-head">
+          <h3>Request Refund for {selectedInvoiceNum}</h3>
+          <button class="rq-close-btn" onclick={closeRefundModal}>✕</button>
+        </div>
+        <div class="rq-modal-body">
+          <label>Refund Amount ($)</label>
+          <input
+            type="number"
+            class="rq-input"
+            value={refundAmount}
+            onchange={handleRefundAmountChange}
+            placeholder="Amount"
+          />
+          <label>Reason for Refund</label>
+          <textarea
+            class="rq-input rq-textarea"
+            onchange={handleRefundReasonChange}
+            placeholder="Reason for refund request (requires approval if above threshold)"
+          ></textarea>
+        </div>
+        <div class="rq-modal-footer">
+          <button class="rq-btn-secondary" onclick={closeRefundModal}>Cancel</button>
+          <button class="rq-btn-primary" onclick={submitRefund}>Submit Refund Request</button>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

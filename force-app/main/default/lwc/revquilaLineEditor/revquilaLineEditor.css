@@ -1,0 +1,335 @@
+@import "c/revquilaTheme";
+
+/* The editor lives in modals as well as pages, so it measures itself */
+:host {
+  container: rq-editor / inline-size;
+}
+
+.rq-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* ---------- lines: one grid shared by the header and every row ---------- */
+.rq-lines {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px var(--rq-line);
+}
+
+.rq-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px 104px 120px 34px;
+  gap: 6px 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border-top: 1px solid var(--rq-line);
+  animation: rq-rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.rq-line-head {
+  padding-block: 8px;
+  border-top: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rq-mut);
+  animation: none;
+}
+
+.rq-right {
+  text-align: right;
+}
+
+.rq-cell-product small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--rq-mut);
+}
+
+.rq-custom {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* the column labels repeat inside each row once the header is gone */
+.rq-cell-qty span,
+.rq-cell-discount span,
+.rq-cell-net span {
+  display: none;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rq-mut);
+}
+
+.rq-cell-qty .rq-input,
+.rq-cell-discount .rq-input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-cell-net {
+  padding-top: 10px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-input.rq-bad-input {
+  border-color: var(--rq-bad);
+}
+
+.rq-input.rq-over {
+  font-weight: 700;
+  color: var(--rq-warn);
+  border-color: color-mix(in srgb, var(--rq-warn) 55%, var(--rq-line));
+}
+
+.rq-remove {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 40px;
+  border-radius: 10px;
+  color: var(--rq-mut);
+  transition:
+    color 0.2s,
+    background 0.2s;
+}
+
+.rq-remove:hover {
+  color: var(--rq-bad);
+  background: color-mix(in srgb, var(--rq-bad) 10%, transparent);
+}
+
+.rq-remove svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rq-line-error {
+  grid-column: 1 / -1;
+}
+
+.rq-none {
+  margin: 0;
+  padding: 18px;
+  border-radius: 14px;
+  text-align: center;
+  color: var(--rq-mut);
+  outline: 1px dashed var(--rq-line);
+  outline-offset: -1px;
+}
+
+.rq-bundle-note,
+.rq-rule-note {
+  display: block;
+  font-size: 11.5px;
+  color: var(--rq-teal);
+  font-weight: 600;
+}
+
+.rq-remove:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---------- one-tap additions ---------- */
+.rq-add.rq-add-bundle {
+  color: var(--rq-teal);
+  box-shadow: inset 0 0 0 1.5px var(--rq-teal);
+}
+
+.rq-adders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rq-add {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--rq-acc);
+  background: color-mix(in srgb, var(--rq-acc) 8%, transparent);
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.2s;
+}
+
+.rq-add small {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--rq-mut);
+  transition: color 0.2s;
+}
+
+.rq-add:hover {
+  color: var(--rq-accfg);
+  background: var(--rq-acc);
+  transform: translateY(-1px);
+}
+
+.rq-add:hover small {
+  color: var(--rq-accfg);
+}
+
+.rq-add.rq-add-custom {
+  color: var(--rq-fg);
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--rq-line);
+}
+
+.rq-add.rq-add-custom:hover {
+  color: var(--rq-acc);
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--rq-acc);
+}
+
+/* ---------- discount tools and totals ---------- */
+.rq-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+  gap: 14px;
+  align-items: start;
+}
+
+.rq-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rq-bulk label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rq-mut);
+}
+
+.rq-bulk-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.rq-bulk-row .rq-input {
+  width: 84px;
+}
+
+.rq-policy {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  color: var(--rq-c);
+  background: color-mix(in srgb, var(--rq-c) 10%, transparent);
+}
+
+.rq-sums {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--rq-bg);
+}
+
+.rq-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rq-row dt {
+  color: var(--rq-mut);
+}
+
+.rq-row dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.rq-row.rq-grand {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rq-line);
+  font-size: 17px;
+}
+
+.rq-row.rq-grand dt {
+  font-weight: 700;
+  color: var(--rq-fg);
+}
+
+.rq-row.rq-grand dd {
+  font-weight: 800;
+}
+
+/* narrow: each line becomes a small card, product on top, numbers below */
+@container rq-editor (max-width: 620px) {
+  .rq-line-head {
+    display: none;
+  }
+
+  .rq-line {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr) 34px;
+  }
+
+  .rq-line:first-of-type,
+  .rq-line-head + .rq-line {
+    border-top: 0;
+  }
+
+  .rq-cell-product {
+    grid-column: 1 / -1;
+  }
+
+  .rq-cell-qty span,
+  .rq-cell-discount span,
+  .rq-cell-net span {
+    display: block;
+  }
+
+  .rq-cell-net {
+    padding-top: 0;
+  }
+
+  .rq-remove {
+    align-self: end;
+  }
+
+  .rq-custom {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .rq-custom input:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .rq-bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
